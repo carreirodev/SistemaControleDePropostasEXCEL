@@ -1,12 +1,31 @@
-Private Sub Label8_Click()
-
+Private Sub UserForm_Initialize()
+    ' Inicializa o formulário e desabilita o botão Salvar
+    btnSalvar.Enabled = False
 End Sub
 
-Private Sub UserForm_Initialize()
-    ' Inicializa o formulário (se necessário, você pode adicionar código aqui)
+Private Sub ValidarCamposObrigatorios()
+    ' Habilita o botão Salvar apenas se os campos obrigatórios estiverem preenchidos
+    btnSalvar.Enabled = (Len(Trim(txtNomeCliente.Value)) > 0 And Len(Trim(txtPessoaContato.Value)) > 0)
+End Sub
+
+Private Sub txtNomeCliente_Change()
+    txtNomeCliente.Text = UCase(txtNomeCliente.Text)
+    txtNomeCliente.SelStart = Len(txtNomeCliente.Text)
+    ValidarCamposObrigatorios
+End Sub
+
+Private Sub txtPessoaContato_Change()
+    FormatarPrimeiraLetraMaiuscula txtPessoaContato
+    ValidarCamposObrigatorios
 End Sub
 
 Private Sub btnSalvar_Click()
+    ' Verifica novamente se os campos obrigatórios estão preenchidos
+    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
+        MsgBox "Os campos 'Nome do Cliente' e 'Pessoa de Contato' são obrigatórios.", vbExclamation
+        Exit Sub
+    End If
+
     Dim ws As Worksheet
     Dim ultimaLinha As Long
     Dim novoID As String
