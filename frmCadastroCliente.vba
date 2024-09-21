@@ -8,17 +8,6 @@ Private Sub ValidarCamposObrigatorios()
     btnSalvar.Enabled = (Len(Trim(txtNomeCliente.Value)) > 0 And Len(Trim(txtPessoaContato.Value)) > 0)
 End Sub
 
-Private Sub txtNomeCliente_Change()
-    txtNomeCliente.Text = UCase(txtNomeCliente.Text)
-    txtNomeCliente.SelStart = Len(txtNomeCliente.Text)
-    ValidarCamposObrigatorios
-End Sub
-
-Private Sub txtPessoaContato_Change()
-    FormatarPrimeiraLetraMaiuscula txtPessoaContato
-    ValidarCamposObrigatorios
-End Sub
-
 Private Sub btnSalvar_Click()
     ' Verifica novamente se os campos obrigatórios estão preenchidos
     If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
@@ -42,22 +31,22 @@ Private Sub btnSalvar_Click()
     nomeClienteMaiusculo = UCase(txtNomeCliente.Value)
     
     ' Gera o novo ID usando o nome em maiúsculas
-    novoID = GerarNovoID(nomeClienteMaiusculo, ultimaLinha)
+    txtID = GerarNovoID(nomeClienteMaiusculo, ultimaLinha)
     
     ' Formata o telefone com apóstrofo no início
     telefoneFormatado = "'" & txtTelefone.Value
     
     ' Adiciona os dados do novo cliente
-    ws.Cells(ultimaLinha + 1, 1).Value = novoID
-    ws.Cells(ultimaLinha + 1, 2).Value = nomeClienteMaiusculo  ' Nome em maiúsculas
+    ws.Cells(ultimaLinha + 1, 1).Value = txtID
+    ws.Cells(ultimaLinha + 1, 2).Value = nomeClienteMaiusculo
     ws.Cells(ultimaLinha + 1, 3).Value = txtPessoaContato.Value
     ws.Cells(ultimaLinha + 1, 4).Value = txtEndereco.Value
     ws.Cells(ultimaLinha + 1, 5).Value = txtCidade.Value
-    ws.Cells(ultimaLinha + 1, 6).Value = UCase(txtEstado.Value)  ' Estado em maiúsculas
-    ws.Cells(ultimaLinha + 1, 7).Value = telefoneFormatado  ' Telefone com apóstrofo
-    ws.Cells(ultimaLinha + 1, 8).Value = LCase(txtEmail.Value)  ' Email em minúsculas
+    ws.Cells(ultimaLinha + 1, 6).Value = UCase(txtEstado.Value)
+    ws.Cells(ultimaLinha + 1, 7).Value = telefoneFormatado
+    ws.Cells(ultimaLinha + 1, 8).Value = LCase(txtEmail.Value) 
     
-    MsgBox "Cliente cadastrado com sucesso!" & vbNewLine & "ID: " & novoID, vbInformation
+    MsgBox "Cliente cadastrado com sucesso!" & vbNewLine & "ID: " & txtID, vbInformation
     
     ' Fecha o formulário
     Unload Me
@@ -85,10 +74,12 @@ End Function
 Private Sub txtNomeCliente_Change()
     txtNomeCliente.Text = UCase(txtNomeCliente.Text)
     txtNomeCliente.SelStart = Len(txtNomeCliente.Text)
+    ValidarCamposObrigatorios
 End Sub
 
 Private Sub txtPessoaContato_Change()
     FormatarPrimeiraLetraMaiuscula txtPessoaContato
+    ValidarCamposObrigatorios
 End Sub
 
 Private Sub txtEndereco_Change()
@@ -153,6 +144,9 @@ Private Sub LimparFormulario()
     txtTelefone.Value = ""
     txtEmail.Value = ""
     
-    ' Coloca o foco no primeiro campo (opcional)
+    ' Coloca o foco no primeiro campo
     txtNomeCliente.SetFocus
+
+    ' Desabilita o botão Salvar após limpar o formulário
+    ValidarCamposObrigatorios
 End Sub
