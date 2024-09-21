@@ -114,3 +114,26 @@ Private Sub FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox)
     txt.SelStart = cursorPos
 End Sub
 
+Private Sub btnFechar_Click()
+    ' Fecha o formulário sem nenhuma ação
+    Unload Me
+End Sub
+
+Private Sub btnLimpar_Click()
+    ' Limpa todos os campos do formulário
+    LimparFormulario
+End Sub
+
+Private Sub LimparFormulario()
+    ' Limpa todos os campos do formulário
+    txtNomeCliente.Value = ""
+    txtPessoaContato.Value = ""
+    txtEndereco.Value = ""
+    txtCidade.Value = ""
+    txtEstado.Value = ""
+    txtTelefone.Value = ""
+    txtEmail.Value = ""
+    
+    ' Coloca o foco no primeiro campo (opcional)
+    txtNomeCliente.SetFocus
+End Sub
