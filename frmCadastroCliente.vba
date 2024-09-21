@@ -1,4 +1,6 @@
-' Código para o formulário frmCadastroCliente
+Private Sub Label8_Click()
+
+End Sub
 
 Private Sub UserForm_Initialize()
     ' Inicializa o formulário (se necessário, você pode adicionar código aqui)
@@ -9,6 +11,7 @@ Private Sub btnSalvar_Click()
     Dim ultimaLinha As Long
     Dim novoID As String
     Dim nomeClienteMaiusculo As String
+    Dim telefoneFormatado As String
     
     ' Define a planilha "CLIENTES"
     Set ws = ThisWorkbook.Sheets("CLIENTES")
@@ -22,15 +25,18 @@ Private Sub btnSalvar_Click()
     ' Gera o novo ID usando o nome em maiúsculas
     novoID = GerarNovoID(nomeClienteMaiusculo, ultimaLinha)
     
+    ' Formata o telefone com apóstrofo no início
+    telefoneFormatado = "'" & txtTelefone.Value
+    
     ' Adiciona os dados do novo cliente
     ws.Cells(ultimaLinha + 1, 1).Value = novoID
     ws.Cells(ultimaLinha + 1, 2).Value = nomeClienteMaiusculo  ' Nome em maiúsculas
     ws.Cells(ultimaLinha + 1, 3).Value = txtPessoaContato.Value
     ws.Cells(ultimaLinha + 1, 4).Value = txtEndereco.Value
     ws.Cells(ultimaLinha + 1, 5).Value = txtCidade.Value
-    ws.Cells(ultimaLinha + 1, 6).Value = txtEstado.Value
-    ws.Cells(ultimaLinha + 1, 7).Value = txtTelefone.Value
-    ws.Cells(ultimaLinha + 1, 8).Value = txtEmail.Value
+    ws.Cells(ultimaLinha + 1, 6).Value = UCase(txtEstado.Value)  ' Estado em maiúsculas
+    ws.Cells(ultimaLinha + 1, 7).Value = telefoneFormatado  ' Telefone com apóstrofo
+    ws.Cells(ultimaLinha + 1, 8).Value = LCase(txtEmail.Value)  ' Email em minúsculas
     
     MsgBox "Cliente cadastrado com sucesso!" & vbNewLine & "ID: " & novoID, vbInformation
     
@@ -74,6 +80,11 @@ Private Sub txtCidade_Change()
     FormatarPrimeiraLetraMaiuscula txtCidade
 End Sub
 
+Private Sub txtEstado_Change()
+    txtEstado.Text = UCase(txtEstado.Text)
+    txtEstado.SelStart = Len(txtEstado.Text)
+End Sub
+
 Private Sub txtEmail_Change()
     Dim cursorPos As Long
     cursorPos = txtEmail.SelStart
@@ -81,7 +92,7 @@ Private Sub txtEmail_Change()
     txtEmail.SelStart = cursorPos
 End Sub
 
-Private Sub FormatarPrimeiraLetraMaiuscula(txt As TextBox)
+Private Sub FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox)
     Dim texto As String
     Dim palavras() As String
     Dim i As Integer
@@ -102,3 +113,4 @@ Private Sub FormatarPrimeiraLetraMaiuscula(txt As TextBox)
     txt.Text = novoTexto
     txt.SelStart = cursorPos
 End Sub
+
