@@ -1,10 +1,24 @@
 ' Código para o formulário frmBuscaCliente
 
+' Variáveis globais para armazenar os valores originais
+Dim originalNomeCliente As String
+Dim originalPessoaContato As String
+Dim originalEndereco As String
+Dim originalCidade As String
+Dim originalEstado As String
+Dim originalTelefone As String
+Dim originalEmail As String
+
+' Variável para rastrear se um registro foi selecionado
+Dim registroSelecionado As Boolean
+
 Private Sub UserForm_Initialize()
     ' Inicializa o formulário
     ConfigurarListBox
+    btnAlterar.Enabled = False ' Desabilita o botão ALTERAR inicialmente
+    btnApagar.Enabled = False ' Desabilita o botão APAGAR inicialmente
+    registroSelecionado = False
 End Sub
-
 
 Private Sub ConfigurarListBox()
     ' Configura as colunas da ListBox sem adicionar cabeçalho
@@ -15,35 +29,55 @@ Private Sub ConfigurarListBox()
     End With
 End Sub
 
-
-
-
 Private Sub txtNomeCliente_Change()
     txtNomeCliente.Value = UCase(txtNomeCliente.Value)
+    VerificarAlteracoes
 End Sub
 
 Private Sub txtEstado_Change()
     txtEstado.Value = UCase(txtEstado.Value)
+    VerificarAlteracoes
 End Sub
 
 Private Sub txtPessoaContato_Change()
     txtPessoaContato.Value = FormatarPrimeiraLetraMaiuscula(txtPessoaContato)
+    VerificarAlteracoes
 End Sub
 
 Private Sub txtEndereco_Change()
     txtEndereco.Value = FormatarPrimeiraLetraMaiuscula(txtEndereco)
+    VerificarAlteracoes
 End Sub
 
 Private Sub txtCidade_Change()
     txtCidade.Value = FormatarPrimeiraLetraMaiuscula(txtCidade)
+    VerificarAlteracoes
 End Sub
 
 Private Sub txtEmail_Change()
     txtEmail.Value = LCase(txtEmail.Value)
+    VerificarAlteracoes
 End Sub
 
+Private Sub txtTelefone_Change()
+    VerificarAlteracoes
+End Sub
 
-
+Private Sub VerificarAlteracoes()
+    ' Habilita o botão ALTERAR somente se um registro foi selecionado e algum campo (exceto ID) for alterado
+    If registroSelecionado And _
+       (txtNomeCliente.Value <> originalNomeCliente Or _
+       txtPessoaContato.Value <> originalPessoaContato Or _
+       txtEndereco.Value <> originalEndereco Or _
+       txtCidade.Value <> originalCidade Or _
+       txtEstado.Value <> originalEstado Or _
+       txtTelefone.Value <> originalTelefone Or _
+       txtEmail.Value <> originalEmail) Then
+        btnAlterar.Enabled = True
+    Else
+        btnAlterar.Enabled = False
+    End If
+End Sub
 
 Private Sub btnBuscar_Click()
     Dim ws As Worksheet
@@ -76,12 +110,17 @@ Private Sub btnBuscar_Click()
     
     If Not encontrou Then
         MsgBox "Nenhum cliente encontrado com os critérios fornecidos.", vbInformation
+    Else
+        btnApagar.Enabled = False ' Desabilita o botão APAGAR após a busca, até que um registro seja selecionado
     End If
+
 End Sub
 
 Private Sub lstResultados_Click()
-    If lstResultados.ListIndex >= 0 Then ' Alterado para >= 0 já que não há mais linha de cabeçalho
-        PreencherCamposCliente lstResultados.List(lstResultados.ListIndex, 0) ' Passa o ID do cliente selecionado
+    If lstResultados.ListIndex >= 0 Then
+        PreencherCamposCliente lstResultados.List(lstResultados.ListIndex, 0)
+        registroSelecionado = True
+        btnApagar.Enabled = True ' Habilita o botão APAGAR
     End If
 End Sub
 
@@ -103,11 +142,20 @@ Private Sub PreencherCamposCliente(clienteID As String)
             txtEstado.Value = ws.Cells(i, 6).Value
             txtTelefone.Value = ws.Cells(i, 7).Value
             txtEmail.Value = ws.Cells(i, 8).Value
+            
+            ' Armazena os valores originais
+            originalNomeCliente = txtNomeCliente.Value
+            originalPessoaContato = txtPessoaContato.Value
+            originalEndereco = txtEndereco.Value
+            originalCidade = txtCidade.Value
+            originalEstado = txtEstado.Value
+            originalTelefone = txtTelefone.Value
+            originalEmail = txtEmail.Value
+            
             Exit For
         End If
     Next i
 End Sub
-
 
 Private Sub btnAlterar_Click()
     Dim ws As Worksheet
@@ -142,11 +190,15 @@ Private Sub btnAlterar_Click()
             ws.Cells(i, 6).Value = UCase(txtEstado.Value) ' Estado em maiúsculas
             ws.Cells(i, 7).Value = telefoneFormatado ' Telefone formatado
             ws.Cells(i, 8).Value = LCase(txtEmail.Value) ' Email em minúsculas
+            btnAlterar.Enabled = False 
             MsgBox "Informações do cliente alteradas com sucesso.", vbInformation
+            LimparFormulario
             Exit Sub
+            
         End If
+
     Next i
-    
+
     MsgBox "Erro ao alterar o cliente. Cliente não encontrado.", vbCritical
 End Sub
 
@@ -177,6 +229,8 @@ End Sub
 Private Sub btnLimpar_Click()
     ' Limpa todos os campos do formulário
     LimparFormulario
+    btnAlterar.Enabled = False ' Desabilita o botão ALTERAR após limpar
+    registroSelecionado = False ' Reseta a seleção de registro
 End Sub
 
 Private Sub LimparFormulario()
@@ -192,7 +246,46 @@ Private Sub LimparFormulario()
     lstResultados.Clear
     
     ' Coloca o foco no primeiro campo
-    txtNomeCliente.SetFocus
+    btnAlterar.Enabled = False 
 
+    txtNomeCliente.SetFocus
 End Sub
 
+
+
+Private Sub btnApagar_Click()
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim clienteID As String
+    Dim resposta As VbMsgBoxResult
+    
+    ' Verifica se um cliente foi selecionado
+    If lstResultados.ListIndex < 0 Then
+        MsgBox "Selecione um cliente para apagar.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Obtém o ID do cliente selecionado
+    clienteID = lstResultados.List(lstResultados.ListIndex, 0)
+    
+    ' Pede confirmação ao usuário
+    resposta = MsgBox("Tem certeza de que deseja apagar o cliente selecionado?", vbYesNo + vbQuestion, "Confirmação")
+    If resposta = vbNo Then Exit Sub
+    
+    Set ws = ThisWorkbook.Sheets("CLIENTES")
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Procura o cliente na planilha e apaga a linha correspondente
+    For i = 2 To ultimaLinha
+        If ws.Cells(i, 1).Value = clienteID Then
+            ws.Rows(i).Delete
+            MsgBox "Cliente apagado com sucesso.", vbInformation
+            LimparFormulario
+            btnAlterar.Enabled = False  
+            Exit Sub
+        End If
+    Next i
+    
+    MsgBox "Erro ao apagar o cliente. Cliente não encontrado.", vbCritical
+End Sub
