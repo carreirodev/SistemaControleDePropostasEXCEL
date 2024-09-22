@@ -5,6 +5,7 @@ Private Sub UserForm_Initialize()
     ConfigurarListBox
 End Sub
 
+
 Private Sub ConfigurarListBox()
     ' Configura as colunas da ListBox sem adicionar cabeçalho
     With lstResultados
@@ -13,6 +14,36 @@ Private Sub ConfigurarListBox()
         .ColumnWidths = "44;150;130;100;22"
     End With
 End Sub
+
+
+
+
+Private Sub txtNomeCliente_Change()
+    txtNomeCliente.Value = UCase(txtNomeCliente.Value)
+End Sub
+
+Private Sub txtEstado_Change()
+    txtEstado.Value = UCase(txtEstado.Value)
+End Sub
+
+Private Sub txtPessoaContato_Change()
+    txtPessoaContato.Value = FormatarPrimeiraLetraMaiuscula(txtPessoaContato)
+End Sub
+
+Private Sub txtEndereco_Change()
+    txtEndereco.Value = FormatarPrimeiraLetraMaiuscula(txtEndereco)
+End Sub
+
+Private Sub txtCidade_Change()
+    txtCidade.Value = FormatarPrimeiraLetraMaiuscula(txtCidade)
+End Sub
+
+Private Sub txtEmail_Change()
+    txtEmail.Value = LCase(txtEmail.Value)
+End Sub
+
+
+
 
 Private Sub btnBuscar_Click()
     Dim ws As Worksheet
@@ -137,7 +168,6 @@ Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As Strin
     novoTexto = Join(palavras, " ")
     FormatarPrimeiraLetraMaiuscula = novoTexto
 End Function
-
 
 Private Sub btnFechar_Click()
     ' Fecha o formulário sem nenhuma ação
