@@ -10,7 +10,7 @@ Private Sub ConfigurarListBox()
     With lstResultados
         .Clear
         .ColumnCount = 5
-        .ColumnWidths = "44;160;140;110;25"
+        .ColumnWidths = "44;150;130;100;22"
     End With
 End Sub
 
