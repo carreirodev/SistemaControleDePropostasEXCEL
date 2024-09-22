@@ -78,3 +78,63 @@ Private Sub PreencherCamposCliente(clienteID As String)
 End Sub
 
 
+Private Sub btnAlterar_Click()
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim clienteID As String
+    Dim telefoneFormatado As String
+    
+    ' Verifica se um cliente foi selecionado
+    If lstResultados.ListIndex < 0 Then
+        MsgBox "Selecione um cliente para alterar.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Obtém o ID do cliente selecionado
+    clienteID = lstResultados.List(lstResultados.ListIndex, 0)
+    
+    Set ws = ThisWorkbook.Sheets("CLIENTES")
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Formata o telefone com apóstrofo no início
+    telefoneFormatado = "'" & txtTelefone.Value
+    
+    ' Procura o cliente na planilha e atualiza os dados
+    For i = 2 To ultimaLinha
+        If ws.Cells(i, 1).Value = clienteID Then
+            ' Atualiza apenas os campos permitidos
+            ws.Cells(i, 2).Value = UCase(txtNomeCliente.Value) ' Nome do Cliente em maiúsculas
+            ws.Cells(i, 3).Value = FormatarPrimeiraLetraMaiuscula(txtPessoaContato) ' Pessoa de Contato
+            ws.Cells(i, 4).Value = FormatarPrimeiraLetraMaiuscula(txtEndereco) ' Endereço
+            ws.Cells(i, 5).Value = FormatarPrimeiraLetraMaiuscula(txtCidade) ' Cidade
+            ws.Cells(i, 6).Value = UCase(txtEstado.Value) ' Estado em maiúsculas
+            ws.Cells(i, 7).Value = telefoneFormatado ' Telefone formatado
+            ws.Cells(i, 8).Value = LCase(txtEmail.Value) ' Email em minúsculas
+            MsgBox "Informações do cliente alteradas com sucesso.", vbInformation
+            Exit Sub
+        End If
+    Next i
+    
+    MsgBox "Erro ao alterar o cliente. Cliente não encontrado.", vbCritical
+End Sub
+
+Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As String
+    Dim texto As String
+    Dim palavras() As String
+    Dim i As Integer
+    Dim novoTexto As String
+    
+    texto = txt.Text
+    palavras = Split(texto, " ")
+    
+    For i = 0 To UBound(palavras)
+        If Len(palavras(i)) > 0 Then
+            palavras(i) = UCase(Left(palavras(i), 1)) & LCase(Mid(palavras(i), 2))
+        End If
+    Next i
+    
+    novoTexto = Join(palavras, " ")
+    FormatarPrimeiraLetraMaiuscula = novoTexto
+End Function
+
