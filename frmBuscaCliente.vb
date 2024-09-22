@@ -301,6 +301,9 @@ Private Sub btnCriarNovaProposta_Click()
     Dim numeroProposta As Long
     Dim clienteID As String
     Dim nomeCliente As String
+    Dim pessoaContato As String
+    Dim cidade As String
+    Dim estado As String
     
     ' Verifica se um cliente foi selecionado
     If lstResultados.ListIndex < 0 Then
@@ -308,11 +311,12 @@ Private Sub btnCriarNovaProposta_Click()
         Exit Sub
     End If
     
-    ' Obtém o ID do cliente selecionado
+    ' Obtém os dados do cliente selecionado
     clienteID = lstResultados.List(lstResultados.ListIndex, 0)
-    
-    ' Obtém o nome do cliente selecionado
     nomeCliente = lstResultados.List(lstResultados.ListIndex, 1)
+    pessoaContato = lstResultados.List(lstResultados.ListIndex, 2)
+    cidade = lstResultados.List(lstResultados.ListIndex, 3)
+    estado = lstResultados.List(lstResultados.ListIndex, 4)
     
     ' Define a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
@@ -331,6 +335,19 @@ Private Sub btnCriarNovaProposta_Click()
     MsgBox "Nova proposta criada para o cliente: " & vbCrLf & _
             nomeCliente & vbCrLf & _
            "Número da Proposta: " & Format(numeroProposta, "0000"), vbInformation
+    
+    ' Preenche o formulário frmProposta com os dados do cliente e o número da proposta
+    With frmProposta
+        .txtID.Value = clienteID
+        .txtNomeCliente.Value = nomeCliente
+        .txtPessoaContato.Value = pessoaContato
+        .txtCidade.Value = cidade
+        .txtEstado.Value = estado
+        .txtProposta.Value = Format(numeroProposta, "0000") ' Preenche o número da proposta
+        .Show
+    End With
+
+    ' Fecha o formulário atual
     Unload Me
 End Sub
 
