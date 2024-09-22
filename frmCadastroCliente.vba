@@ -60,16 +60,48 @@ End Sub
 Private Function GerarNovoID(nomeCliente As String, ultimaLinha As Long) As String
     Dim prefixo As String
     Dim numero As Long
-    
-    ' Pega os dois primeiros caracteres do nome do cliente e transforma em maiúsculas
-    prefixo = UCase(Left(nomeCliente, 2))
-    
+    Dim idExistente As Boolean
+    Dim novoID As String
+    Dim rng As Range
+    Dim caracteres As String
+    Dim i As Integer
+
+    ' Define a sequência de caracteres para o prefixo aleatório
+    caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
     ' Gera o número sequencial
     numero = ultimaLinha
+
+    ' Verifica se o ID já existe
+    Do
+        ' Pega os dois primeiros caracteres do nome do cliente e transforma em maiúsculas
+        ' ou gera um prefixo aleatório
+        If Len(nomeCliente) >= 2 Then
+            prefixo = UCase(Left(nomeCliente, 2))
+        Else
+            prefixo = ""
+        End If
+        
+        ' Se o prefixo for vazio ou o ID já existir, gera um prefixo aleatório
+        If prefixo = "" Or idExistente Then
+            prefixo = ""
+            For i = 1 To 2
+                prefixo = prefixo & Mid(caracteres, Int((Len(caracteres) * Rnd) + 1), 1)
+            Next i
+        End If
+
+        ' Formata o ID (prefixo + número de 5 dígitos)
+        novoID = prefixo & Format(numero, "00000")
+        
+        ' Verifica se o ID já existe na coluna A
+        Set rng = ThisWorkbook.Sheets("CLIENTES").Columns("A").Find(What:=novoID, LookIn:=xlValues, LookAt:=xlWhole)
+        idExistente = Not rng Is Nothing
+    Loop While idExistente
     
-    ' Formata o ID (prefixo + número de 5 dígitos)
-    GerarNovoID = prefixo & Format(numero, "00000")
+    GerarNovoID = novoID
 End Function
+
+
 
 Private Sub txtNomeCliente_Change()
     txtNomeCliente.Text = UCase(txtNomeCliente.Text)
@@ -150,3 +182,5 @@ Private Sub LimparFormulario()
     ' Desabilita o botão Salvar após limpar o formulário
     ValidarCamposObrigatorios
 End Sub
+
+
