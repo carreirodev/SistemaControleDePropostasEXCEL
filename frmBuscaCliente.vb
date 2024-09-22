@@ -138,3 +138,31 @@ Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As Strin
     FormatarPrimeiraLetraMaiuscula = novoTexto
 End Function
 
+
+Private Sub btnFechar_Click()
+    ' Fecha o formulário sem nenhuma ação
+    Unload Me
+End Sub
+
+Private Sub btnLimpar_Click()
+    ' Limpa todos os campos do formulário
+    LimparFormulario
+End Sub
+
+Private Sub LimparFormulario()
+    ' Limpa todos os campos do formulário
+    txtID.Value = ""
+    txtNomeCliente.Value = ""
+    txtPessoaContato.Value = ""
+    txtEndereco.Value = ""
+    txtCidade.Value = ""
+    txtEstado.Value = ""
+    txtTelefone.Value = ""
+    txtEmail.Value = ""
+    lstResultados.Clear
+    
+    ' Coloca o foco no primeiro campo
+    txtNomeCliente.SetFocus
+
+End Sub
+
