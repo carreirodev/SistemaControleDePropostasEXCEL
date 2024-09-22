@@ -136,7 +136,6 @@ End Sub
 
 Private Sub LimparFormulario()
     ' Limpa todos os campos do formulário
-    txtID.Value = ""
     txtNomeCliente.Value = ""
     txtPessoaContato.Value = ""
     txtEndereco.Value = ""
@@ -144,8 +143,10 @@ Private Sub LimparFormulario()
     txtEstado.Value = ""
     txtTelefone.Value = ""
     txtEmail.Value = ""
-    lstResultados.Clear
     
     ' Coloca o foco no primeiro campo
     txtNomeCliente.SetFocus
+
+    ' Desabilita o botão Salvar após limpar o formulário
+    ValidarCamposObrigatorios
 End Sub
