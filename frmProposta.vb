@@ -51,3 +51,14 @@ Private Sub btnBuscaCliente_Click()
 End Sub
 
 
+Private Sub lstCliente_Click()
+    ' Verifica se algum item está selecionado
+    If Me.lstCliente.ListIndex <> -1 Then
+        ' Preenche os campos com as informações do cliente selecionado
+        Me.txtID.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 0) ' ID
+        Me.txtNomeCliente.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 1) ' Nome
+        Me.txtPessoaContato.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 2) ' Contato
+        Me.txtCidade.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 3) ' Cidade
+        Me.txtEstado.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 4) ' Estado
+    End If
+End Sub
