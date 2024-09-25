@@ -5,6 +5,27 @@ Private Sub UserForm_Initialize()
         ' Definindo as larguras das colunas: ID, Nome, Contato, Cidade, Estado
         .ColumnWidths = "48;166;152;108;24"
     End With
+    
+    ' Desabilitar o botão Selecionar Cliente por padrão
+    Me.btnSelecionarCliente.Enabled = False
+End Sub
+
+Private Sub lstCliente_Click()
+    ' Verifica se algum item está selecionado
+    If Me.lstCliente.ListIndex <> -1 Then
+        ' Preenche os campos com as informações do cliente selecionado
+        Me.txtID.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 0) ' ID
+        Me.txtNomeCliente.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 1) ' Nome
+        Me.txtPessoaContato.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 2) ' Contato
+        Me.txtCidade.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 3) ' Cidade
+        Me.txtEstado.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 4) ' Estado
+        
+        ' Habilitar o botão Selecionar Cliente
+        Me.btnSelecionarCliente.Enabled = True
+    Else
+        ' Desabilitar o botão Selecionar Cliente se nenhum item estiver selecionado
+        Me.btnSelecionarCliente.Enabled = False
+    End If
 End Sub
 
 Private Sub btnBuscaCliente_Click()
@@ -50,15 +71,41 @@ Private Sub btnBuscaCliente_Click()
     End If
 End Sub
 
-
-Private Sub lstCliente_Click()
-    ' Verifica se algum item está selecionado
-    If Me.lstCliente.ListIndex <> -1 Then
-        ' Preenche os campos com as informações do cliente selecionado
-        Me.txtID.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 0) ' ID
-        Me.txtNomeCliente.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 1) ' Nome
-        Me.txtPessoaContato.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 2) ' Contato
-        Me.txtCidade.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 3) ' Cidade
-        Me.txtEstado.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 4) ' Estado
-    End If
+Private Sub btnSelecionarCliente_Click()
+    ' Desabilitar os campos para edição
+    Me.txtID.Enabled = False
+    Me.txtNomeCliente.Enabled = False
+    Me.txtPessoaContato.Enabled = False
+    Me.txtCidade.Enabled = False
+    Me.txtEstado.Enabled = False
+    
+    ' Desabilitar a ListBox para impedir novas seleções
+    Me.lstCliente.Enabled = False
 End Sub
+
+Private Sub btnLimparCliente_Click()
+    ' Limpar os campos
+    Me.txtID.Value = ""
+    Me.txtNomeCliente.Value = ""
+    Me.txtPessoaContato.Value = ""
+    Me.txtCidade.Value = ""
+    Me.txtEstado.Value = ""
+    lstCliente.Clear
+    
+    ' Reabilitar os campos txtID e txtNomeCliente para edição
+    Me.txtID.Enabled = True
+    Me.txtNomeCliente.Enabled = True
+    
+    ' Desabilitar os outros campos
+    Me.txtPessoaContato.Enabled = False
+    Me.txtCidade.Enabled = False
+    Me.txtEstado.Enabled = False
+    
+    ' Desabilitar o botão Selecionar Cliente
+    Me.btnSelecionarCliente.Enabled = False
+    
+    ' Reabilitar a ListBox para permitir novas seleções
+    Me.lstCliente.Enabled = True
+End Sub
+
+
