@@ -295,81 +295,82 @@ End Sub
 'VERSAO 3.5
 
 
-Private Sub btnCriarNovaProposta_Click()
-    Dim wsPropostas As Worksheet
-    Dim ultimaLinhaProposta As Long
-    Dim numeroProposta As Long
-    Dim clienteID As String
-    Dim nomeCliente As String
-    Dim pessoaContato As String
-    Dim cidade As String
-    Dim estado As String
-    
-    ' Verifica se um cliente foi selecionado
-    If lstResultados.ListIndex < 0 Then
-        MsgBox "Selecione um cliente para criar uma nova proposta.", vbExclamation
-        Exit Sub
-    End If
-    
-    ' Obtém os dados do cliente selecionado
-    clienteID = lstResultados.List(lstResultados.ListIndex, 0)
-    nomeCliente = lstResultados.List(lstResultados.ListIndex, 1)
-    pessoaContato = lstResultados.List(lstResultados.ListIndex, 2)
-    cidade = lstResultados.List(lstResultados.ListIndex, 3)
-    estado = lstResultados.List(lstResultados.ListIndex, 4)
-    
-    ' Define a planilha de propostas
-    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    
-    ' Gera um número de proposta único
-    numeroProposta = GerarNumeroPropostaUnico(wsPropostas)
-    
-    ' Adiciona um novo registro na planilha "ListaDePropostas"
-    With wsPropostas
-        ultimaLinhaProposta = .Cells(.Rows.Count, 1).End(xlUp).Row + 1
-        .Cells(ultimaLinhaProposta, 1).Value = Format(numeroProposta, "0000") ' Número da proposta com 4 dígitos
-        .Cells(ultimaLinhaProposta, 2).Value = clienteID ' ID do cliente
-    End With
-    
-    ' Exibe uma mensagem ao usuário com o número da proposta e o nome do cliente
-    MsgBox "Nova proposta criada para o cliente: " & vbCrLf & _
-            nomeCliente & vbCrLf & _
-           "Número da Proposta: " & Format(numeroProposta, "0000"), vbInformation
-    
-    ' Preenche o formulário frmProposta com os dados do cliente e o número da proposta
-    With frmProposta
-        .txtID.Value = clienteID
-        .txtNomeCliente.Value = nomeCliente
-        .txtPessoaContato.Value = pessoaContato
-        .txtCidade.Value = cidade
-        .txtEstado.Value = estado
-        .txtProposta.Value = Format(numeroProposta, "0000") ' Preenche o número da proposta
-        .Show
-    End With
-
-    ' Fecha o formulário atual
-    Unload Me
-End Sub
-
-
-
-
-
-Private Function GerarNumeroPropostaUnico(ws As Worksheet) As Long
-    Dim ultimaLinha As Long
-    Dim i As Long
-    Dim maiorNumero As Long
-    Dim numeroAtual As Long
-    
-    ultimaLinha = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
-    maiorNumero = 0
-    
-    For i = 2 To ultimaLinha ' Assume que a linha 1 é o cabeçalho
-        numeroAtual = Val(ws.Cells(i, 1).Value)
-        If numeroAtual > maiorNumero Then
-            maiorNumero = numeroAtual
-        End If
-    Next i
-    
-    GerarNumeroPropostaUnico = maiorNumero + 1
-End Function
+'Private Sub btnCriarNovaProposta_Click()
+'    Dim wsPropostas As Worksheet
+'    Dim ultimaLinhaProposta As Long
+'    Dim numeroProposta As Long
+'    Dim clienteID As String
+'    Dim nomeCliente As String
+'    Dim pessoaContato As String
+'    Dim cidade As String
+'    Dim estado As String
+'    
+'    ' Verifica se um cliente foi selecionado
+'    If lstResultados.ListIndex < 0 Then
+'        MsgBox "Selecione um cliente para criar uma nova proposta.", vbExclamation
+'        Exit Sub
+'    End If
+'    
+'    ' Obtém os dados do cliente selecionado
+'    clienteID = lstResultados.List(lstResultados.ListIndex, 0)
+'    nomeCliente = lstResultados.List(lstResultados.ListIndex, 1)
+'    pessoaContato = lstResultados.List(lstResultados.ListIndex, 2)
+'    cidade = lstResultados.List(lstResultados.ListIndex, 3)
+'    estado = lstResultados.List(lstResultados.ListIndex, 4)
+'    
+'    ' Define a planilha de propostas
+'    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+'    
+'    ' Gera um número de proposta único
+'    numeroProposta = GerarNumeroPropostaUnico(wsPropostas)
+'    
+'    ' Adiciona um novo registro na planilha "ListaDePropostas"
+'    With wsPropostas
+'        ultimaLinhaProposta = .Cells(.Rows.Count, 1).End(xlUp).Row + 1
+'        .Cells(ultimaLinhaProposta, 1).Value = Format(numeroProposta, "0000") ' Número da proposta com 4 dígitos
+'        .Cells(ultimaLinhaProposta, 2).Value = clienteID ' ID do cliente
+'    End With
+'    
+'    ' Exibe uma mensagem ao usuário com o número da proposta e o nome do cliente
+'    MsgBox "Nova proposta criada para o cliente: " & vbCrLf & _
+'            nomeCliente & vbCrLf & _
+'           "Número da Proposta: " & Format(numeroProposta, "0000"), vbInformation
+'    
+'    ' Preenche o formulário frmProposta com os dados do cliente e o número da proposta
+'    With frmProposta
+'        .txtID.Value = clienteID
+'        .txtNomeCliente.Value = nomeCliente
+'        .txtPessoaContato.Value = pessoaContato
+'        .txtCidade.Value = cidade
+'        .txtEstado.Value = estado
+'        .txtProposta.Value = Format(numeroProposta, "0000") ' Preenche o número da proposta
+'        .Show
+'    End With
+'
+'    ' Fecha o formulário atual
+'    Unload Me
+'End Sub
+'
+'
+'
+'
+'
+'Private Function GerarNumeroPropostaUnico(ws As Worksheet) As Long
+'    Dim ultimaLinha As Long
+'    Dim i As Long
+'    Dim maiorNumero As Long
+'    Dim numeroAtual As Long
+'    
+'    ultimaLinha = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+'    maiorNumero = 0
+'    
+'    For i = 2 To ultimaLinha ' Assume que a linha 1 é o cabeçalho
+'        numeroAtual = Val(ws.Cells(i, 1).Value)
+'        If numeroAtual > maiorNumero Then
+'            maiorNumero = numeroAtual
+'        End If
+'    Next i
+'    
+'    GerarNumeroPropostaUnico = maiorNumero + 1
+'End Function
+'
