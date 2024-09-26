@@ -159,3 +159,40 @@ Private Sub CriarNovaProposta()
     ' Preencher o número da proposta no campo txtNrProposta
     Me.txtNrProposta.Value = novoNumero
 End Sub
+
+
+Private Sub btnBuscarProduto_Click()
+    Dim wsPrecos As Worksheet
+    Dim rngPrecos As Range
+    Dim cel As Range
+    Dim codigoBusca As String
+    Dim encontrado As Boolean
+    
+    ' Definindo a planilha de preços
+    Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    ' Definindo o intervalo de dados dos produtos
+    Set rngPrecos = wsPrecos.ListObjects("TabPrecos").DataBodyRange
+    
+    ' Obtendo o código do produto
+    codigoBusca = Trim(Me.txtCodProduto.Value)
+    
+    ' Iterando sobre cada produto
+    For Each cel In rngPrecos.Columns(1).Cells ' Coluna Produto
+        ' Verificando se o código corresponde
+        If cel.Value = codigoBusca Then
+            ' Preenchendo os campos com as informações do produto
+            Me.txtDescricao.Value = cel.Offset(0, 1).Value ' Descrição
+            Me.txtPreco.Value = cel.Offset(0, 2).Value ' Preço
+            
+            encontrado = True
+            Exit For
+        End If
+    Next cel
+    
+    ' Mensagem caso o produto não seja encontrado
+    If Not encontrado Then
+        MsgBox "Produto não encontrado.", vbInformation
+    End If
+End Sub
+
+
