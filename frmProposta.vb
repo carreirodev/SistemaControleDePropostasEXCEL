@@ -3,7 +3,7 @@ Private Sub UserForm_Initialize()
     With Me.lstCliente
         .ColumnCount = 5
         ' Definindo as larguras das colunas: ID, Nome, Contato, Cidade, Estado
-        .ColumnWidths = "48;166;152;108;24"
+        .ColumnWidths = "48;140;140;108;24"
     End With
     
     ' Desabilitar o botão Selecionar Cliente por padrão
@@ -71,17 +71,7 @@ Private Sub btnBuscaCliente_Click()
     End If
 End Sub
 
-Private Sub btnSelecionarCliente_Click()
-    ' Desabilitar os campos para edição
-    Me.txtID.Enabled = False
-    Me.txtNomeCliente.Enabled = False
-    Me.txtPessoaContato.Enabled = False
-    Me.txtCidade.Enabled = False
-    Me.txtEstado.Enabled = False
-    
-    ' Desabilitar a ListBox para impedir novas seleções
-    Me.lstCliente.Enabled = False
-End Sub
+
 
 Private Sub btnLimparCliente_Click()
     ' Limpar os campos
@@ -112,3 +102,60 @@ Private Sub btnLimparCliente_Click()
 End Sub
 
 
+Private Sub btnSelecionarCliente_Click()
+    ' Desabilitar os campos para edição
+    Me.txtID.Enabled = False
+    Me.txtNomeCliente.Enabled = False
+    Me.txtPessoaContato.Enabled = False
+    Me.txtCidade.Enabled = False
+    Me.txtEstado.Enabled = False
+    
+    ' Desabilitar a ListBox para impedir novas seleções
+    Me.lstCliente.Enabled = False
+
+    ' Desabilitar o botão Limpar e Buscar Cliente
+    Me.btnLimparCliente.Enabled = False
+    Me.btnBuscaCliente.Enabled = False
+
+    ' Gerar novo número de proposta e registrar na planilha
+    CriarNovaProposta
+End Sub
+
+Private Sub CriarNovaProposta()
+    Dim wsPropostas As Worksheet
+    Dim numeroBase As Long
+    Dim novoNumero As String
+    Dim estadoCliente As String
+    Dim ultimaLinha As Long
+
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obter o último número base da proposta da célula N1
+    numeroBase = wsPropostas.Range("N1").Value
+    
+    ' Incrementar o número base
+    numeroBase = numeroBase + 1
+    
+    ' Atualizar a célula N1 com o novo número base
+    wsPropostas.Range("N1").Value = numeroBase
+    
+    ' Formatar o número da proposta com quatro dígitos
+    novoNumero = Format(numeroBase, "0000")
+    
+    ' Obter o estado do cliente
+    estadoCliente = Me.txtEstado.Value
+    
+    ' Concatenar o número formatado com o estado do cliente
+    novoNumero = novoNumero & "-" & estadoCliente
+    
+    ' Encontrar a próxima linha vazia para registrar a nova proposta
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+    
+    ' Preencher a nova linha na planilha de propostas
+    wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
+    wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
+    
+    ' Preencher o número da proposta no campo txtNrProposta
+    Me.txtNrProposta.Value = novoNumero
+End Sub
