@@ -182,7 +182,7 @@ Private Sub btnBuscarProduto_Click()
         If cel.Value = codigoBusca Then
             ' Preenchendo os campos com as informações do produto
             Me.txtDescricao.Value = cel.Offset(0, 1).Value ' Descrição
-            Me.txtPreco.Value = cel.Offset(0, 2).Value ' Preço
+            Me.txtPreco.Value = Format(cel.Offset(0, 2).Value, "#,##0.00") ' Preço
             
             encontrado = True
             Exit For
@@ -194,5 +194,6 @@ Private Sub btnBuscarProduto_Click()
         MsgBox "Produto não encontrado.", vbInformation
     End If
 End Sub
+
 
 
