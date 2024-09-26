@@ -106,6 +106,9 @@ Private Sub btnLimparCliente_Click()
     
     ' Reabilitar a ListBox para permitir novas seleções
     Me.lstCliente.Enabled = True
+
+    ' Foco no nome
+        txtNomeCliente.SetFocus
 End Sub
 
 
