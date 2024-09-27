@@ -53,7 +53,8 @@ Private Sub btnBuscaCliente_Click()
         ' Verificando se o ID ou Nome contém o texto buscado
         If (idBusca <> "" And InStr(1, cel.Value, idBusca, vbTextCompare) > 0) Or _
            (nomeBusca <> "" And InStr(1, cel.Offset(0, 1).Value, nomeBusca, vbTextCompare) > 0) Then
-           
+
+
             ' Adicionando o cliente à ListBox
             Me.lstCliente.AddItem cel.Value
             Me.lstCliente.List(Me.lstCliente.ListCount - 1, 1) = cel.Offset(0, 1).Value ' Nome
@@ -121,44 +122,46 @@ Private Sub btnSelecionarCliente_Click()
     CriarNovaProposta
 End Sub
 
-Private Sub CriarNovaProposta()
-    Dim wsPropostas As Worksheet
-    Dim numeroBase As Long
-    Dim novoNumero As String
-    Dim estadoCliente As String
-    Dim ultimaLinha As Long
+   Private Sub CriarNovaProposta()
+       Dim wsPropostas As Worksheet
+       Dim numeroBase As Long
+       Dim novoNumero As String
+       Dim estadoCliente As String
+       Dim ultimaLinha As Long
 
-    ' Definindo a planilha de propostas
-    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    
-    ' Obter o último número base da proposta da célula N1
-    numeroBase = wsPropostas.Range("N1").Value
-    
-    ' Incrementar o número base
-    numeroBase = numeroBase + 1
-    
-    ' Atualizar a célula N1 com o novo número base
-    wsPropostas.Range("N1").Value = numeroBase
-    
-    ' Formatar o número da proposta com quatro dígitos
-    novoNumero = Format(numeroBase, "0000")
-    
-    ' Obter o estado do cliente
-    estadoCliente = Me.txtEstado.Value
-    
-    ' Concatenar o número formatado com o estado do cliente
-    novoNumero = novoNumero & "-" & estadoCliente
-    
-    ' Encontrar a próxima linha vazia para registrar a nova proposta
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
-    
-    ' Preencher a nova linha na planilha de propostas
-    wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
-    wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
-    
-    ' Preencher o número da proposta no campo txtNrProposta
-    Me.txtNrProposta.Value = novoNumero
-End Sub
+       ' Definindo a planilha de propostas
+       Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+       
+       ' Obter o último número base da proposta da célula N1
+       numeroBase = wsPropostas.Range("N1").Value
+       
+       ' Incrementar o número base
+       numeroBase = numeroBase + 1
+       
+       ' Atualizar a célula N1 com o novo número base
+       wsPropostas.Range("N1").Value = numeroBase
+       
+       ' Formatar o número da proposta com quatro dígitos
+       novoNumero = Format(numeroBase, "0000")
+       
+       ' Obter o estado do cliente
+       estadoCliente = Me.txtEstado.Value
+       
+       ' Concatenar o número formatado com o estado do cliente
+       novoNumero = novoNumero & "-" & estadoCliente
+       
+       ' Encontrar a próxima linha vazia para registrar a nova proposta
+       ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+       
+       ' Preencher a nova linha na planilha de propostas
+       wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
+       wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
+       wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
+       
+       ' Preencher o número da proposta no campo txtNrProposta
+       Me.txtNrProposta.Value = novoNumero
+   End Sub
+
 
 
 Private Sub btnBuscarProduto_Click()
@@ -203,81 +206,83 @@ End Sub
 
 
 
-Private Sub btnAdicionarProduto_Click()
-    ' Verificar se o número da proposta está preenchido
-    If Me.txtNrProposta.Value = "" Then
-        MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
-        Exit Sub
-    End If
+   Private Sub btnAdicionarProduto_Click()
+       ' Verificar se o número da proposta está preenchido
+       If Me.txtNrProposta.Value = "" Then
+           MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
+           Exit Sub
+       End If
 
-    ' Verificar se o cliente foi selecionado
-    If Me.txtID.Value = "" Or Me.txtID.Enabled = True Then
-        MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
-        Exit Sub
-    End If
+       ' Verificar se o cliente foi selecionado
+       If Me.txtID.Value = "" Or Me.txtID.Enabled = True Then
+           MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
+           Exit Sub
+       End If
 
-    Dim wsPropostas As Worksheet
-    Dim ultimaLinha As Long
-    Dim numeroProposta As String
-    Dim cliente As String
-    Dim item As Long
-    Dim codigo As String
-    Dim descricao As String
-    Dim precoUnitario As Double
-    Dim quantidade As Long
-    Dim subtotal As Double
-    Dim linhaProposta As Long
+       Dim wsPropostas As Worksheet
+       Dim ultimaLinha As Long
+       Dim numeroProposta As String
+       Dim cliente As String
+       Dim item As Long
+       Dim codigo As String
+       Dim descricao As String
+       Dim precoUnitario As Double
+       Dim quantidade As Long
+       Dim subtotal As Double
+       Dim linhaProposta As Long
 
-    ' Definindo a planilha de propostas
-    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    
-    ' Obtendo o número da proposta e cliente selecionado
-    numeroProposta = Me.txtNrProposta.Value
-    cliente = Me.txtID.Value
-    
-    ' Obtendo os valores dos campos
-    item = CLng(Me.txtItem.Value)
-    codigo = Me.txtCodProduto.Value
-    descricao = Me.txtDescricao.Value
-    precoUnitario = CDbl(Me.txtPreco.Value)
-    quantidade = CLng(Me.txtQTD.Value)
-    subtotal = precoUnitario * quantidade
-    
-    ' Encontrar a linha da proposta atual
-    linhaProposta = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole).Row
-    
-    ' Verificar se a linha da proposta já tem um item
-    If wsPropostas.Cells(linhaProposta, 3).Value = "" Then
-        ' Preencher a linha existente na planilha de propostas
-        wsPropostas.Cells(linhaProposta, 3).Value = item ' Coluna ITEM
-        wsPropostas.Cells(linhaProposta, 4).Value = codigo ' Coluna CODIGO
-        wsPropostas.Cells(linhaProposta, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
-        wsPropostas.Cells(linhaProposta, 6).Value = quantidade ' Coluna QUANTIDADE
-        wsPropostas.Cells(linhaProposta, 7).Value = subtotal ' Coluna SUBTOTAL
-    Else
-        ' Encontrar a próxima linha vazia para registrar o novo item da proposta
-        ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
-        
-        ' Preencher a nova linha na planilha de propostas
-        wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
-        wsPropostas.Cells(ultimaLinha, 2).Value = cliente ' Coluna CLIENTE
-        wsPropostas.Cells(ultimaLinha, 3).Value = item ' Coluna ITEM
-        wsPropostas.Cells(ultimaLinha, 4).Value = codigo ' Coluna CODIGO
-        wsPropostas.Cells(ultimaLinha, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
-        wsPropostas.Cells(ultimaLinha, 6).Value = quantidade ' Coluna QUANTIDADE
-        wsPropostas.Cells(ultimaLinha, 7).Value = subtotal ' Coluna SUBTOTAL
-    End If
-    
-    ' Limpar os campos de entrada
-    Me.txtCodProduto.Value = ""
-    Me.txtDescricao.Value = ""
-    Me.txtPreco.Value = ""
-    Me.txtQTD.Value = ""
-    Me.txtItem.Value = ""
-    
-    ' Reposicionar o cursor para o campo txtCodProduto
-    Me.txtCodProduto.SetFocus
-    
-    ' Incrementar o número do item para o próximo produto
-    Me.txtItem.Value = item + 1
-End Sub
+       ' Definindo a planilha de propostas
+       Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+       
+       ' Obtendo o número da proposta e cliente selecionado
+       numeroProposta = Me.txtNrProposta.Value
+       cliente = Me.txtID.Value
+       
+       ' Obtendo os valores dos campos
+       item = CLng(Me.txtItem.Value)
+       codigo = Me.txtCodProduto.Value
+       descricao = Me.txtDescricao.Value
+       precoUnitario = CDbl(Me.txtPreco.Value)
+       quantidade = CLng(Me.txtQTD.Value)
+       subtotal = precoUnitario * quantidade
+       
+       ' Encontrar a linha da proposta atual
+       linhaProposta = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole).Row
+       
+       ' Verificar se a linha da proposta já tem um item
+       If wsPropostas.Cells(linhaProposta, 3).Value = "" Then
+           ' Preencher a linha existente na planilha de propostas
+           wsPropostas.Cells(linhaProposta, 3).Value = item ' Coluna ITEM
+           wsPropostas.Cells(linhaProposta, 4).Value = codigo ' Coluna CODIGO
+           wsPropostas.Cells(linhaProposta, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
+           wsPropostas.Cells(linhaProposta, 6).Value = quantidade ' Coluna QUANTIDADE
+           wsPropostas.Cells(linhaProposta, 7).Value = subtotal ' Coluna SUBTOTAL
+           wsPropostas.Cells(linhaProposta, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
+       Else
+           ' Encontrar a próxima linha vazia para registrar o novo item da proposta
+           ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+           
+           ' Preencher a nova linha na planilha de propostas
+           wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
+           wsPropostas.Cells(ultimaLinha, 2).Value = cliente ' Coluna CLIENTE
+           wsPropostas.Cells(ultimaLinha, 3).Value = item ' Coluna ITEM
+           wsPropostas.Cells(ultimaLinha, 4).Value = codigo ' Coluna CODIGO
+           wsPropostas.Cells(ultimaLinha, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
+           wsPropostas.Cells(ultimaLinha, 6).Value = quantidade ' Coluna QUANTIDADE
+           wsPropostas.Cells(ultimaLinha, 7).Value = subtotal ' Coluna SUBTOTAL
+           wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
+       End If
+       
+       ' Limpar os campos de entrada
+       Me.txtCodProduto.Value = ""
+       Me.txtDescricao.Value = ""
+       Me.txtPreco.Value = ""
+       Me.txtQTD.Value = ""
+       Me.txtItem.Value = ""
+       
+       ' Reposicionar o cursor para o campo txtCodProduto
+       Me.txtCodProduto.SetFocus
+       
+       ' Incrementar o número do item para o próximo produto
+       Me.txtItem.Value = item + 1
+   End Sub
