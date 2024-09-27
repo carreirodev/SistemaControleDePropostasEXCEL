@@ -204,9 +204,15 @@ End Sub
 
 
 Private Sub btnAdicionarProduto_Click()
+    ' Verificar se o número da proposta está preenchido
+    If Me.txtNrProposta.Value = "" Then
+        MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
+        Exit Sub
+    End If
+
     ' Verificar se o cliente foi selecionado
     If Me.txtID.Value = "" Or Me.txtID.Enabled = True Then
-        MsgBox "Por favor, selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
+        MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
         Exit Sub
     End If
 
