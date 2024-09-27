@@ -216,6 +216,7 @@ Private Sub btnAdicionarProduto_Click()
         MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
         Exit Sub
     End If
+    
     Dim wsPropostas As Worksheet
     Dim ultimaLinha As Long
     Dim numeroProposta As String
@@ -227,6 +228,8 @@ Private Sub btnAdicionarProduto_Click()
     Dim quantidade As Long
     Dim subtotal As Double
     Dim linhaProposta As Long
+    Dim cel As Range
+    
     ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     
@@ -242,10 +245,17 @@ Private Sub btnAdicionarProduto_Click()
     quantidade = CLng(Me.txtQTD.Value)
     subtotal = precoUnitario * quantidade
     
-    ' Encontrar a linha da proposta atual
-    linhaProposta = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole).Row
+    ' Encontrar a linha da proposta atual (primeira ocorrência na coluna 1)
+    Set cel = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
+    If Not cel Is Nothing Then
+        linhaProposta = cel.Row
+    Else
+        ' Se a proposta não for encontrada, algo está errado
+        MsgBox "Erro: Proposta não encontrada.", vbExclamation
+        Exit Sub
+    End If
     
-    ' Verificar se a linha da proposta já tem um item
+    ' Adicionar ou atualizar o item na proposta
     If wsPropostas.Cells(linhaProposta, 3).Value = "" Then
         ' Preencher a linha existente na planilha de propostas
         wsPropostas.Cells(linhaProposta, 3).Value = item ' Coluna ITEM
@@ -253,6 +263,7 @@ Private Sub btnAdicionarProduto_Click()
         wsPropostas.Cells(linhaProposta, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
         wsPropostas.Cells(linhaProposta, 6).Value = quantidade ' Coluna QUANTIDADE
         wsPropostas.Cells(linhaProposta, 7).Value = subtotal ' Coluna SUBTOTAL
+        ' Atualizar a referência apenas na primeira linha da proposta
         wsPropostas.Cells(linhaProposta, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
     Else
         ' Encontrar a próxima linha vazia para registrar o novo item da proposta
@@ -266,7 +277,6 @@ Private Sub btnAdicionarProduto_Click()
         wsPropostas.Cells(ultimaLinha, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
         wsPropostas.Cells(ultimaLinha, 6).Value = quantidade ' Coluna QUANTIDADE
         wsPropostas.Cells(ultimaLinha, 7).Value = subtotal ' Coluna SUBTOTAL
-        wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
     End If
     
     ' Limpar os campos de entrada
@@ -282,3 +292,5 @@ Private Sub btnAdicionarProduto_Click()
     ' Incrementar o número do item para o próximo produto
     Me.txtItem.Value = item + 1
 End Sub
+
+
