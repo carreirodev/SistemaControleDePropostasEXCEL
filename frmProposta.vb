@@ -204,6 +204,12 @@ End Sub
 
 
 Private Sub btnAdicionarProduto_Click()
+    ' Verificar se o cliente foi selecionado
+    If Me.txtID.Value = "" Or Me.txtID.Enabled = True Then
+        MsgBox "Por favor, selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
+        Exit Sub
+    End If
+
     Dim wsPropostas As Worksheet
     Dim ultimaLinha As Long
     Dim numeroProposta As String
