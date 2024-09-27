@@ -118,6 +118,7 @@ Private Sub btnSelecionarCliente_Click()
     Me.btnBuscaCliente.Enabled = False
 
     ' Gerar novo número de proposta e registrar na planilha
+    frmProposta.Enabled = False
     CriarNovaProposta
 End Sub
 
@@ -183,9 +184,12 @@ Private Sub btnBuscarProduto_Click()
             ' Preenchendo os campos com as informações do produto
             Me.txtDescricao.Value = cel.Offset(0, 1).Value ' Descrição
             Me.txtPreco.Value = Format(cel.Offset(0, 2).Value, "#,##0.00") ' Preço
-            Me.txtQTD.Value = 1 ' Preencher quantidade com 1
-            Me.txtItem.Value = 1 ' Iniciar item com 1 se for o primeiro produto
             
+            ' Apenas definir txtQTD e txtItem se eles ainda não tiverem valor,
+            ' assim não redefinimos o item a cada busca de produto.
+            If Me.txtQTD.Value = "" Then Me.txtQTD.Value = 1 ' Preencher quantidade com 1
+            If Me.txtItem.Value = "" Then Me.txtItem.Value = 1 ' Iniciar item com 1 se for o primeiro produto
+
             encontrado = True
             Exit For
         End If
@@ -256,11 +260,11 @@ Private Sub btnAdicionarProduto_Click()
     Me.txtDescricao.Value = ""
     Me.txtPreco.Value = ""
     Me.txtQTD.Value = ""
-    Me.txtItem.Value = ""
-    
-    ' Reposicionar o cursor para o campo txtCodProduto
-    Me.txtCodProduto.SetFocus
+    Me.txtItem.Value = ""  ' Limpa o campo Item
     
     ' Incrementar o número do item para o próximo produto
     Me.txtItem.Value = item + 1
+    
+    ' Reposicionar o cursor para o campo txtCodProduto
+    Me.txtCodProduto.SetFocus
 End Sub
