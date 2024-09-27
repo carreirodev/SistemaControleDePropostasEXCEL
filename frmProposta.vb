@@ -184,7 +184,11 @@ Private Sub btnBuscarProduto_Click()
             Me.txtDescricao.Value = cel.Offset(0, 1).Value ' Descrição
             Me.txtPreco.Value = Format(cel.Offset(0, 2).Value, "#,##0.00") ' Preço
             Me.txtQTD.Value = 1 ' Preencher quantidade com 1
-            Me.txtItem.Value = 1 ' Iniciar item com 1 se for o primeiro produto
+            
+            ' Verificar se o campo txtItem está vazio e definir como 1 apenas se estiver
+            If Me.txtItem.Value = "" Then
+                Me.txtItem.Value = 1
+            End If
             
             encontrado = True
             Exit For
@@ -196,6 +200,7 @@ Private Sub btnBuscarProduto_Click()
         MsgBox "Produto não encontrado.", vbInformation
     End If
 End Sub
+
 
 
 Private Sub btnAdicionarProduto_Click()
