@@ -294,3 +294,38 @@ Private Sub btnAdicionarProduto_Click()
 End Sub
 
 
+Private Sub ValidarProduto()
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim produtoEncontrado As Boolean
+    Dim descricaoCorreta As Boolean
+    
+    ' Define a planilha "ListaDePrecos"
+    Set ws = ThisWorkbook.Sheets("ListaDePrecos")
+    
+    ' Procura o código do produto na tabela "TabPrecos"
+    Set rng = ws.Range("TabPrecos").Columns("A").Find(What:=Trim(txtCodProduto.Value), LookIn:=xlValues, LookAt:=xlWhole)
+    
+    ' Verifica se o produto foi encontrado
+    produtoEncontrado = Not rng Is Nothing
+    
+    ' Verifica se a descrição corresponde, somente se o produto foi encontrado
+    If produtoEncontrado Then
+        descricaoCorreta = (rng.Offset(0, 1).Value = Trim(txtDescricao.Value))
+    Else
+        descricaoCorreta = False
+    End If
+    
+    ' Habilita o botão apenas se o produto for encontrado e a descrição estiver correta
+    btnAdicionarProduto.Enabled = produtoEncontrado And descricaoCorreta
+End Sub
+
+
+
+Private Sub txtCodProduto_Change()
+    ValidarProduto
+End Sub
+
+Private Sub txtDescricao_Change()
+    ValidarProduto
+End Sub
