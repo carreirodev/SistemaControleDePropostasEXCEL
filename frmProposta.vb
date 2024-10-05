@@ -320,7 +320,10 @@ Private Sub btnAdicionarProduto_Click()
     
     ' Incrementar o número do item para o próximo produto
     Me.txtItem.Value = item + 1
+
+    AtualizarListaProdutos
 End Sub
+
 
 
 Private Sub ValidarProduto()
@@ -392,3 +395,78 @@ Private Sub btnAtualizarRef_Click()
 End Sub
 
 
+Private Sub AtualizarListaProdutos()
+    Dim wsPropostas As Worksheet
+    Dim wsPrecos As Worksheet
+    Dim numeroProposta As String
+    Dim ultimaLinha As Long
+    Dim linhaAtual As Long
+    Dim item As String
+    Dim codigo As String
+    Dim descricao As String
+    Dim quantidade As String
+    Dim precoUnitario As Double
+    Dim precoTotal As Double
+    Dim rngPreco As Range
+    
+    ' Definindo as planilhas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    
+    ' Obtendo o número da proposta atual
+    numeroProposta = Me.txtNrProposta.Value
+    
+    ' Limpar a ListBox antes de adicionar novos itens
+    Me.lstProdutosDaProposta.Clear
+    
+    ' Configurar larguras das colunas
+    Me.lstProdutosDaProposta.ColumnCount = 6
+    Me.lstProdutosDaProposta.ColumnWidths = "30;40;300;30;80;80" ' Ajuste conforme necessário
+    
+    ' Adicionar cabeçalho simulado
+    With Me.lstProdutosDaProposta
+        .AddItem "Item"
+        .List(.ListCount - 1, 1) = "Código"
+        .List(.ListCount - 1, 2) = "Descrição"
+        .List(.ListCount - 1, 3) = "Qtd"
+        .List(.ListCount - 1, 4) = "$ Unitário"
+        .List(.ListCount - 1, 5) = "$ Total"
+    End With
+    
+    ' Encontrar a última linha da planilha de propostas
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 3).End(xlUp).Row
+    
+    ' Iterar sobre as linhas da planilha para a proposta atual
+    For linhaAtual = 2 To ultimaLinha ' Começando em 2 para pular o cabeçalho
+        If wsPropostas.Cells(linhaAtual, 1).Value = numeroProposta Then
+            ' Obter os valores das colunas relevantes
+            item = wsPropostas.Cells(linhaAtual, 3).Value ' Coluna C - ITEM
+            codigo = wsPropostas.Cells(linhaAtual, 4).Value ' Coluna D - CODIGO
+            precoUnitario = wsPropostas.Cells(linhaAtual, 5).Value ' Coluna E - PRECO UNITARIO
+            quantidade = wsPropostas.Cells(linhaAtual, 6).Value ' Coluna F - QUANTIDADE
+            precoTotal = wsPropostas.Cells(linhaAtual, 7).Value ' Coluna G - TOTAL DO ITEM
+            
+            ' Buscar a descrição do produto na planilha de preços
+            Set rngPreco = wsPrecos.Range("A:A").Find(What:=codigo, LookIn:=xlValues, LookAt:=xlWhole)
+            If Not rngPreco Is Nothing Then
+                descricao = rngPreco.Offset(0, 1).Value ' Supondo que a descrição está na coluna B
+            Else
+                descricao = "Descrição não encontrada"
+            End If
+            
+            ' Adicionar o item à ListBox
+            With Me.lstProdutosDaProposta
+                .AddItem item
+                .List(.ListCount - 1, 1) = codigo
+                .List(.ListCount - 1, 2) = descricao
+                .List(.ListCount - 1, 3) = quantidade
+                .List(.ListCount - 1, 4) = Format(precoUnitario, "#,##0.00")
+                .List(.ListCount - 1, 5) = Format(precoTotal, "#,##0.00")
+            End With
+        End If
+    Next linhaAtual
+End Sub
+
+'#####################################
+
+'Analise o codigo acima
