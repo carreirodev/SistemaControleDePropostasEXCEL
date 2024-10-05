@@ -229,13 +229,15 @@ Private Sub btnAdicionarProduto_Click()
     Dim subtotal As Double
     Dim linhaProposta As Long
     Dim cel As Range
+    Dim referencia As String
     
     ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     
-    ' Obtendo o número da proposta e cliente selecionado
+    ' Obtendo o número da proposta, cliente selecionado e a referência
     numeroProposta = Me.txtNrProposta.Value
     cliente = Me.txtID.Value
+    referencia = Me.txtReferencia.Value
     
     ' Obtendo os valores dos campos
     item = CLng(Me.txtItem.Value)
@@ -264,7 +266,7 @@ Private Sub btnAdicionarProduto_Click()
         wsPropostas.Cells(linhaProposta, 6).Value = quantidade ' Coluna QUANTIDADE
         wsPropostas.Cells(linhaProposta, 7).Value = subtotal ' Coluna SUBTOTAL
         ' Atualizar a referência apenas na primeira linha da proposta
-        wsPropostas.Cells(linhaProposta, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
+        wsPropostas.Cells(linhaProposta, 8).Value = referencia ' Coluna REFERENCIA
     Else
         ' Encontrar a próxima linha vazia para registrar o novo item da proposta
         ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
@@ -277,6 +279,7 @@ Private Sub btnAdicionarProduto_Click()
         wsPropostas.Cells(ultimaLinha, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
         wsPropostas.Cells(ultimaLinha, 6).Value = quantidade ' Coluna QUANTIDADE
         wsPropostas.Cells(ultimaLinha, 7).Value = subtotal ' Coluna SUBTOTAL
+        wsPropostas.Cells(ultimaLinha, 8).Value = referencia ' Coluna REFERENCIA
     End If
     
     ' Limpar os campos de entrada
@@ -292,6 +295,7 @@ Private Sub btnAdicionarProduto_Click()
     ' Incrementar o número do item para o próximo produto
     Me.txtItem.Value = item + 1
 End Sub
+
 
 
 Private Sub ValidarProduto()
@@ -328,4 +332,36 @@ End Sub
 
 Private Sub txtDescricao_Change()
     ValidarProduto
+End Sub
+
+
+Private Sub btnAtualizarRef_Click()
+    Dim wsPropostas As Worksheet
+    Dim numeroProposta As String
+    Dim novaReferencia As String
+    Dim cel As Range
+    Dim primeiraOcorrencia As Range
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obtendo o número da proposta e a nova referência
+    numeroProposta = Me.txtNrProposta.Value
+    novaReferencia = Me.txtReferencia.Value
+    
+    ' Encontrar a primeira ocorrência da proposta
+    Set primeiraOcorrencia = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
+    
+    ' Verifica se a proposta foi encontrada
+    If Not primeiraOcorrencia Is Nothing Then
+        ' Iterar sobre cada linha da proposta
+        For Each cel In wsPropostas.Columns(1).Cells
+            If cel.Value = numeroProposta Then
+                ' Atualizar a coluna de referência
+                wsPropostas.Cells(cel.Row, 8).Value = novaReferencia ' Coluna REFERENCIA
+            End If
+        Next cel
+    Else
+        MsgBox "Proposta não encontrada.", vbExclamation
+    End If
 End Sub
