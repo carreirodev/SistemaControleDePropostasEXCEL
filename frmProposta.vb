@@ -122,45 +122,45 @@ Private Sub btnSelecionarCliente_Click()
     CriarNovaProposta
 End Sub
 
-   Private Sub CriarNovaProposta()
-       Dim wsPropostas As Worksheet
-       Dim numeroBase As Long
-       Dim novoNumero As String
-       Dim estadoCliente As String
-       Dim ultimaLinha As Long
 
-       ' Definindo a planilha de propostas
-       Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-       
-       ' Obter o último número base da proposta da célula N1
-       numeroBase = wsPropostas.Range("N1").Value
-       
-       ' Incrementar o número base
-       numeroBase = numeroBase + 1
-       
-       ' Atualizar a célula N1 com o novo número base
-       wsPropostas.Range("N1").Value = numeroBase
-       
-       ' Formatar o número da proposta com quatro dígitos
-       novoNumero = Format(numeroBase, "0000")
-       
-       ' Obter o estado do cliente
-       estadoCliente = Me.txtEstado.Value
-       
-       ' Concatenar o número formatado com o estado do cliente
-       novoNumero = novoNumero & "-" & estadoCliente
-       
-       ' Encontrar a próxima linha vazia para registrar a nova proposta
-       ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
-       
-       ' Preencher a nova linha na planilha de propostas
-       wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
-       wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
-       wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
-       
-       ' Preencher o número da proposta no campo txtNrProposta
-       Me.txtNrProposta.Value = novoNumero
-   End Sub
+Private Sub CriarNovaProposta()
+    Dim wsPropostas As Worksheet
+    Dim numeroBase As Long
+    Dim novoNumero As String
+    Dim estadoCliente As String
+    Dim ultimaLinha As Long
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obter o último número base da proposta da célula N1
+    numeroBase = wsPropostas.Range("N1").Value
+    
+    ' Incrementar o número base
+    numeroBase = numeroBase + 1
+    
+    ' Atualizar a célula N1 com o novo número base
+    wsPropostas.Range("N1").Value = numeroBase
+    
+    ' Formatar o número da proposta com quatro dígitos
+    novoNumero = Format(numeroBase, "0000")
+    
+    ' Obter o estado do cliente
+    estadoCliente = Me.txtEstado.Value
+    
+    ' Concatenar o número formatado com o estado do cliente
+    novoNumero = novoNumero & "-" & estadoCliente
+    
+    ' Encontrar a próxima linha vazia para registrar a nova proposta
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+    
+    ' Preencher a nova linha na planilha de propostas
+    wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
+    wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
+    wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
+    
+    ' Preencher o número da proposta no campo txtNrProposta
+    Me.txtNrProposta.Value = novoNumero
+End Sub
 
 
 
@@ -211,12 +211,38 @@ Private Sub btnAdicionarProduto_Click()
         MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
         Exit Sub
     End If
+    
     ' Verificar se o cliente foi selecionado
     If Me.txtID.Value = "" Or Me.txtID.Enabled = True Then
         MsgBox "Selecione um cliente antes de adicionar produtos à proposta.", vbExclamation
         Exit Sub
     End If
     
+    ' Verificar se o código do produto está preenchido
+    If Me.txtCodProduto.Value = "" Then
+        MsgBox "Insira o código do produto antes de adicionar à proposta.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Verificar se a descrição do produto está preenchida
+    If Me.txtDescricao.Value = "" Then
+        MsgBox "Insira a descrição do produto antes de adicionar à proposta.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Verificar se o preço do produto está preenchido
+    If Me.txtPreco.Value = "" Then
+        MsgBox "Insira o preço do produto antes de adicionar à proposta.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Verificar se a quantidade está preenchida
+    If Me.txtQTD.Value = "" Then
+        MsgBox "Insira a quantidade antes de adicionar à proposta.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Continuar com a adição do produto
     Dim wsPropostas As Worksheet
     Dim ultimaLinha As Long
     Dim numeroProposta As String
@@ -297,7 +323,6 @@ Private Sub btnAdicionarProduto_Click()
 End Sub
 
 
-
 Private Sub ValidarProduto()
     Dim ws As Worksheet
     Dim rng As Range
@@ -365,3 +390,5 @@ Private Sub btnAtualizarRef_Click()
         MsgBox "Proposta não encontrada.", vbExclamation
     End If
 End Sub
+
+
