@@ -6,7 +6,7 @@ Private Sub UserForm_Initialize()
     End With
     
     ' Desabilitar o botão Selecionar Cliente por padrão (se existir)
-    ' Me.btnSelecionarCliente.Enabled = False
+    Me.btnSelecionarCliente.Enabled = False
 End Sub
 
 Private Sub btnBuscaCliente_Click()
@@ -42,12 +42,16 @@ Private Sub btnBuscaCliente_Click()
             
             encontrado = True
         End If
+        Me.btnSelecionarCliente.Enabled = True
     Next cel
     
     ' Mensagem caso nenhum cliente seja encontrado
     If Not encontrado Then
         MsgBox "Nenhum cliente encontrado com os critérios fornecidos.", vbInformation
+            Me.btnSelecionarCliente.Enabled = False
     End If
+
+
 End Sub
 
 
@@ -60,7 +64,7 @@ Private Sub lstClientesListados_Click()
         Me.txtNomeCliente.Value = Me.lstClientesListados.List(Me.lstClientesListados.ListIndex, 1)
         
         ' Desabilitar o botão Selecionar Cliente após a seleção
-        Me.btnSelecionarCliente.Enabled = False
+        Me.btnSelecionarCliente.Enabled = True
         
         ' Desabilitar os campos para edição
         Me.txtID.Enabled = False
@@ -107,10 +111,36 @@ Private Sub btnSelecionarCliente_Click()
     ' Por exemplo:
     ' CarregarDetalhesPropostaCliente Me.txtID.Value
     
-    MsgBox "Cliente selecionado com sucesso. ID: " & Me.txtID.Value & ", Nome: " & Me.txtNomeCliente.Value, vbInformation
+    Me.btnSelecionarCliente.Enabled = False
 End Sub
 
 
 '#####################################
 
 'Analise o codigo acima pois irei precisar de ajuda em uma implementacao
+
+
+
+
+' txtID
+' txtNomeCliente
+' btnBuscaCliente
+' btnLimparCliente
+' lstClientesListados
+' btnSelecionarCliente
+' lstPropostasCliente
+' btnSelecionarProposta
+
+' txtNrProposta
+' txtReferencia
+' btnAtualizarRef
+
+' btnBuscarProduto
+' txtCodProduto
+' txtDescricao
+' txtQTD
+' txtPreco
+' txtItem
+' btnAdicionarProduto
+
+
