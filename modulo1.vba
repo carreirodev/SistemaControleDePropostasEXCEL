@@ -15,3 +15,10 @@ Sub CriarProposta()
 End Sub
 
 
+Sub AlterarProposta()
+    ' Chama o formulário de cadastro de cliente
+    frmAlterarProposta.Show
+End Sub
+
+
+
