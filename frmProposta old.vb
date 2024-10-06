@@ -1,28 +1,14 @@
 Private Sub UserForm_Initialize()
-    ' Configurando o ListView para ter colunas
-    With Me.lvwProdutosDaProposta
-        .View = lvwReport
-        .Gridlines = True
-        .FullRowSelect = True
-        .ColumnHeaders.Clear
-        .ColumnHeaders.Add , , "Item", 35
-        .ColumnHeaders.Add , , "Código", 55
-        .ColumnHeaders.Add , , "Descrição", 320
-        .ColumnHeaders.Add , , "Qtd", 35
-        .ColumnHeaders.Add , , "$ Unitário", 85
-        .ColumnHeaders.Add , , "$ Total", 85
-    End With
-    
-    ' Configurar a ListBox lstCliente (mantida como está)
+    ' Configurando a ListBox para ter 5 colunas
     With Me.lstCliente
         .ColumnCount = 5
+        ' Definindo as larguras das colunas: ID, Nome, Contato, Cidade, Estado
         .ColumnWidths = "48;140;140;108;24"
     End With
     
     ' Desabilitar o botão Selecionar Cliente por padrão
     Me.btnSelecionarCliente.Enabled = False
 End Sub
-
 
 Private Sub lstCliente_Click()
     ' Verifica se algum item está selecionado
@@ -422,7 +408,6 @@ Private Sub AtualizarListaProdutos()
     Dim precoUnitario As Double
     Dim precoTotal As Double
     Dim rngPreco As Range
-    Dim lvwItem As ListItem
     
     ' Definindo as planilhas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
@@ -431,8 +416,22 @@ Private Sub AtualizarListaProdutos()
     ' Obtendo o número da proposta atual
     numeroProposta = Me.txtNrProposta.Value
     
-    ' Limpar o ListView antes de adicionar novos itens
-    Me.lvwProdutosDaProposta.ListItems.Clear
+    ' Limpar a ListBox antes de adicionar novos itens
+    Me.lstProdutosDaProposta.Clear
+    
+    ' Configurar larguras das colunas
+    Me.lstProdutosDaProposta.ColumnCount = 6
+    Me.lstProdutosDaProposta.ColumnWidths = "30;40;300;30;80;80" ' Ajuste conforme necessário
+    
+    ' Adicionar cabeçalho simulado
+    With Me.lstProdutosDaProposta
+        .AddItem "Item"
+        .List(.ListCount - 1, 1) = "Código"
+        .List(.ListCount - 1, 2) = "Descrição"
+        .List(.ListCount - 1, 3) = "Qtd"
+        .List(.ListCount - 1, 4) = "$ Unitário"
+        .List(.ListCount - 1, 5) = "$ Total"
+    End With
     
     ' Encontrar a última linha da planilha de propostas
     ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 3).End(xlUp).Row
@@ -455,13 +454,15 @@ Private Sub AtualizarListaProdutos()
                 descricao = "Descrição não encontrada"
             End If
             
-            ' Adicionar o item ao ListView
-            Set lvwItem = Me.lvwProdutosDaProposta.ListItems.Add(, , item)
-            lvwItem.ListSubItems.Add , , codigo
-            lvwItem.ListSubItems.Add , , descricao
-            lvwItem.ListSubItems.Add , , quantidade
-            lvwItem.ListSubItems.Add , , Format(precoUnitario, "#,##0.00")
-            lvwItem.ListSubItems.Add , , Format(precoTotal, "#,##0.00")
+            ' Adicionar o item à ListBox
+            With Me.lstProdutosDaProposta
+                .AddItem item
+                .List(.ListCount - 1, 1) = codigo
+                .List(.ListCount - 1, 2) = descricao
+                .List(.ListCount - 1, 3) = quantidade
+                .List(.ListCount - 1, 4) = Format(precoUnitario, "#,##0.00")
+                .List(.ListCount - 1, 5) = Format(precoTotal, "#,##0.00")
+            End With
         End If
     Next linhaAtual
 End Sub
