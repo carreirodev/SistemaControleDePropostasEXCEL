@@ -91,6 +91,8 @@ Private Sub btnLimparCliente_Click()
     
     ' Reabilitar a ListBox para permitir novas seleções
     Me.lstClientesListados.Enabled = True
+    Me.lstPropostasCliente.Clear
+
 
     ' Reabilitar os botões
     Me.btnSelecionarCliente.Enabled = False
@@ -101,18 +103,88 @@ Private Sub btnLimparCliente_Click()
     txtNomeCliente.SetFocus
 End Sub
 
-' O botão Selecionar Cliente não é mais necessário, mas se você quiser mantê-lo,
-' você pode ajustá-lo para realizar alguma ação adicional após a seleção
-Private Sub btnSelecionarCliente_Click()
-    ' Este botão não será mais necessário para a seleção do cliente,
-    ' mas você pode mantê-lo se quiser realizar alguma ação adicional
-    ' após a seleção do cliente.
+
+Private Sub ListarPropostasCliente(clienteID As String)
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim ultimaLinha As Long
+    Dim numeroAtual As String
+    Dim valorTotal As Double
+    Dim referencia As String
     
-    ' Por exemplo:
-    ' CarregarDetalhesPropostaCliente Me.txtID.Value
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     
-    Me.btnSelecionarCliente.Enabled = False
+    ' Encontrando a última linha com dados
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    
+    ' Definindo o intervalo de dados das propostas
+    Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
+    
+    ' Limpando a ListBox antes de adicionar novos itens
+    Me.lstPropostasCliente.Clear
+    
+    ' Configurando a ListBox para 3 colunas
+    With Me.lstPropostasCliente
+        .ColumnCount = 3
+        .ColumnWidths = "80;100;120" ' Ajuste conforme necessário
+    End With
+    
+    ' Iterando sobre cada linha da planilha de propostas
+    numeroAtual = ""
+    valorTotal = 0
+    
+    For Each cel In rngPropostas.Columns(2).Cells ' Coluna B para ID do cliente
+        If cel.Value = clienteID Then
+            If cel.Offset(0, -1).Value <> numeroAtual Then
+                ' Nova proposta encontrada
+                If numeroAtual <> "" Then
+                    ' Adicionar proposta anterior à ListBox
+                    Me.lstPropostasCliente.AddItem numeroAtual
+                    Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 1) = Format(valorTotal, "#,##0.00")
+                    Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 2) = referencia
+                End If
+                
+                ' Iniciar nova proposta
+                numeroAtual = cel.Offset(0, -1).Value
+                valorTotal = cel.Offset(0, 5).Value ' Coluna G (SUBTOTAL)
+                referencia = cel.Offset(0, 6).Value ' Coluna H (REFERENCIA)
+            Else
+                ' Continuar somando para a proposta atual
+                valorTotal = valorTotal + cel.Offset(0, 5).Value
+            End If
+        End If
+    Next cel
+    
+    ' Adicionar a última proposta à ListBox
+    If numeroAtual <> "" Then
+        Me.lstPropostasCliente.AddItem numeroAtual
+        Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 1) = Format(valorTotal, "#,##0.00")
+        Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 2) = referencia
+    End If
+    
+    ' Habilitar a ListBox de propostas
+    Me.lstPropostasCliente.Enabled = True
 End Sub
+
+
+Private Sub btnSelecionarCliente_Click()
+    If Me.lstClientesListados.ListIndex <> -1 Then
+        Dim clienteID As String
+        clienteID = Me.lstClientesListados.List(Me.lstClientesListados.ListIndex, 0)
+        
+        ' Chamar a função para listar as propostas do cliente
+        ListarPropostasCliente clienteID
+        
+        ' Desabilitar o botão após a seleção
+        Me.btnSelecionarCliente.Enabled = False
+    Else
+        MsgBox "Por favor, selecione um cliente primeiro.", vbExclamation
+    End If
+End Sub
+
+
 
 
 '#####################################
