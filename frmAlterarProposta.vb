@@ -128,7 +128,7 @@ Private Sub ListarPropostasCliente(clienteID As String)
     ' Configurando a ListBox para 3 colunas
     With Me.lstPropostasCliente
         .ColumnCount = 3
-        .ColumnWidths = "80;100;120" ' Ajuste conforme necessário
+        .ColumnWidths = "45;58;120" ' Ajuste conforme necessário
     End With
     
     ' Iterando sobre cada linha da planilha de propostas
@@ -183,6 +183,127 @@ Private Sub btnSelecionarCliente_Click()
         MsgBox "Por favor, selecione um cliente primeiro.", vbExclamation
     End If
 End Sub
+
+
+Private Sub lstPropostasCliente_Click()
+    If Me.lstPropostasCliente.ListIndex <> -1 Then
+        Dim numeroPropostaSelecionada As String
+        numeroPropostaSelecionada = Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListIndex, 0)
+        ExibirDetalhesProposta numeroPropostaSelecionada
+    End If
+End Sub
+
+
+
+Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim ultimaLinha As Long
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Encontrando a última linha com dados
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    
+    ' Definindo o intervalo de dados das propostas
+    Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
+    
+    ' Limpar o ListView antes de adicionar novos itens
+    Me.lvwProdutosDaProposta.ListItems.Clear
+    
+    ' Configurar as colunas do ListView (se ainda não estiver configurado)
+    With Me.lvwProdutosDaProposta
+        .View = lvwReport
+        .ColumnHeaders.Clear
+        .ColumnHeaders.Add , , "Item", 50
+        .ColumnHeaders.Add , , "Código", 80
+        .ColumnHeaders.Add , , "Preço Unitário", 100
+        .ColumnHeaders.Add , , "Quantidade", 80
+        .ColumnHeaders.Add , , "Subtotal", 100
+    End With
+    
+    ' Iterando sobre cada linha da planilha de propostas
+    For Each cel In rngPropostas.Columns(1).Cells ' Coluna A para NUMERO
+        If cel.Value = numeroPropostaSelecionada Then
+            Dim lstItem As ListItem
+            Set lstItem = Me.lvwProdutosDaProposta.ListItems.Add(, , cel.Offset(0, 2).Value) ' ITEM
+            lstItem.SubItems(1) = cel.Offset(0, 3).Value ' CODIGO
+            lstItem.SubItems(2) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' PRECO UNITARIO
+            lstItem.SubItems(3) = cel.Offset(0, 5).Value ' QUANTIDADE
+            lstItem.SubItems(4) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' SUBTOTAL
+        End If
+    Next cel
+    
+    ' Ajustar o tamanho das colunas para se ajustarem ao conteúdo
+    ' AjustarColunasListView Me.lvwProdutosDaProposta
+End Sub
+
+
+
+' Private Sub AjustarColunasListView(lv As ListView)
+'     Dim col As ColumnHeader
+'     Dim i As Long
+'     Dim larguraMaxima As Long
+'     Dim item As ListItem
+'     Dim textoItem As String
+    
+'     lv.Visible = False ' Esconde temporariamente o ListView para melhorar o desempenho
+    
+'     For i = 1 To lv.ColumnHeaders.Count
+'         larguraMaxima = 0
+        
+'         ' Verifica a largura do cabeçalho
+'         larguraMaxima = Max(larguraMaxima, TextWidth(lv.ColumnHeaders(i).Text))
+        
+'         ' Verifica a largura de cada item na coluna
+'         For Each item In lv.ListItems
+'             If i = 1 Then
+'                 textoItem = item.Text
+'             Else
+'                 textoItem = item.SubItems(i - 1)
+'             End If
+'             larguraMaxima = Max(larguraMaxima, TextWidth(textoItem))
+'         Next item
+        
+'         ' Adiciona um pequeno espaço extra e define a largura da coluna
+'         lv.ColumnHeaders(i).Width = larguraMaxima + 20
+'     Next i
+    
+'     lv.Visible = True ' Torna o ListView visível novamente
+' End Sub
+
+' ' Função auxiliar para obter o máximo entre dois valores
+' Private Function Max(a As Long, b As Long) As Long
+'     If a > b Then
+'         Max = a
+'     Else
+'         Max = b
+'     End If
+' End Function
+
+' ' Função auxiliar para calcular a largura do texto
+' Private Function TextWidth(texto As String) As Long
+'     On Error Resume Next
+'     Dim tmpControl As Control
+'     Set tmpControl = Me.Controls.Add("Forms.Label.1", "tmpLabel")
+'     If Err.Number = 0 Then
+'         With tmpControl
+'             .AutoSize = True
+'             .Caption = texto
+'             TextWidth = .Width
+'         End With
+'         Me.Controls.Remove "tmpLabel"
+'     Else
+'         ' Alternativa se não puder adicionar controle
+'         TextWidth = Len(texto) * 7 ' Estimativa aproximada
+'     End If
+'     On Error GoTo 0
+' End Function
+
+
+
 
 
 
