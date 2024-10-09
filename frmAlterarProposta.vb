@@ -321,6 +321,9 @@ Private Sub btnSelecionarProposta_Click()
     Dim numeroPropostaSelecionada As String
     numeroPropostaSelecionada = lstPropostasCliente.List(lstPropostasCliente.ListIndex, 0)
     
+    ' Preencher o txtNrProposta com o número da proposta selecionada
+    txtNrProposta.Value = numeroPropostaSelecionada
+    
     ' Exibir detalhes da proposta
     ExibirDetalhesProposta numeroPropostaSelecionada
     
@@ -335,13 +338,36 @@ Private Sub btnSelecionarProposta_Click()
 End Sub
 
 
+
 Private Sub AtualizarInterfacePropostaSelecionada()
     
     ' Desabilitar outros controles que não devem ser usados durante a edição
     btnSelecionarCliente.Enabled = False
     btnBuscaCliente.Enabled = False
     
- End Sub
+End Sub
+
+
+Private Sub lvwProdutosDaProposta_ItemClick(ByVal Item As MSComctlLib.ListItem)
+    ' Preencher os campos com os dados do item selecionado
+    txtItem.Value = Item.Text
+    txtCodProduto.Value = Item.SubItems(1)
+    txtDescricao.Value = Item.SubItems(2)
+    txtPreco.Value = Replace(Item.SubItems(3), ".", ",") ' Ajusta o separador decimal se necessário
+    txtQTD.Value = Item.SubItems(4)
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
