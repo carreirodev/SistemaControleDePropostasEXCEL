@@ -117,7 +117,7 @@ Private Sub ListarPropostasCliente(clienteID As String)
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     
     ' Encontrando a última linha com dados
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).row
     
     ' Definindo o intervalo de dados das propostas
     Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
