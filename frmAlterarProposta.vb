@@ -112,61 +112,54 @@ Private Sub ListarPropostasCliente(clienteID As String)
     Dim numeroAtual As String
     Dim valorTotal As Double
     Dim referencia As String
+    Dim qtdItens As Integer
     
-    ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    
-    ' Encontrando a última linha com dados
     ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).row
-    
-    ' Definindo o intervalo de dados das propostas
     Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
     
-    ' Limpando a ListBox antes de adicionar novos itens
     Me.lstPropostasCliente.Clear
     
-    ' Configurando a ListBox para 3 colunas
     With Me.lstPropostasCliente
-        .ColumnCount = 3
-        .ColumnWidths = "45;58;120" ' Ajuste conforme necessário
+        .ColumnCount = 4
+        .ColumnWidths = "45;58;40;120"
     End With
     
-    ' Iterando sobre cada linha da planilha de propostas
     numeroAtual = ""
     valorTotal = 0
+    qtdItens = 0
     
-    For Each cel In rngPropostas.Columns(2).Cells ' Coluna B para ID do cliente
+    For Each cel In rngPropostas.Columns(2).Cells
         If cel.Value = clienteID Then
             If cel.Offset(0, -1).Value <> numeroAtual Then
-                ' Nova proposta encontrada
                 If numeroAtual <> "" Then
-                    ' Adicionar proposta anterior à ListBox
                     Me.lstPropostasCliente.AddItem numeroAtual
                     Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 1) = Format(valorTotal, "#,##0.00")
-                    Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 2) = referencia
+                    Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 2) = qtdItens
+                    Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 3) = referencia
                 End If
                 
-                ' Iniciar nova proposta
                 numeroAtual = cel.Offset(0, -1).Value
-                valorTotal = cel.Offset(0, 5).Value ' Coluna G (SUBTOTAL)
-                referencia = cel.Offset(0, 6).Value ' Coluna H (REFERENCIA)
+                valorTotal = cel.Offset(0, 5).Value
+                referencia = cel.Offset(0, 6).Value
+                qtdItens = 1
             Else
-                ' Continuar somando para a proposta atual
                 valorTotal = valorTotal + cel.Offset(0, 5).Value
+                qtdItens = qtdItens + 1
             End If
         End If
     Next cel
     
-    ' Adicionar a última proposta à ListBox
     If numeroAtual <> "" Then
         Me.lstPropostasCliente.AddItem numeroAtual
         Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 1) = Format(valorTotal, "#,##0.00")
-        Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 2) = referencia
+        Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 2) = qtdItens
+        Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListCount - 1, 3) = referencia
     End If
     
-    ' Habilitar a ListBox de propostas
     Me.lstPropostasCliente.Enabled = True
 End Sub
+
 
 
 Private Sub btnSelecionarCliente_Click()
@@ -194,116 +187,161 @@ Private Sub lstPropostasCliente_Click()
 End Sub
 
 
-
 Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     Dim wsPropostas As Worksheet
     Dim rngPropostas As Range
     Dim cel As Range
     Dim ultimaLinha As Long
+    Dim item As listItem
+    Dim referenciaProposta As String
     
-    ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    
-    ' Encontrando a última linha com dados
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
-    
-    ' Definindo o intervalo de dados das propostas
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).row
     Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
     
-    ' Limpar o ListView antes de adicionar novos itens
-    Me.lvwProdutosDaProposta.ListItems.Clear
+    lvwProdutosDaProposta.ListItems.Clear
     
-    ' Configurar as colunas do ListView (se ainda não estiver configurado)
-    With Me.lvwProdutosDaProposta
+    With lvwProdutosDaProposta
         .View = lvwReport
         .ColumnHeaders.Clear
-        .ColumnHeaders.Add , , "Item", 50
-        .ColumnHeaders.Add , , "Código", 80
-        .ColumnHeaders.Add , , "Preço Unitário", 100
-        .ColumnHeaders.Add , , "Quantidade", 80
-        .ColumnHeaders.Add , , "Subtotal", 100
+        .ColumnHeaders.Add , , "Item", 40
+        .ColumnHeaders.Add , , "Código", 60
+        .ColumnHeaders.Add , , "Descrição", 150
+        .ColumnHeaders.Add , , "Preço Unitário", 80
+        .ColumnHeaders.Add , , "Qtd", 40
+        .ColumnHeaders.Add , , "Subtotal", 80
     End With
     
-    ' Iterando sobre cada linha da planilha de propostas
-    For Each cel In rngPropostas.Columns(1).Cells ' Coluna A para NUMERO
+    For Each cel In rngPropostas.Columns(1).Cells
         If cel.Value = numeroPropostaSelecionada Then
-            Dim lstItem As ListItem
-            Set lstItem = Me.lvwProdutosDaProposta.ListItems.Add(, , cel.Offset(0, 2).Value) ' ITEM
-            lstItem.SubItems(1) = cel.Offset(0, 3).Value ' CODIGO
-            lstItem.SubItems(2) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' PRECO UNITARIO
-            lstItem.SubItems(3) = cel.Offset(0, 5).Value ' QUANTIDADE
-            lstItem.SubItems(4) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' SUBTOTAL
+            Set item = lvwProdutosDaProposta.ListItems.Add(, , cel.Offset(0, 2).Value) ' ITEM
+            item.SubItems(1) = cel.Offset(0, 3).Value ' CODIGO
+            item.SubItems(2) = BuscarDetalheProduto(cel.Offset(0, 3).Value) ' Descrição do produto
+            item.SubItems(3) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' PRECO UNITARIO
+            item.SubItems(4) = cel.Offset(0, 5).Value ' QUANTIDADE
+            item.SubItems(5) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' SUBTOTAL
+            
+            ' Capturar a referência da proposta (assumindo que é a mesma para todos os itens da proposta)
+            referenciaProposta = cel.Offset(0, 7).Value ' REFERENCIA (Coluna H)
         End If
     Next cel
     
-    ' Ajustar o tamanho das colunas para se ajustarem ao conteúdo
-    ' AjustarColunasListView Me.lvwProdutosDaProposta
+    ' Preencher o txtReferencia com a referência da proposta
+    Me.txtReferencia.Value = referenciaProposta
+    
+    ' Ajustar o tamanho das colunas automaticamente
+    AjustarColunasListView lvwProdutosDaProposta
 End Sub
 
 
-
-' Private Sub AjustarColunasListView(lv As ListView)
-'     Dim col As ColumnHeader
-'     Dim i As Long
-'     Dim larguraMaxima As Long
-'     Dim item As ListItem
-'     Dim textoItem As String
+Private Function BuscarDetalheProduto(codigoProduto As String) As String
+    Dim wsPrecos As Worksheet
+    Dim rngPrecos As Range
+    Dim cel As Range
     
-'     lv.Visible = False ' Esconde temporariamente o ListView para melhorar o desempenho
+    Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    Set rngPrecos = wsPrecos.UsedRange
     
-'     For i = 1 To lv.ColumnHeaders.Count
-'         larguraMaxima = 0
-        
-'         ' Verifica a largura do cabeçalho
-'         larguraMaxima = Max(larguraMaxima, TextWidth(lv.ColumnHeaders(i).Text))
-        
-'         ' Verifica a largura de cada item na coluna
-'         For Each item In lv.ListItems
-'             If i = 1 Then
-'                 textoItem = item.Text
-'             Else
-'                 textoItem = item.SubItems(i - 1)
-'             End If
-'             larguraMaxima = Max(larguraMaxima, TextWidth(textoItem))
-'         Next item
-        
-'         ' Adiciona um pequeno espaço extra e define a largura da coluna
-'         lv.ColumnHeaders(i).Width = larguraMaxima + 20
-'     Next i
+    For Each cel In rngPrecos.Columns(1).Cells ' Assumindo que o código está na primeira coluna
+        If cel.Value = codigoProduto Then
+            ' Retorna a descrição do produto (assumindo que está na segunda coluna)
+            BuscarDetalheProduto = cel.Offset(0, 1).Value
+            Exit Function
+        End If
+    Next cel
     
-'     lv.Visible = True ' Torna o ListView visível novamente
-' End Sub
-
-' ' Função auxiliar para obter o máximo entre dois valores
-' Private Function Max(a As Long, b As Long) As Long
-'     If a > b Then
-'         Max = a
-'     Else
-'         Max = b
-'     End If
-' End Function
-
-' ' Função auxiliar para calcular a largura do texto
-' Private Function TextWidth(texto As String) As Long
-'     On Error Resume Next
-'     Dim tmpControl As Control
-'     Set tmpControl = Me.Controls.Add("Forms.Label.1", "tmpLabel")
-'     If Err.Number = 0 Then
-'         With tmpControl
-'             .AutoSize = True
-'             .Caption = texto
-'             TextWidth = .Width
-'         End With
-'         Me.Controls.Remove "tmpLabel"
-'     Else
-'         ' Alternativa se não puder adicionar controle
-'         TextWidth = Len(texto) * 7 ' Estimativa aproximada
-'     End If
-'     On Error GoTo 0
-' End Function
+    BuscarDetalheProduto = "Produto não encontrado"
+End Function
 
 
 
+Private Sub AjustarColunasListView(lv As ListView)
+    Dim col As ColumnHeader
+    Dim maxWidth As Long
+    Dim item As listItem
+    Dim subItem As ListSubItem
+    Dim i As Long
+    Dim totalWidth As Long
+    Dim avgCharWidth As Long
+    Const FIXED_COL_WIDTH As Long = 45  ' Largura fixa para ITEM, CODIGO e QTD
+    Const MAX_COL_WIDTH As Long = 230   ' Largura máxima para outras colunas
+    Const MIN_COL_WIDTH As Long = 45    ' Largura mínima para outras colunas
+    
+    ' Estimar a largura média de um caractere
+    avgCharWidth = lv.Font.Size * 0.7
+    
+    totalWidth = 0
+    For Each col In lv.ColumnHeaders
+        Select Case col.Index
+            Case 1, 2, 5 ' ITEM, CODIGO, QTD
+                col.Width = FIXED_COL_WIDTH
+                totalWidth = totalWidth + FIXED_COL_WIDTH
+            Case Else ' Outras colunas (Descrição, Preço Unitário, Subtotal)
+                maxWidth = col.Width
+                For Each item In lv.ListItems
+                    maxWidth = WorksheetFunction.Max(maxWidth, avgCharWidth * Len(item.SubItems(col.Index - 1)))
+                Next item
+                
+                ' Limitar a largura entre o mínimo e o máximo
+                maxWidth = WorksheetFunction.Max(MIN_COL_WIDTH, WorksheetFunction.Min(maxWidth + 15, MAX_COL_WIDTH))
+                
+                col.Width = maxWidth
+                totalWidth = totalWidth + maxWidth
+        End Select
+    Next col
+    
+    ' Se a largura total for menor que a largura do ListView, ajustar proporcionalmente as colunas não fixas
+    If totalWidth < lv.Width Then
+        Dim remainingWidth As Long
+        Dim nonFixedWidth As Long
+        Dim ratio As Double
+        
+        remainingWidth = lv.Width - (FIXED_COL_WIDTH * 3) ' Subtrair a largura das colunas fixas
+        nonFixedWidth = totalWidth - (FIXED_COL_WIDTH * 3)
+        
+        If nonFixedWidth > 0 Then
+            ratio = remainingWidth / nonFixedWidth
+            For Each col In lv.ColumnHeaders
+                If col.Index <> 1 And col.Index <> 2 And col.Index <> 5 Then
+                    col.Width = col.Width * ratio
+                End If
+            Next col
+        End If
+    End If
+End Sub
+
+
+Private Sub btnSelecionarProposta_Click()
+    If lstPropostasCliente.ListIndex = -1 Then
+        MsgBox "Por favor, selecione uma proposta antes de continuar.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Obter o número da proposta selecionada
+    Dim numeroPropostaSelecionada As String
+    numeroPropostaSelecionada = lstPropostasCliente.List(lstPropostasCliente.ListIndex, 0)
+    
+    ' Exibir detalhes da proposta
+    ExibirDetalhesProposta numeroPropostaSelecionada
+    
+    ' Desabilitar a lista de propostas
+    lstPropostasCliente.Enabled = False
+    
+    ' Desabilitar o botão de selecionar proposta
+    btnSelecionarProposta.Enabled = False
+
+    ' Atualizar a interface para refletir que uma proposta foi selecionada para edição
+    AtualizarInterfacePropostaSelecionada
+End Sub
+
+
+Private Sub AtualizarInterfacePropostaSelecionada()
+    
+    ' Desabilitar outros controles que não devem ser usados durante a edição
+    btnSelecionarCliente.Enabled = False
+    btnBuscaCliente.Enabled = False
+    
+ End Sub
 
 
 
@@ -335,4 +373,6 @@ End Sub
 ' txtPreco
 ' txtItem
 ' btnAdicionarProduto
+
+
 
