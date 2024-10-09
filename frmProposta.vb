@@ -165,7 +165,7 @@ Private Sub CriarNovaProposta()
     novoNumero = novoNumero & "-" & estadoCliente
     
     ' Encontrar a próxima linha vazia para registrar a nova proposta
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).row + 1
     
     ' Preencher a nova linha na planilha de propostas
     wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
@@ -261,7 +261,7 @@ Private Sub btnAdicionarProduto_Click()
     Dim ultimaLinha As Long
     Dim numeroProposta As String
     Dim cliente As String
-    Dim item As Long
+    Dim Item As Long
     Dim codigo As String
     Dim descricao As String
     Dim precoUnitario As Double
@@ -280,7 +280,7 @@ Private Sub btnAdicionarProduto_Click()
     referencia = Me.txtReferencia.Value
     
     ' Obtendo os valores dos campos
-    item = CLng(Me.txtItem.Value)
+    Item = CLng(Me.txtItem.Value)
     codigo = Me.txtCodProduto.Value
     descricao = Me.txtDescricao.Value
     precoUnitario = CDbl(Me.txtPreco.Value)
@@ -290,7 +290,7 @@ Private Sub btnAdicionarProduto_Click()
     ' Encontrar a linha da proposta atual (primeira ocorrência na coluna 1)
     Set cel = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
     If Not cel Is Nothing Then
-        linhaProposta = cel.Row
+        linhaProposta = cel.row
     Else
         ' Se a proposta não for encontrada, algo está errado
         MsgBox "Erro: Proposta não encontrada.", vbExclamation
@@ -300,7 +300,7 @@ Private Sub btnAdicionarProduto_Click()
     ' Adicionar ou atualizar o item na proposta
     If wsPropostas.Cells(linhaProposta, 3).Value = "" Then
         ' Preencher a linha existente na planilha de propostas
-        wsPropostas.Cells(linhaProposta, 3).Value = item ' Coluna ITEM
+        wsPropostas.Cells(linhaProposta, 3).Value = Item ' Coluna ITEM
         wsPropostas.Cells(linhaProposta, 4).Value = codigo ' Coluna CODIGO
         wsPropostas.Cells(linhaProposta, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
         wsPropostas.Cells(linhaProposta, 6).Value = quantidade ' Coluna QUANTIDADE
@@ -309,12 +309,12 @@ Private Sub btnAdicionarProduto_Click()
         wsPropostas.Cells(linhaProposta, 8).Value = referencia ' Coluna REFERENCIA
     Else
         ' Encontrar a próxima linha vazia para registrar o novo item da proposta
-        ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+        ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).row + 1
         
         ' Preencher a nova linha na planilha de propostas
         wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
         wsPropostas.Cells(ultimaLinha, 2).Value = cliente ' Coluna CLIENTE
-        wsPropostas.Cells(ultimaLinha, 3).Value = item ' Coluna ITEM
+        wsPropostas.Cells(ultimaLinha, 3).Value = Item ' Coluna ITEM
         wsPropostas.Cells(ultimaLinha, 4).Value = codigo ' Coluna CODIGO
         wsPropostas.Cells(ultimaLinha, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
         wsPropostas.Cells(ultimaLinha, 6).Value = quantidade ' Coluna QUANTIDADE
@@ -333,7 +333,7 @@ Private Sub btnAdicionarProduto_Click()
     Me.txtCodProduto.SetFocus
     
     ' Incrementar o número do item para o próximo produto
-    Me.txtItem.Value = item + 1
+    Me.txtItem.Value = Item + 1
 
     AtualizarListaProdutos
 End Sub
@@ -400,7 +400,7 @@ Private Sub btnAtualizarRef_Click()
         For Each cel In wsPropostas.Columns(1).Cells
             If cel.Value = numeroProposta Then
                 ' Atualizar a coluna de referência
-                wsPropostas.Cells(cel.Row, 8).Value = novaReferencia ' Coluna REFERENCIA
+                wsPropostas.Cells(cel.row, 8).Value = novaReferencia ' Coluna REFERENCIA
             End If
         Next cel
     Else
@@ -415,14 +415,14 @@ Private Sub AtualizarListaProdutos()
     Dim numeroProposta As String
     Dim ultimaLinha As Long
     Dim linhaAtual As Long
-    Dim item As String
+    Dim Item As String
     Dim codigo As String
     Dim descricao As String
     Dim quantidade As String
     Dim precoUnitario As Double
     Dim precoTotal As Double
     Dim rngPreco As Range
-    Dim lvwItem As ListItem
+    Dim lvwItem As listItem
     
     ' Definindo as planilhas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
@@ -435,13 +435,13 @@ Private Sub AtualizarListaProdutos()
     Me.lvwProdutosDaProposta.ListItems.Clear
     
     ' Encontrar a última linha da planilha de propostas
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 3).End(xlUp).Row
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 3).End(xlUp).row
     
     ' Iterar sobre as linhas da planilha para a proposta atual
     For linhaAtual = 2 To ultimaLinha ' Começando em 2 para pular o cabeçalho
         If wsPropostas.Cells(linhaAtual, 1).Value = numeroProposta Then
             ' Obter os valores das colunas relevantes
-            item = wsPropostas.Cells(linhaAtual, 3).Value ' Coluna C - ITEM
+            Item = wsPropostas.Cells(linhaAtual, 3).Value ' Coluna C - ITEM
             codigo = wsPropostas.Cells(linhaAtual, 4).Value ' Coluna D - CODIGO
             precoUnitario = wsPropostas.Cells(linhaAtual, 5).Value ' Coluna E - PRECO UNITARIO
             quantidade = wsPropostas.Cells(linhaAtual, 6).Value ' Coluna F - QUANTIDADE
@@ -456,7 +456,7 @@ Private Sub AtualizarListaProdutos()
             End If
             
             ' Adicionar o item ao ListView
-            Set lvwItem = Me.lvwProdutosDaProposta.ListItems.Add(, , item)
+            Set lvwItem = Me.lvwProdutosDaProposta.ListItems.Add(, , Item)
             lvwItem.ListSubItems.Add , , codigo
             lvwItem.ListSubItems.Add , , descricao
             lvwItem.ListSubItems.Add , , quantidade
@@ -466,6 +466,67 @@ Private Sub AtualizarListaProdutos()
     Next linhaAtual
 End Sub
 
+Private Sub lvwProdutosDaProposta_AfterEdit(ByVal Item As listItem, ByVal SubItemIndex As Integer)
+    Dim wsPropostas As Worksheet
+    Dim numeroProposta As String
+    Dim linhaProposta As Long
+    Dim cel As Range
+    Dim itemNumero As Long
+    Dim coluna As Integer
+    Dim novoValor As Variant
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obtendo o número da proposta atual
+    numeroProposta = Me.txtNrProposta.Value
+    
+    ' Localizar a linha da proposta atual na planilha
+    Set cel = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
+    If Not cel Is Nothing Then
+        linhaProposta = cel.row
+    Else
+        MsgBox "Erro: Proposta não encontrada.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Determinar qual SubItem foi editado
+    Select Case SubItemIndex
+        Case 1 ' Número do Item
+            coluna = 3
+        Case 4 ' Quantidade
+            coluna = 6
+        Case 5 ' Preço Unitário
+            coluna = 5
+        Case Else
+            Exit Sub
+    End Select
+    
+    ' Obter o novo valor do SubItem editado
+    novoValor = Item.SubItems(SubItemIndex).Text
+    
+    ' Atualizar a planilha com o novo valor
+    ' Encontrar a linha correta para o item na proposta
+    For linhaAtual = linhaProposta To wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).row
+        If wsPropostas.Cells(linhaAtual, 1).Value = numeroProposta And _
+           wsPropostas.Cells(linhaAtual, 3).Value = Item.Text Then
+            wsPropostas.Cells(linhaAtual, coluna).Value = novoValor
+            ' Atualizar subtotal se a quantidade ou preço unitário foram alterados
+            If SubItemIndex = 4 Or SubItemIndex = 5 Then
+                wsPropostas.Cells(linhaAtual, 7).Value = wsPropostas.Cells(linhaAtual, 5).Value * wsPropostas.Cells(linhaAtual, 6).Value
+            End If
+            Exit For
+        End If
+    Next linhaAtual
+End Sub
+
+
+Private Sub btnFechar_Click()
+    ' Fecha o formulário sem nenhuma ação
+    Unload Me
+End Sub
+
 '#####################################
 
 'Analise o codigo acima
+

@@ -7,6 +7,7 @@ Private Sub UserForm_Initialize()
     
     ' Desabilitar o botão Selecionar Cliente por padrão (se existir)
     Me.btnSelecionarCliente.Enabled = False
+
 End Sub
 
 Private Sub btnBuscaCliente_Click()
@@ -78,7 +79,7 @@ Private Sub lstClientesListados_Click()
     End If
 End Sub
 
-' Ajuste no btnLimparCliente_Click para reabilitar todos os controles
+
 Private Sub btnLimparCliente_Click()
     ' Limpar os campos
     Me.txtID.Value = ""
@@ -192,34 +193,35 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     Dim rngPropostas As Range
     Dim cel As Range
     Dim ultimaLinha As Long
-    Dim item As listItem
     Dim referenciaProposta As String
     
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).row
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
     Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
     
-    lvwProdutosDaProposta.ListItems.Clear
+    lstProdutosDaProposta.Clear
     
-    With lvwProdutosDaProposta
-        .View = lvwReport
-        .ColumnHeaders.Clear
-        .ColumnHeaders.Add , , "Item", 40
-        .ColumnHeaders.Add , , "Código", 60
-        .ColumnHeaders.Add , , "Descrição", 150
-        .ColumnHeaders.Add , , "Preço Unitário", 80
-        .ColumnHeaders.Add , , "Qtd", 40
-        .ColumnHeaders.Add , , "Subtotal", 80
+    With lstProdutosDaProposta
+        .ColumnCount = 6
+        .ColumnWidths = "40;60;150;80;40;80"
+        
+        ' Adicionar cabeçalho
+        .AddItem "Item"
+        .List(0, 1) = "Código"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Preço Unitário"
+        .List(0, 4) = "Qtd"
+        .List(0, 5) = "Subtotal"
     End With
     
     For Each cel In rngPropostas.Columns(1).Cells
         If cel.Value = numeroPropostaSelecionada Then
-            Set item = lvwProdutosDaProposta.ListItems.Add(, , cel.Offset(0, 2).Value) ' ITEM
-            item.SubItems(1) = cel.Offset(0, 3).Value ' CODIGO
-            item.SubItems(2) = BuscarDetalheProduto(cel.Offset(0, 3).Value) ' Descrição do produto
-            item.SubItems(3) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' PRECO UNITARIO
-            item.SubItems(4) = cel.Offset(0, 5).Value ' QUANTIDADE
-            item.SubItems(5) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' SUBTOTAL
+            lstProdutosDaProposta.AddItem cel.Offset(0, 2).Value ' Item
+            lstProdutosDaProposta.List(lstProdutosDaProposta.ListCount - 1, 1) = cel.Offset(0, 3).Value ' Código
+            lstProdutosDaProposta.List(lstProdutosDaProposta.ListCount - 1, 2) = BuscarDetalheProduto(cel.Offset(0, 3).Value) ' Descrição
+            lstProdutosDaProposta.List(lstProdutosDaProposta.ListCount - 1, 3) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' Preço Unitário
+            lstProdutosDaProposta.List(lstProdutosDaProposta.ListCount - 1, 4) = cel.Offset(0, 5).Value ' Quantidade
+            lstProdutosDaProposta.List(lstProdutosDaProposta.ListCount - 1, 5) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' Subtotal
             
             ' Capturar a referência da proposta (assumindo que é a mesma para todos os itens da proposta)
             referenciaProposta = cel.Offset(0, 7).Value ' REFERENCIA (Coluna H)
@@ -228,9 +230,6 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     
     ' Preencher o txtReferencia com a referência da proposta
     Me.txtReferencia.Value = referenciaProposta
-    
-    ' Ajustar o tamanho das colunas automaticamente
-    AjustarColunasListView lvwProdutosDaProposta
 End Sub
 
 
@@ -254,121 +253,22 @@ Private Function BuscarDetalheProduto(codigoProduto As String) As String
 End Function
 
 
-
-Private Sub AjustarColunasListView(lv As ListView)
-    Dim col As ColumnHeader
-    Dim maxWidth As Long
-    Dim item As listItem
-    Dim subItem As ListSubItem
-    Dim i As Long
-    Dim totalWidth As Long
-    Dim avgCharWidth As Long
-    Const FIXED_COL_WIDTH As Long = 45  ' Largura fixa para ITEM, CODIGO e QTD
-    Const MAX_COL_WIDTH As Long = 230   ' Largura máxima para outras colunas
-    Const MIN_COL_WIDTH As Long = 45    ' Largura mínima para outras colunas
-    
-    ' Estimar a largura média de um caractere
-    avgCharWidth = lv.Font.Size * 0.7
-    
-    totalWidth = 0
-    For Each col In lv.ColumnHeaders
-        Select Case col.Index
-            Case 1, 2, 5 ' ITEM, CODIGO, QTD
-                col.Width = FIXED_COL_WIDTH
-                totalWidth = totalWidth + FIXED_COL_WIDTH
-            Case Else ' Outras colunas (Descrição, Preço Unitário, Subtotal)
-                maxWidth = col.Width
-                For Each item In lv.ListItems
-                    maxWidth = WorksheetFunction.Max(maxWidth, avgCharWidth * Len(item.SubItems(col.Index - 1)))
-                Next item
-                
-                ' Limitar a largura entre o mínimo e o máximo
-                maxWidth = WorksheetFunction.Max(MIN_COL_WIDTH, WorksheetFunction.Min(maxWidth + 15, MAX_COL_WIDTH))
-                
-                col.Width = maxWidth
-                totalWidth = totalWidth + maxWidth
-        End Select
-    Next col
-    
-    ' Se a largura total for menor que a largura do ListView, ajustar proporcionalmente as colunas não fixas
-    If totalWidth < lv.Width Then
-        Dim remainingWidth As Long
-        Dim nonFixedWidth As Long
-        Dim ratio As Double
-        
-        remainingWidth = lv.Width - (FIXED_COL_WIDTH * 3) ' Subtrair a largura das colunas fixas
-        nonFixedWidth = totalWidth - (FIXED_COL_WIDTH * 3)
-        
-        If nonFixedWidth > 0 Then
-            ratio = remainingWidth / nonFixedWidth
-            For Each col In lv.ColumnHeaders
-                If col.Index <> 1 And col.Index <> 2 And col.Index <> 5 Then
-                    col.Width = col.Width * ratio
-                End If
-            Next col
-        End If
+Private Sub lstProdutosDaProposta_Click()
+    If lstProdutosDaProposta.ListIndex > 0 Then ' Ignorar o cabeçalho
+        ' Preencher os campos com os dados do item selecionado
+        txtItem.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 0)
+        txtCodProduto.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 1)
+        txtDescricao.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 2)
+        txtPreco.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 3)
+        txtQTD.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 4)
     End If
 End Sub
 
 
-Private Sub btnSelecionarProposta_Click()
-    If lstPropostasCliente.ListIndex = -1 Then
-        MsgBox "Por favor, selecione uma proposta antes de continuar.", vbExclamation
-        Exit Sub
-    End If
-    
-    ' Obter o número da proposta selecionada
-    Dim numeroPropostaSelecionada As String
-    numeroPropostaSelecionada = lstPropostasCliente.List(lstPropostasCliente.ListIndex, 0)
-    
-    ' Preencher o txtNrProposta com o número da proposta selecionada
-    txtNrProposta.Value = numeroPropostaSelecionada
-    
-    ' Exibir detalhes da proposta
-    ExibirDetalhesProposta numeroPropostaSelecionada
-    
-    ' Desabilitar a lista de propostas
-    lstPropostasCliente.Enabled = False
-    
-    ' Desabilitar o botão de selecionar proposta
-    btnSelecionarProposta.Enabled = False
-
-    ' Atualizar a interface para refletir que uma proposta foi selecionada para edição
-    AtualizarInterfacePropostaSelecionada
+Private Sub btnFechar_Click()
+    ' Fecha o formulário sem nenhuma ação
+    Unload Me
 End Sub
-
-
-
-Private Sub AtualizarInterfacePropostaSelecionada()
-    
-    ' Desabilitar outros controles que não devem ser usados durante a edição
-    btnSelecionarCliente.Enabled = False
-    btnBuscaCliente.Enabled = False
-    
-End Sub
-
-
-Private Sub lvwProdutosDaProposta_ItemClick(ByVal Item As MSComctlLib.ListItem)
-    ' Preencher os campos com os dados do item selecionado
-    txtItem.Value = Item.Text
-    txtCodProduto.Value = Item.SubItems(1)
-    txtDescricao.Value = Item.SubItems(2)
-    txtPreco.Value = Replace(Item.SubItems(3), ".", ",") ' Ajusta o separador decimal se necessário
-    txtQTD.Value = Item.SubItems(4)
-End Sub
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
