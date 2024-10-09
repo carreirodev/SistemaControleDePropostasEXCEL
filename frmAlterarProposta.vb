@@ -178,12 +178,14 @@ Private Sub btnSelecionarCliente_Click()
     End If
 End Sub
 
-
 Private Sub lstPropostasCliente_Click()
     If Me.lstPropostasCliente.ListIndex <> -1 Then
         Dim numeroPropostaSelecionada As String
         numeroPropostaSelecionada = Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListIndex, 0)
         ExibirDetalhesProposta numeroPropostaSelecionada
+        
+        ' Preencher o txtNrProposta com o número da proposta selecionada
+        Me.txtNrProposta.Value = numeroPropostaSelecionada
     End If
 End Sub
 
@@ -225,8 +227,11 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
             
             ' Capturar a referência da proposta (assumindo que é a mesma para todos os itens da proposta)
             referenciaProposta = cel.Offset(0, 7).Value ' REFERENCIA (Coluna H)
+            Exit For ' Sair do loop após encontrar a proposta
         End If
     Next cel
+
+    
     
     ' Preencher o txtReferencia com a referência da proposta
     Me.txtReferencia.Value = referenciaProposta
@@ -263,6 +268,36 @@ Private Sub lstProdutosDaProposta_Click()
         txtQTD.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 4)
     End If
 End Sub
+
+
+
+Private Sub btnSelecionarProposta_Click()
+    If Me.lstPropostasCliente.ListIndex <> -1 Then
+        Dim numeroPropostaSelecionada As String
+        numeroPropostaSelecionada = Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListIndex, 0)
+        
+        ' Exibir detalhes da proposta selecionada
+        ExibirDetalhesProposta numeroPropostaSelecionada
+        
+        ' Preencher o txtNrProposta com o número da proposta selecionada
+        Me.txtNrProposta.Value = numeroPropostaSelecionada
+        
+        ' Desabilitar a ListBox de propostas para impedir novas seleções
+        Me.lstPropostasCliente.Enabled = False
+        
+        ' Desabilitar o botão de selecionar proposta
+        Me.btnSelecionarProposta.Enabled = False
+        
+        ' Preencher o txtReferencia com a referência da proposta
+        ' (Isso já está sendo feito na função ExibirDetalhesProposta)
+    Else
+        MsgBox "Por favor, selecione uma proposta primeiro.", vbExclamation
+    End If
+End Sub
+
+
+
+
 
 
 Private Sub btnFechar_Click()
