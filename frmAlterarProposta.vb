@@ -236,7 +236,6 @@ Private Function BuscarDetalheProduto(codigoProduto As String) As String
     ' ...
 End Function
 
-' Remova a função AjustarColunasListView, pois não será mais necessária para o ListBox
 
 Private Sub btnSelecionarProposta_Click()
     If lstPropostasCliente.ListIndex = -1 Then
@@ -260,6 +259,8 @@ Private Sub btnSelecionarProposta_Click()
     ' Atualizar a interface para refletir que uma proposta foi selecionada para edição
     AtualizarInterfacePropostaSelecionada
 End Sub
+
+
 
 Private Sub AtualizarInterfacePropostaSelecionada()
     ' Desabilitar outros controles que não devem ser usados durante a edição
@@ -330,6 +331,5 @@ End Sub
 ' txtPreco
 ' txtItem
 ' btnAdicionarProduto
-
 
 
