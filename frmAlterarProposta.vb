@@ -208,9 +208,19 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     ' Configurar as colunas do ListBox
     With lstProdutosDaProposta
         .ColumnCount = 6
-        .ColumnWidths = "30;50;250;80;40;80"
+        .ColumnWidths = "50;50;280;100;50;100"
     End With
     
+    ' Adicionar cabeçalho ao ListBox
+    With lstProdutosDaProposta
+        .AddItem "ITEM"
+        .List(.ListCount - 1, 1) = "CÓDIGO"
+        .List(.ListCount - 1, 2) = "DESCRIÇÃO"
+        .List(.ListCount - 1, 3) = "PREÇO UNITÁRIO"
+        .List(.ListCount - 1, 4) = "QTD"
+        .List(.ListCount - 1, 5) = "SUBTOTAL"
+    End With
+
     For Each cel In rngPropostas.Columns(1).Cells
         If cel.Value = numeroPropostaSelecionada Then
             Dim descricaoProduto As String
@@ -235,6 +245,7 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     ' Preencher o txtReferencia com a referência da proposta
     Me.txtReferencia.Value = referenciaProposta
 End Sub
+
 
 Private Function BuscarDetalheProduto(codigoProduto As String) As String
     Dim wsPrecos As Worksheet
@@ -289,10 +300,15 @@ Private Sub AtualizarInterfacePropostaSelecionada()
     ' Você pode adicionar mais atualizações de interface aqui, se necessário
 End Sub
 
-' Adicione este evento para lidar com cliques no ListBox de produtos da proposta
+
+
 Private Sub lstProdutosDaProposta_Click()
-    ' Aqui você pode adicionar qualquer lógica que deseja executar quando um item é clicado
-    ' Por exemplo, você pode preencher campos de edição com os detalhes do item selecionado
+    ' Ignorar cliques na linha de cabeçalho
+    If lstProdutosDaProposta.ListIndex = 0 Then
+        Exit Sub
+    End If
+
+    ' Lógica para cliques em outras linhas
     If lstProdutosDaProposta.ListIndex > 0 Then ' Ignorar o cabeçalho
         Dim itemSelecionado As String
         itemSelecionado = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex)
@@ -311,6 +327,7 @@ Private Sub lstProdutosDaProposta_Click()
         ' txtSubtotal.Value = partes(5)
     End If
 End Sub
+
 
 
 Private Sub btnFechar_Click()
