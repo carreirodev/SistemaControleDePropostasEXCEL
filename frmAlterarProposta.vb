@@ -205,8 +205,6 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     With lstProdutosDaProposta
         .ColumnCount = 6
         .ColumnWidths = "40;60;150;80;40;80"
-        ' Adicionar cabeçalhos
-        .AddItem "Item;Código;Descrição;Preço Unitário;Qtd;Subtotal"
     End With
     
     For Each cel In rngPropostas.Columns(1).Cells
@@ -214,13 +212,16 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
             Dim descricaoProduto As String
             descricaoProduto = BuscarDetalheProduto(cel.Offset(0, 3).Value)
             
-            lstProdutosDaProposta.AddItem _
-                cel.Offset(0, 2).Value & ";" & _
-                cel.Offset(0, 3).Value & ";" & _
-                descricaoProduto & ";" & _
-                Format(cel.Offset(0, 4).Value, "#,##0.00") & ";" & _
-                cel.Offset(0, 5).Value & ";" & _
-                Format(cel.Offset(0, 6).Value, "#,##0.00")
+            ' Adicionar os dados ao ListBox
+            With lstProdutosDaProposta
+                .AddItem
+                .List(.ListCount - 1, 0) = cel.Offset(0, 2).Value ' ITEM
+                .List(.ListCount - 1, 1) = cel.Offset(0, 3).Value ' CODIGO
+                .List(.ListCount - 1, 2) = descricaoProduto ' DESCRIÇÃO
+                .List(.ListCount - 1, 3) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' PREÇO UNITÁRIO
+                .List(.ListCount - 1, 4) = cel.Offset(0, 5).Value ' QUANTIDADE
+                .List(.ListCount - 1, 5) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' SUBTOTAL
+            End With
             
             ' Capturar a referência da proposta (assumindo que é a mesma para todos os itens da proposta)
             referenciaProposta = cel.Offset(0, 7).Value ' REFERENCIA (Coluna H)
@@ -232,9 +233,23 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
 End Sub
 
 Private Function BuscarDetalheProduto(codigoProduto As String) As String
-    ' Esta função permanece inalterada
-    ' ...
+    Dim wsPrecos As Worksheet
+    Dim rngPrecos As Range
+    Dim cel As Range
+    
+    Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    Set rngPrecos = wsPrecos.Range("A2", wsPrecos.Cells(wsPrecos.Rows.Count, "C").End(xlUp))
+    
+    For Each cel In rngPrecos.Columns(1).Cells
+        If cel.Value = codigoProduto Then
+            BuscarDetalheProduto = cel.Offset(0, 1).Value ' DESCRIÇÃO DO PRODUTO
+            Exit Function
+        End If
+    Next cel
+    
+    BuscarDetalheProduto = "Descrição não encontrada"
 End Function
+
 
 
 Private Sub btnSelecionarProposta_Click()
