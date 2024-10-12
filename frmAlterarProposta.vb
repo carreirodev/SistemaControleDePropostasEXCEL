@@ -182,10 +182,14 @@ Private Sub lstPropostasCliente_Click()
     If Me.lstPropostasCliente.ListIndex <> -1 Then
         Dim numeroPropostaSelecionada As String
         numeroPropostaSelecionada = Me.lstPropostasCliente.List(Me.lstPropostasCliente.ListIndex, 0)
+        
+        ' Preencher o campo txtNrProposta com o número da proposta selecionada
+        Me.txtNrProposta.Value = numeroPropostaSelecionada
+        
+        ' Exibir detalhes da proposta
         ExibirDetalhesProposta numeroPropostaSelecionada
     End If
 End Sub
-
 
 Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     Dim wsPropostas As Worksheet
@@ -204,7 +208,7 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     ' Configurar as colunas do ListBox
     With lstProdutosDaProposta
         .ColumnCount = 6
-        .ColumnWidths = "40;60;150;80;40;80"
+        .ColumnWidths = "30;50;250;80;40;80"
     End With
     
     For Each cel In rngPropostas.Columns(1).Cells
