@@ -313,8 +313,9 @@ Private Sub lstProdutosDaProposta_Click()
 End Sub
 
 
-
-
+Private Sub btnFechar_Click()
+    Unload Me
+End Sub
 
 
 
