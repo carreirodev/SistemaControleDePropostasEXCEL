@@ -31,11 +31,13 @@ End Sub
 
 
 Private Sub btnSalvar_Click()
+    ' Verifica se os campos obrigatórios estão preenchidos
     If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
         MsgBox "Os campos 'Nome do Cliente' e 'Pessoa de Contato' são obrigatórios.", vbExclamation
         Exit Sub
     End If
 
+    ' Resto do código para salvar o cliente
     Dim ws As Worksheet
     Dim ultimaLinha As Long
     Dim novoID As String
@@ -61,6 +63,7 @@ Private Sub btnSalvar_Click()
     MsgBox "Cliente cadastrado com sucesso!" & vbNewLine & "ID: " & txtID, vbInformation
     LimparFormulario
 End Sub
+
 
 
 
@@ -245,27 +248,33 @@ Private Sub PreencherCamposCliente(clienteID As String)
 End Sub
 
 Private Sub btnAlterar_Click()
+    ' Verifica se os campos obrigatórios estão preenchidos
+    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
+        MsgBox "Os campos 'Nome do Cliente' e 'Pessoa de Contato' são obrigatórios.", vbExclamation
+        Exit Sub
+    End If
+
     Dim ws As Worksheet
     Dim ultimaLinha As Long
     Dim i As Long
     Dim clienteID As String
     Dim telefoneFormatado As String
-    
+
     ' Verifica se um cliente foi selecionado
     If lstResultados.ListIndex < 0 Then
         MsgBox "Selecione um cliente para alterar.", vbExclamation
         Exit Sub
     End If
-    
+
     ' Obtém o ID do cliente selecionado
     clienteID = lstResultados.List(lstResultados.ListIndex, 0)
-    
+
     Set ws = ThisWorkbook.Sheets("CLIENTES")
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-    
+
     ' Formata o telefone com apóstrofo no início
     telefoneFormatado = "'" & txtTelefone.Value
-    
+
     ' Procura o cliente na planilha e atualiza os dados
     For i = 2 To ultimaLinha
         If ws.Cells(i, 1).Value = clienteID Then
@@ -277,17 +286,16 @@ Private Sub btnAlterar_Click()
             ws.Cells(i, 6).Value = UCase(txtEstado.Value) ' Estado em maiúsculas
             ws.Cells(i, 7).Value = telefoneFormatado ' Telefone formatado
             ws.Cells(i, 8).Value = LCase(txtEmail.Value) ' Email em minúsculas
-            btnAlterar.Enabled = False 
+            btnAlterar.Enabled = False
             MsgBox "Informações do cliente alteradas com sucesso.", vbInformation
             LimparFormulario
             Exit Sub
-            
         End If
-
     Next i
 
     MsgBox "Erro ao alterar o cliente. Cliente não encontrado.", vbCritical
 End Sub
+
 
 
 
@@ -377,6 +385,8 @@ Private Sub btnApagar_Click()
     
     MsgBox "Erro ao apagar o cliente. Cliente não encontrado.", vbCritical
 End Sub
+
+
 
 
 Private Sub btnFechar_Click()
