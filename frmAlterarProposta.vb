@@ -6,7 +6,8 @@ Private Sub UserForm_Initialize()
     End With
     
     ' Desabilitar o botão Selecionar Cliente por padrão (se existir)
-    Me.btnSelecionarCliente.Enabled = False
+    ' Removido o botão Selecionar Cliente
+    ' Me.btnSelecionarCliente.Enabled = False
 End Sub
 
 Private Sub btnBuscaCliente_Click()
@@ -42,29 +43,21 @@ Private Sub btnBuscaCliente_Click()
             
             encontrado = True
         End If
-        Me.btnSelecionarCliente.Enabled = True
+        ' Me.btnSelecionarCliente.Enabled = True ' Removido
     Next cel
     
     ' Mensagem caso nenhum cliente seja encontrado
     If Not encontrado Then
         MsgBox "Nenhum cliente encontrado com os critérios fornecidos.", vbInformation
-            Me.btnSelecionarCliente.Enabled = False
+        ' Me.btnSelecionarCliente.Enabled = False ' Removido
     End If
-
-
 End Sub
-
-
-
 
 Private Sub lstClientesListados_Click()
     If Me.lstClientesListados.ListIndex <> -1 Then
         ' Preencher os campos com as informações do cliente selecionado
         Me.txtID.Value = Me.lstClientesListados.List(Me.lstClientesListados.ListIndex, 0)
         Me.txtNomeCliente.Value = Me.lstClientesListados.List(Me.lstClientesListados.ListIndex, 1)
-        
-        ' Desabilitar o botão Selecionar Cliente após a seleção
-        Me.btnSelecionarCliente.Enabled = True
         
         ' Desabilitar os campos para edição
         Me.txtID.Enabled = False
@@ -75,10 +68,17 @@ Private Sub lstClientesListados_Click()
 
         ' Desabilitar o botão Limpar e Buscar Cliente
         Me.btnBuscaCliente.Enabled = False
+        
+        ' Chamar a função para listar as propostas do cliente
+        Dim clienteID As String
+        clienteID = Me.lstClientesListados.List(Me.lstClientesListados.ListIndex, 0)
+        ListarPropostasCliente clienteID
+        
+        ' Desabilitar o botão após a seleção
+        ' Me.btnSelecionarCliente.Enabled = False ' Removido
     End If
 End Sub
 
-' Ajuste no btnLimparCliente_Click para reabilitar todos os controles
 Private Sub btnLimparCliente_Click()
     ' Limpar os campos
     Me.txtID.Value = ""
@@ -92,17 +92,24 @@ Private Sub btnLimparCliente_Click()
     ' Reabilitar a ListBox para permitir novas seleções
     Me.lstClientesListados.Enabled = True
     Me.lstPropostasCliente.Clear
+    Me.txtNrProposta.Value = ""
+    Me.lstProdutosDaProposta.Clear
+    Me.txtCodProduto.Value = ""
+    Me.txtDescricao.Value = ""
+    Me.txtQTD.Value = ""
+    Me.txtPreco.Value = ""
+    Me.txtItem.Value = ""
+
 
 
     ' Reabilitar os botões
-    Me.btnSelecionarCliente.Enabled = False
+    ' Me.btnSelecionarCliente.Enabled = False ' Removido
     Me.btnLimparCliente.Enabled = True
     Me.btnBuscaCliente.Enabled = True
 
     ' Foco no nome
     txtNomeCliente.SetFocus
 End Sub
-
 
 Private Sub ListarPropostasCliente(clienteID As String)
     Dim wsPropostas As Worksheet
@@ -115,7 +122,7 @@ Private Sub ListarPropostasCliente(clienteID As String)
     Dim qtdItens As Integer
     
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).row
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
     Set rngPropostas = wsPropostas.Range("A2:H" & ultimaLinha)
     
     Me.lstPropostasCliente.Clear
@@ -160,24 +167,6 @@ Private Sub ListarPropostasCliente(clienteID As String)
     Me.lstPropostasCliente.Enabled = True
 End Sub
 
-
-
-Private Sub btnSelecionarCliente_Click()
-    If Me.lstClientesListados.ListIndex <> -1 Then
-        Dim clienteID As String
-        clienteID = Me.lstClientesListados.List(Me.lstClientesListados.ListIndex, 0)
-        
-        ' Chamar a função para listar as propostas do cliente
-        ListarPropostasCliente clienteID
-        
-        ' Desabilitar o botão após a seleção
-        Me.btnSelecionarCliente.Enabled = False
-    Else
-        MsgBox "Por favor, selecione um cliente primeiro.", vbExclamation
-    End If
-End Sub
-
-
 Private Sub lstPropostasCliente_Click()
     If Me.lstPropostasCliente.ListIndex <> -1 Then
         Dim numeroPropostaSelecionada As String
@@ -190,6 +179,8 @@ Private Sub lstPropostasCliente_Click()
         ExibirDetalhesProposta numeroPropostaSelecionada
     End If
 End Sub
+
+
 
 Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
     Dim wsPropostas As Worksheet
@@ -247,6 +238,8 @@ Private Sub ExibirDetalhesProposta(numeroPropostaSelecionada As String)
 End Sub
 
 
+
+
 Private Function BuscarDetalheProduto(codigoProduto As String) As String
     Dim wsPrecos As Worksheet
     Dim rngPrecos As Range
@@ -277,9 +270,6 @@ Private Sub btnSelecionarProposta_Click()
     Dim numeroPropostaSelecionada As String
     numeroPropostaSelecionada = lstPropostasCliente.List(lstPropostasCliente.ListIndex, 0)
     
-    ' Exibir detalhes da proposta
-    ExibirDetalhesProposta numeroPropostaSelecionada
-    
     ' Desabilitar a lista de propostas
     lstPropostasCliente.Enabled = False
     
@@ -292,13 +282,15 @@ End Sub
 
 
 
+
 Private Sub AtualizarInterfacePropostaSelecionada()
     ' Desabilitar outros controles que não devem ser usados durante a edição
-    btnSelecionarCliente.Enabled = False
+    ' Me.btnSelecionarCliente.Enabled = False ' Removido
     btnBuscaCliente.Enabled = False
     
     ' Você pode adicionar mais atualizações de interface aqui, se necessário
 End Sub
+
 
 
 
@@ -328,15 +320,9 @@ Private Sub lstProdutosDaProposta_Click()
     End If
 End Sub
 
-
-
 Private Sub btnFechar_Click()
     Unload Me
 End Sub
-
-
-
-
 
 
 
