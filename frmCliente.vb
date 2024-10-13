@@ -1,5 +1,3 @@
-' Código para o formulário frmBuscaCliente
-
 ' Variáveis globais para armazenar os valores originais
 Dim originalNomeCliente As String
 Dim originalPessoaContato As String
@@ -29,39 +27,83 @@ Private Sub ConfigurarListBox()
     End With
 End Sub
 
-Private Sub txtNomeCliente_Change()
-    txtNomeCliente.Value = UCase(txtNomeCliente.Value)
-    VerificarAlteracoes
+
+
+
+Private Sub btnSalvar_Click()
+    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
+        MsgBox "Os campos 'Nome do Cliente' e 'Pessoa de Contato' são obrigatórios.", vbExclamation
+        Exit Sub
+    End If
+
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim novoID As String
+    Dim nomeClienteMaiusculo As String
+    Dim telefoneFormatado As String
+
+    Set ws = ThisWorkbook.Sheets("CLIENTES")
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    nomeClienteMaiusculo = UCase(txtNomeCliente.Value)
+    txtID = GerarNovoID(nomeClienteMaiusculo, ultimaLinha)
+    telefoneFormatado = "'" & txtTelefone.Value
+
+    ws.Cells(ultimaLinha + 1, 1).Value = txtID
+    ws.Cells(ultimaLinha + 1, 2).Value = nomeClienteMaiusculo
+    ws.Cells(ultimaLinha + 1, 3).Value = txtPessoaContato.Value
+    ws.Cells(ultimaLinha + 1, 4).Value = txtEndereco.Value
+    ws.Cells(ultimaLinha + 1, 5).Value = txtCidade.Value
+    ws.Cells(ultimaLinha + 1, 6).Value = UCase(txtEstado.Value)
+    ws.Cells(ultimaLinha + 1, 7).Value = telefoneFormatado
+    ws.Cells(ultimaLinha + 1, 8).Value = LCase(txtEmail.Value)
+
+    MsgBox "Cliente cadastrado com sucesso!" & vbNewLine & "ID: " & txtID, vbInformation
+    LimparFormulario
 End Sub
 
-Private Sub txtEstado_Change()
-    txtEstado.Value = UCase(txtEstado.Value)
-    VerificarAlteracoes
+
+
+Private Function GerarNovoID(nomeCliente As String, ultimaLinha As Long) As String
+    Dim prefixo As String
+    Dim numero As Long
+    Dim idExistente As Boolean
+    Dim novoID As String
+    Dim rng As Range
+    Dim caracteres As String
+    Dim i As Integer
+
+    caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    numero = ultimaLinha
+
+    Do
+        If Len(nomeCliente) >= 2 Then
+            prefixo = UCase(Left(nomeCliente, 2))
+        Else
+            prefixo = ""
+        End If
+
+        If prefixo = "" Or idExistente Then
+            prefixo = ""
+            For i = 1 To 2
+                prefixo = prefixo & Mid(caracteres, Int((Len(caracteres) * Rnd) + 1), 1)
+            Next i
+        End If
+
+        novoID = prefixo & Format(numero, "00000")
+        Set rng = ThisWorkbook.Sheets("CLIENTES").Columns("A").Find(What:=novoID, LookIn:=xlValues, LookAt:=xlWhole)
+        idExistente = Not rng Is Nothing
+    Loop While idExistente
+
+    GerarNovoID = novoID
+End Function
+
+
+Private Sub ValidarCamposObrigatorios()
+    btnSalvar.Enabled = (Len(Trim(txtNomeCliente.Value)) > 0 And Len(Trim(txtPessoaContato.Value)) > 0)
 End Sub
 
-Private Sub txtPessoaContato_Change()
-    txtPessoaContato.Value = FormatarPrimeiraLetraMaiuscula(txtPessoaContato)
-    VerificarAlteracoes
-End Sub
 
-Private Sub txtEndereco_Change()
-    txtEndereco.Value = FormatarPrimeiraLetraMaiuscula(txtEndereco)
-    VerificarAlteracoes
-End Sub
-
-Private Sub txtCidade_Change()
-    txtCidade.Value = FormatarPrimeiraLetraMaiuscula(txtCidade)
-    VerificarAlteracoes
-End Sub
-
-Private Sub txtEmail_Change()
-    txtEmail.Value = LCase(txtEmail.Value)
-    VerificarAlteracoes
-End Sub
-
-Private Sub txtTelefone_Change()
-    VerificarAlteracoes
-End Sub
 
 Private Sub VerificarAlteracoes()
     ' Habilita o botão ALTERAR somente se um registro foi selecionado e algum campo (exceto ID) for alterado
@@ -78,6 +120,51 @@ Private Sub VerificarAlteracoes()
         btnAlterar.Enabled = False
     End If
 End Sub
+
+Private Sub txtNomeCliente_Change()
+    txtNomeCliente.Text = UCase(txtNomeCliente.Text)
+    txtNomeCliente.SelStart = Len(txtNomeCliente.Text)
+    ' Remova a chamada para ValidarCamposObrigatorios
+    VerificarAlteracoes
+End Sub
+
+Private Sub txtPessoaContato_Change()
+    txtPessoaContato.Text = FormatarPrimeiraLetraMaiuscula(txtPessoaContato)
+    ' Remova a chamada para ValidarCamposObrigatorios
+    VerificarAlteracoes
+End Sub
+
+Private Sub txtEndereco_Change()
+    txtEndereco.Text = FormatarPrimeiraLetraMaiuscula(txtEndereco)
+    VerificarAlteracoes
+End Sub
+
+Private Sub txtCidade_Change()
+    txtCidade.Text = FormatarPrimeiraLetraMaiuscula(txtCidade)
+    VerificarAlteracoes
+End Sub
+
+Private Sub txtEstado_Change()
+    txtEstado.Text = UCase(txtEstado.Text)
+    txtEstado.SelStart = Len(txtEstado.Text)
+    VerificarAlteracoes
+End Sub
+
+Private Sub txtEmail_Change()
+    Dim cursorPos As Long
+    cursorPos = txtEmail.SelStart
+    txtEmail.Text = LCase(txtEmail.Text)
+    txtEmail.SelStart = cursorPos
+    VerificarAlteracoes
+End Sub
+
+Private Sub txtTelefone_Change()
+    VerificarAlteracoes
+End Sub
+
+
+
+
 
 Private Sub btnBuscar_Click()
     Dim ws As Worksheet
@@ -202,6 +289,8 @@ Private Sub btnAlterar_Click()
     MsgBox "Erro ao alterar o cliente. Cliente não encontrado.", vbCritical
 End Sub
 
+
+
 Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As String
     Dim texto As String
     Dim palavras() As String
@@ -221,10 +310,9 @@ Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As Strin
     FormatarPrimeiraLetraMaiuscula = novoTexto
 End Function
 
-Private Sub btnFechar_Click()
-    ' Fecha o formulário sem nenhuma ação
-    Unload Me
-End Sub
+
+
+
 
 Private Sub btnLimpar_Click()
     ' Limpa todos os campos do formulário
@@ -291,86 +379,7 @@ Private Sub btnApagar_Click()
 End Sub
 
 
-
-'VERSAO 3.5
-
-
-'Private Sub btnCriarNovaProposta_Click()
-'    Dim wsPropostas As Worksheet
-'    Dim ultimaLinhaProposta As Long
-'    Dim numeroProposta As Long
-'    Dim clienteID As String
-'    Dim nomeCliente As String
-'    Dim pessoaContato As String
-'    Dim cidade As String
-'    Dim estado As String
-'    
-'    ' Verifica se um cliente foi selecionado
-'    If lstResultados.ListIndex < 0 Then
-'        MsgBox "Selecione um cliente para criar uma nova proposta.", vbExclamation
-'        Exit Sub
-'    End If
-'    
-'    ' Obtém os dados do cliente selecionado
-'    clienteID = lstResultados.List(lstResultados.ListIndex, 0)
-'    nomeCliente = lstResultados.List(lstResultados.ListIndex, 1)
-'    pessoaContato = lstResultados.List(lstResultados.ListIndex, 2)
-'    cidade = lstResultados.List(lstResultados.ListIndex, 3)
-'    estado = lstResultados.List(lstResultados.ListIndex, 4)
-'    
-'    ' Define a planilha de propostas
-'    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-'    
-'    ' Gera um número de proposta único
-'    numeroProposta = GerarNumeroPropostaUnico(wsPropostas)
-'    
-'    ' Adiciona um novo registro na planilha "ListaDePropostas"
-'    With wsPropostas
-'        ultimaLinhaProposta = .Cells(.Rows.Count, 1).End(xlUp).Row + 1
-'        .Cells(ultimaLinhaProposta, 1).Value = Format(numeroProposta, "0000") ' Número da proposta com 4 dígitos
-'        .Cells(ultimaLinhaProposta, 2).Value = clienteID ' ID do cliente
-'    End With
-'    
-'    ' Exibe uma mensagem ao usuário com o número da proposta e o nome do cliente
-'    MsgBox "Nova proposta criada para o cliente: " & vbCrLf & _
-'            nomeCliente & vbCrLf & _
-'           "Número da Proposta: " & Format(numeroProposta, "0000"), vbInformation
-'    
-'    ' Preenche o formulário frmProposta com os dados do cliente e o número da proposta
-'    With frmProposta
-'        .txtID.Value = clienteID
-'        .txtNomeCliente.Value = nomeCliente
-'        .txtPessoaContato.Value = pessoaContato
-'        .txtCidade.Value = cidade
-'        .txtEstado.Value = estado
-'        .txtProposta.Value = Format(numeroProposta, "0000") ' Preenche o número da proposta
-'        .Show
-'    End With
-'
-'    ' Fecha o formulário atual
-'    Unload Me
-'End Sub
-'
-'
-'
-'
-'
-'Private Function GerarNumeroPropostaUnico(ws As Worksheet) As Long
-'    Dim ultimaLinha As Long
-'    Dim i As Long
-'    Dim maiorNumero As Long
-'    Dim numeroAtual As Long
-'    
-'    ultimaLinha = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
-'    maiorNumero = 0
-'    
-'    For i = 2 To ultimaLinha ' Assume que a linha 1 é o cabeçalho
-'        numeroAtual = Val(ws.Cells(i, 1).Value)
-'        If numeroAtual > maiorNumero Then
-'            maiorNumero = numeroAtual
-'        End If
-'    Next i
-'    
-'    GerarNumeroPropostaUnico = maiorNumero + 1
-'End Function
-'
+Private Sub btnFechar_Click()
+    ' Fecha o formulário sem nenhuma ação
+    Unload Me
+End Sub
