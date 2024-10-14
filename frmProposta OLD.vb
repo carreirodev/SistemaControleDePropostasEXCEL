@@ -16,29 +16,11 @@ Private Sub UserForm_Initialize()
     ' Configurar a ListBox lstCliente (mantida como está)
     With Me.lstCliente
         .ColumnCount = 5
-        .ColumnWidths = "45;130;130;100;24"
+        .ColumnWidths = "48;140;140;108;24"
     End With
     
     ' Desabilitar o botão Selecionar Cliente por padrão
     Me.btnSelecionarCliente.Enabled = False
-    
-    ' Carregar os vendedores na ComboBox cmbVendedor
-    Dim wsVendedores As Worksheet
-    Dim rngVendedores As Range
-    Dim cel As Range
-    
-    ' Definindo a planilha de vendedores
-    Set wsVendedores = ThisWorkbook.Sheets("VENDEDORES")
-    ' Definindo o intervalo de dados dos vendedores (ajuste conforme necessário)
-    Set rngVendedores = wsVendedores.ListObjects("Vendedor").DataBodyRange
-    
-    ' Limpando a ComboBox antes de adicionar novos itens
-    Me.cmbVendedor.Clear
-    
-    ' Iterando sobre cada vendedor e adicionando à ComboBox
-    For Each cel In rngVendedores.Columns(1).Cells
-        Me.cmbVendedor.AddItem cel.Value
-    Next cel
 End Sub
 
 
@@ -86,6 +68,7 @@ Private Sub btnBuscaCliente_Click()
         If (idBusca <> "" And InStr(1, cel.Value, idBusca, vbTextCompare) > 0) Or _
            (nomeBusca <> "" And InStr(1, cel.Offset(0, 1).Value, nomeBusca, vbTextCompare) > 0) Then
 
+
             ' Adicionando o cliente à ListBox
             Me.lstCliente.AddItem cel.Value
             Me.lstCliente.List(Me.lstCliente.ListCount - 1, 1) = cel.Offset(0, 1).Value ' Nome
@@ -102,6 +85,8 @@ Private Sub btnBuscaCliente_Click()
         MsgBox "Nenhum cliente encontrado com os critérios fornecidos.", vbInformation
     End If
 End Sub
+
+
 
 Private Sub btnLimparCliente_Click()
     ' Limpar os campos
@@ -128,8 +113,9 @@ Private Sub btnLimparCliente_Click()
     Me.lstCliente.Enabled = True
 
     ' Foco no nome
-    txtNomeCliente.SetFocus
+        txtNomeCliente.SetFocus
 End Sub
+
 
 Private Sub btnSelecionarCliente_Click()
     ' Desabilitar os campos para edição
@@ -150,12 +136,13 @@ Private Sub btnSelecionarCliente_Click()
     CriarNovaProposta
 End Sub
 
+
 Private Sub CriarNovaProposta()
     Dim wsPropostas As Worksheet
     Dim numeroBase As Long
     Dim novoNumero As String
     Dim estadoCliente As String
-    
+    Dim ultimaLinha As Long
     ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     
@@ -177,9 +164,19 @@ Private Sub CriarNovaProposta()
     ' Concatenar o número formatado com o estado do cliente
     novoNumero = novoNumero & "-" & estadoCliente
     
+    ' Encontrar a próxima linha vazia para registrar a nova proposta
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).row + 1
+    
+    ' Preencher a nova linha na planilha de propostas
+    wsPropostas.Cells(ultimaLinha, 1).Value = novoNumero ' Coluna NUMERO
+    wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
+    wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value ' Coluna REFERENCIA
+    
     ' Preencher o número da proposta no campo txtNrProposta
     Me.txtNrProposta.Value = novoNumero
 End Sub
+
+
 
 Private Sub btnBuscarProduto_Click()
     Dim wsPrecos As Worksheet
@@ -221,6 +218,7 @@ Private Sub btnBuscarProduto_Click()
     End If
 End Sub
 
+
 Private Sub btnAdicionarProduto_Click()
     ' Verificar se o número da proposta está preenchido
     If Me.txtNrProposta.Value = "" Then
@@ -259,13 +257,27 @@ Private Sub btnAdicionarProduto_Click()
     End If
 
     ' Continuar com a adição do produto
+    Dim wsPropostas As Worksheet
+    Dim ultimaLinha As Long
+    Dim numeroProposta As String
+    Dim cliente As String
     Dim Item As Long
     Dim codigo As String
     Dim descricao As String
     Dim precoUnitario As Double
     Dim quantidade As Long
     Dim subtotal As Double
-    Dim lvwItem As ListItem
+    Dim linhaProposta As Long
+    Dim cel As Range
+    Dim referencia As String
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obtendo o número da proposta, cliente selecionado e a referência
+    numeroProposta = Me.txtNrProposta.Value
+    cliente = Me.txtID.Value
+    referencia = Me.txtReferencia.Value
     
     ' Obtendo os valores dos campos
     Item = CLng(Me.txtItem.Value)
@@ -275,13 +287,40 @@ Private Sub btnAdicionarProduto_Click()
     quantidade = CLng(Me.txtQTD.Value)
     subtotal = precoUnitario * quantidade
     
-    ' Adicionar o item ao ListView
-    Set lvwItem = Me.lvwProdutosDaProposta.ListItems.Add(, , Item)
-    lvwItem.ListSubItems.Add , , codigo
-    lvwItem.ListSubItems.Add , , descricao
-    lvwItem.ListSubItems.Add , , quantidade
-    lvwItem.ListSubItems.Add , , Format(precoUnitario, "#,##0.00")
-    lvwItem.ListSubItems.Add , , Format(subtotal, "#,##0.00")
+    ' Encontrar a linha da proposta atual (primeira ocorrência na coluna 1)
+    Set cel = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
+    If Not cel Is Nothing Then
+        linhaProposta = cel.row
+    Else
+        ' Se a proposta não for encontrada, algo está errado
+        MsgBox "Erro: Proposta não encontrada.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Adicionar ou atualizar o item na proposta
+    If wsPropostas.Cells(linhaProposta, 3).Value = "" Then
+        ' Preencher a linha existente na planilha de propostas
+        wsPropostas.Cells(linhaProposta, 3).Value = Item ' Coluna ITEM
+        wsPropostas.Cells(linhaProposta, 4).Value = codigo ' Coluna CODIGO
+        wsPropostas.Cells(linhaProposta, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
+        wsPropostas.Cells(linhaProposta, 6).Value = quantidade ' Coluna QUANTIDADE
+        wsPropostas.Cells(linhaProposta, 7).Value = subtotal ' Coluna SUBTOTAL
+        ' Atualizar a referência apenas na primeira linha da proposta
+        wsPropostas.Cells(linhaProposta, 8).Value = referencia ' Coluna REFERENCIA
+    Else
+        ' Encontrar a próxima linha vazia para registrar o novo item da proposta
+        ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).row + 1
+        
+        ' Preencher a nova linha na planilha de propostas
+        wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
+        wsPropostas.Cells(ultimaLinha, 2).Value = cliente ' Coluna CLIENTE
+        wsPropostas.Cells(ultimaLinha, 3).Value = Item ' Coluna ITEM
+        wsPropostas.Cells(ultimaLinha, 4).Value = codigo ' Coluna CODIGO
+        wsPropostas.Cells(ultimaLinha, 5).Value = precoUnitario ' Coluna PRECO UNITARIO
+        wsPropostas.Cells(ultimaLinha, 6).Value = quantidade ' Coluna QUANTIDADE
+        wsPropostas.Cells(ultimaLinha, 7).Value = subtotal ' Coluna SUBTOTAL
+        wsPropostas.Cells(ultimaLinha, 8).Value = referencia ' Coluna REFERENCIA
+    End If
     
     ' Limpar os campos de entrada
     Me.txtCodProduto.Value = ""
@@ -295,7 +334,11 @@ Private Sub btnAdicionarProduto_Click()
     
     ' Incrementar o número do item para o próximo produto
     Me.txtItem.Value = Item + 1
+
+    AtualizarListaProdutos
 End Sub
+
+
 
 Private Sub ValidarProduto()
     Dim ws As Worksheet
@@ -323,6 +366,8 @@ Private Sub ValidarProduto()
     btnAdicionarProduto.Enabled = produtoEncontrado And descricaoCorreta
 End Sub
 
+
+
 Private Sub txtCodProduto_Change()
     ValidarProduto
 End Sub
@@ -331,14 +376,13 @@ Private Sub txtDescricao_Change()
     ValidarProduto
 End Sub
 
-Private Sub btnSalvarProposta_Click()
+
+Private Sub btnAtualizarRef_Click()
     Dim wsPropostas As Worksheet
     Dim numeroProposta As String
     Dim novaReferencia As String
-    Dim ultimaLinha As Long
-    Dim i As Long
-    Dim lvwItem As ListItem
-    Dim vendedor As String
+    Dim cel As Range
+    Dim primeiraOcorrencia As Range
     
     ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
@@ -346,35 +390,134 @@ Private Sub btnSalvarProposta_Click()
     ' Obtendo o número da proposta e a nova referência
     numeroProposta = Me.txtNrProposta.Value
     novaReferencia = Me.txtReferencia.Value
-    vendedor = Me.cmbVendedor.Value
     
-    ' Limpar itens antigos da proposta na planilha
-    For i = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row To 2 Step -1
-        If wsPropostas.Cells(i, 1).Value = numeroProposta Then
-            wsPropostas.Rows(i).Delete
-        End If
-    Next i
+    ' Encontrar a primeira ocorrência da proposta
+    Set primeiraOcorrencia = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
     
-    ' Encontrar a próxima linha vazia para registrar a nova proposta
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
-    
-    ' Iterar sobre os itens do ListView e adicionar à planilha
-    For Each lvwItem In Me.lvwProdutosDaProposta.ListItems
-        wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
-        wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
-        wsPropostas.Cells(ultimaLinha, 3).Value = lvwItem.Text ' Coluna ITEM
-        wsPropostas.Cells(ultimaLinha, 4).Value = lvwItem.ListSubItems(1).Text ' Coluna CODIGO
-        wsPropostas.Cells(ultimaLinha, 5).Value = CDbl(lvwItem.ListSubItems(4).Text) ' Coluna PRECO UNITARIO
-        wsPropostas.Cells(ultimaLinha, 6).Value = CLng(lvwItem.ListSubItems(3).Text) ' Coluna QUANTIDADE
-        wsPropostas.Cells(ultimaLinha, 7).Value = CDbl(lvwItem.ListSubItems(5).Text) ' Coluna SUBTOTAL
-        wsPropostas.Cells(ultimaLinha, 8).Value = novaReferencia ' Coluna REFERENCIA
-        wsPropostas.Cells(ultimaLinha, 9).Value = vendedor ' Coluna VENDEDOR
-        ultimaLinha = ultimaLinha + 1
-    Next lvwItem
-    
-    MsgBox "Proposta salva com sucesso!", vbInformation
+    ' Verifica se a proposta foi encontrada
+    If Not primeiraOcorrencia Is Nothing Then
+        ' Iterar sobre cada linha da proposta
+        For Each cel In wsPropostas.Columns(1).Cells
+            If cel.Value = numeroProposta Then
+                ' Atualizar a coluna de referência
+                wsPropostas.Cells(cel.row, 8).Value = novaReferencia ' Coluna REFERENCIA
+            End If
+        Next cel
+    Else
+        MsgBox "Proposta não encontrada.", vbExclamation
+    End If
+End Sub
 
-    Unload Me
+
+Private Sub AtualizarListaProdutos()
+    Dim wsPropostas As Worksheet
+    Dim wsPrecos As Worksheet
+    Dim numeroProposta As String
+    Dim ultimaLinha As Long
+    Dim linhaAtual As Long
+    Dim Item As String
+    Dim codigo As String
+    Dim descricao As String
+    Dim quantidade As String
+    Dim precoUnitario As Double
+    Dim precoTotal As Double
+    Dim rngPreco As Range
+    Dim lvwItem As listItem
+    
+    ' Definindo as planilhas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    
+    ' Obtendo o número da proposta atual
+    numeroProposta = Me.txtNrProposta.Value
+    
+    ' Limpar o ListView antes de adicionar novos itens
+    Me.lvwProdutosDaProposta.ListItems.Clear
+    
+    ' Encontrar a última linha da planilha de propostas
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 3).End(xlUp).row
+    
+    ' Iterar sobre as linhas da planilha para a proposta atual
+    For linhaAtual = 2 To ultimaLinha ' Começando em 2 para pular o cabeçalho
+        If wsPropostas.Cells(linhaAtual, 1).Value = numeroProposta Then
+            ' Obter os valores das colunas relevantes
+            Item = wsPropostas.Cells(linhaAtual, 3).Value ' Coluna C - ITEM
+            codigo = wsPropostas.Cells(linhaAtual, 4).Value ' Coluna D - CODIGO
+            precoUnitario = wsPropostas.Cells(linhaAtual, 5).Value ' Coluna E - PRECO UNITARIO
+            quantidade = wsPropostas.Cells(linhaAtual, 6).Value ' Coluna F - QUANTIDADE
+            precoTotal = wsPropostas.Cells(linhaAtual, 7).Value ' Coluna G - TOTAL DO ITEM
+            
+            ' Buscar a descrição do produto na planilha de preços
+            Set rngPreco = wsPrecos.Range("A:A").Find(What:=codigo, LookIn:=xlValues, LookAt:=xlWhole)
+            If Not rngPreco Is Nothing Then
+                descricao = rngPreco.Offset(0, 1).Value ' Supondo que a descrição está na coluna B
+            Else
+                descricao = "Descrição não encontrada"
+            End If
+            
+            ' Adicionar o item ao ListView
+            Set lvwItem = Me.lvwProdutosDaProposta.ListItems.Add(, , Item)
+            lvwItem.ListSubItems.Add , , codigo
+            lvwItem.ListSubItems.Add , , descricao
+            lvwItem.ListSubItems.Add , , quantidade
+            lvwItem.ListSubItems.Add , , Format(precoUnitario, "#,##0.00")
+            lvwItem.ListSubItems.Add , , Format(precoTotal, "#,##0.00")
+        End If
+    Next linhaAtual
+End Sub
+
+Private Sub lvwProdutosDaProposta_AfterEdit(ByVal Item As listItem, ByVal SubItemIndex As Integer)
+    Dim wsPropostas As Worksheet
+    Dim numeroProposta As String
+    Dim linhaProposta As Long
+    Dim cel As Range
+    Dim itemNumero As Long
+    Dim coluna As Integer
+    Dim novoValor As Variant
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obtendo o número da proposta atual
+    numeroProposta = Me.txtNrProposta.Value
+    
+    ' Localizar a linha da proposta atual na planilha
+    Set cel = wsPropostas.Columns(1).Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
+    If Not cel Is Nothing Then
+        linhaProposta = cel.row
+    Else
+        MsgBox "Erro: Proposta não encontrada.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Determinar qual SubItem foi editado
+    Select Case SubItemIndex
+        Case 1 ' Número do Item
+            coluna = 3
+        Case 4 ' Quantidade
+            coluna = 6
+        Case 5 ' Preço Unitário
+            coluna = 5
+        Case Else
+            Exit Sub
+    End Select
+    
+    ' Obter o novo valor do SubItem editado
+    novoValor = Item.SubItems(SubItemIndex).Text
+    
+    ' Atualizar a planilha com o novo valor
+    ' Encontrar a linha correta para o item na proposta
+    For linhaAtual = linhaProposta To wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).row
+        If wsPropostas.Cells(linhaAtual, 1).Value = numeroProposta And _
+           wsPropostas.Cells(linhaAtual, 3).Value = Item.Text Then
+            wsPropostas.Cells(linhaAtual, coluna).Value = novoValor
+            ' Atualizar subtotal se a quantidade ou preço unitário foram alterados
+            If SubItemIndex = 4 Or SubItemIndex = 5 Then
+                wsPropostas.Cells(linhaAtual, 7).Value = wsPropostas.Cells(linhaAtual, 5).Value * wsPropostas.Cells(linhaAtual, 6).Value
+            End If
+            Exit For
+        End If
+    Next linhaAtual
 End Sub
 
 
@@ -386,3 +529,4 @@ End Sub
 '#####################################
 
 'Analise o codigo acima
+

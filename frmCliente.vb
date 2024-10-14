@@ -27,13 +27,10 @@ Private Sub ConfigurarListBox()
     End With
 End Sub
 
-
-
-
 Private Sub btnSalvar_Click()
     ' Verifica se os campos obrigatórios estão preenchidos
-    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
-        MsgBox "Os campos 'Nome do Cliente' e 'Pessoa de Contato' são obrigatórios.", vbExclamation
+    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Or Len(Trim(txtEstado.Value)) = 0 Then
+        MsgBox "Os campos 'Nome do Cliente', 'Pessoa de Contato' e 'Estado' são obrigatórios.", vbExclamation
         Exit Sub
     End If
 
@@ -63,9 +60,6 @@ Private Sub btnSalvar_Click()
     MsgBox "Cliente cadastrado com sucesso!" & vbNewLine & "ID: " & txtID, vbInformation
     LimparFormulario
 End Sub
-
-
-
 
 Private Function GerarNovoID(nomeCliente As String, ultimaLinha As Long) As String
     Dim prefixo As String
@@ -101,12 +95,9 @@ Private Function GerarNovoID(nomeCliente As String, ultimaLinha As Long) As Stri
     GerarNovoID = novoID
 End Function
 
-
 Private Sub ValidarCamposObrigatorios()
-    btnSalvar.Enabled = (Len(Trim(txtNomeCliente.Value)) > 0 And Len(Trim(txtPessoaContato.Value)) > 0)
+    btnSalvar.Enabled = (Len(Trim(txtNomeCliente.Value)) > 0 And Len(Trim(txtPessoaContato.Value)) > 0 And Len(Trim(txtEstado.Value)) > 0)
 End Sub
-
-
 
 Private Sub VerificarAlteracoes()
     ' Habilita o botão ALTERAR somente se um registro foi selecionado e algum campo (exceto ID) for alterado
@@ -127,13 +118,13 @@ End Sub
 Private Sub txtNomeCliente_Change()
     txtNomeCliente.Text = UCase(txtNomeCliente.Text)
     txtNomeCliente.SelStart = Len(txtNomeCliente.Text)
-    ' Remova a chamada para ValidarCamposObrigatorios
+    ValidarCamposObrigatorios
     VerificarAlteracoes
 End Sub
 
 Private Sub txtPessoaContato_Change()
     txtPessoaContato.Text = FormatarPrimeiraLetraMaiuscula(txtPessoaContato)
-    ' Remova a chamada para ValidarCamposObrigatorios
+    ValidarCamposObrigatorios
     VerificarAlteracoes
 End Sub
 
@@ -150,6 +141,7 @@ End Sub
 Private Sub txtEstado_Change()
     txtEstado.Text = UCase(txtEstado.Text)
     txtEstado.SelStart = Len(txtEstado.Text)
+    ValidarCamposObrigatorios
     VerificarAlteracoes
 End Sub
 
@@ -164,10 +156,6 @@ End Sub
 Private Sub txtTelefone_Change()
     VerificarAlteracoes
 End Sub
-
-
-
-
 
 Private Sub btnBuscar_Click()
     Dim ws As Worksheet
@@ -249,8 +237,8 @@ End Sub
 
 Private Sub btnAlterar_Click()
     ' Verifica se os campos obrigatórios estão preenchidos
-    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Then
-        MsgBox "Os campos 'Nome do Cliente' e 'Pessoa de Contato' são obrigatórios.", vbExclamation
+    If Len(Trim(txtNomeCliente.Value)) = 0 Or Len(Trim(txtPessoaContato.Value)) = 0 Or Len(Trim(txtEstado.Value)) = 0 Then
+        MsgBox "Os campos 'Nome do Cliente', 'Pessoa de Contato' e 'Estado' são obrigatórios.", vbExclamation
         Exit Sub
     End If
 
@@ -296,9 +284,6 @@ Private Sub btnAlterar_Click()
     MsgBox "Erro ao alterar o cliente. Cliente não encontrado.", vbCritical
 End Sub
 
-
-
-
 Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As String
     Dim texto As String
     Dim palavras() As String
@@ -317,10 +302,6 @@ Private Function FormatarPrimeiraLetraMaiuscula(txt As MSForms.TextBox) As Strin
     novoTexto = Join(palavras, " ")
     FormatarPrimeiraLetraMaiuscula = novoTexto
 End Function
-
-
-
-
 
 Private Sub btnLimpar_Click()
     ' Limpa todos os campos do formulário
@@ -346,8 +327,6 @@ Private Sub LimparFormulario()
 
     txtNomeCliente.SetFocus
 End Sub
-
-
 
 Private Sub btnApagar_Click()
     Dim ws As Worksheet
@@ -385,9 +364,6 @@ Private Sub btnApagar_Click()
     
     MsgBox "Erro ao apagar o cliente. Cliente não encontrado.", vbCritical
 End Sub
-
-
-
 
 Private Sub btnFechar_Click()
     ' Fecha o formulário sem nenhuma ação
