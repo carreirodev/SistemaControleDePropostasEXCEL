@@ -37,7 +37,28 @@ Private Sub UserForm_Initialize()
     For Each cel In rngVendedores.Columns(1).Cells
         Me.cmbVendedor.AddItem cel.Value
     Next cel
+
+    ' Carregar as condições de pagamento na ComboBox cmbCondPagamento
+    Dim wsCondPagto As Worksheet
+    Dim rngCondPagto As Range
+    
+    ' Definindo a planilha de condições de pagamento
+    Set wsCondPagto = ThisWorkbook.Sheets("CondPagto")
+    ' Definindo o intervalo de dados das condições de pagamento
+    Set rngCondPagto = wsCondPagto.ListObjects("CondPagto").DataBodyRange
+    
+    ' Limpando a ComboBox antes de adicionar novos itens
+    Me.cmbCondPagamento.Clear
+    
+    ' Iterando sobre cada condição de pagamento e adicionando à ComboBox
+    For Each cel In rngCondPagto.Columns(1).Cells
+        Me.cmbCondPagamento.AddItem cel.Value
+    Next cel
+
+    ' Desabilitar o botão Salvar Proposta por padrão
+    Me.btnSalvarProposta.Enabled = False    
 End Sub
+
 
 Private Sub lstCliente_Click()
     If Me.lstCliente.ListIndex <> -1 Then
@@ -54,16 +75,20 @@ Private Sub lstCliente_Click()
         ' Desabilitar o botão Selecionar Cliente se nenhum item estiver selecionado
         Me.btnSelecionarCliente.Enabled = False
     End If
+
+    ' Verificar se pode habilitar o botão Salvar Proposta
+    VerificarSalvarProposta
 End Sub
 
 
-
-
-
-
-
-
-
+Private Sub VerificarSalvarProposta()
+    ' Verificar se um cliente foi selecionado e há pelo menos um item na proposta
+    If Me.txtID.Value <> "" And Me.lstProdutosDaProposta.ListCount > 1 Then
+        Me.btnSalvarProposta.Enabled = True
+    Else
+        Me.btnSalvarProposta.Enabled = False
+    End If
+End Sub
 
 
 
@@ -303,7 +328,11 @@ Private Sub btnAdicionarProduto_Click()
     
     ' Incrementar o número do item para o próximo produto
     Me.txtItem.Value = Item + 1
+
+    ' Verificar se pode habilitar o botão Salvar Proposta
+    VerificarSalvarProposta
 End Sub
+
 
 Private Sub ValidarProduto()
     Dim ws As Worksheet
@@ -346,6 +375,8 @@ Private Sub btnSalvarProposta_Click()
     Dim ultimaLinha As Long
     Dim i As Long
     Dim vendedor As String
+    Dim condicaoPagamento As String
+    Dim prazoEntrega As String
     
     ' Definindo a planilha de propostas
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
@@ -354,6 +385,8 @@ Private Sub btnSalvarProposta_Click()
     numeroProposta = Me.txtNrProposta.Value
     novaReferencia = Me.txtReferencia.Value
     vendedor = Me.cmbVendedor.Value
+    condicaoPagamento = Me.cmbCondPagamento.Value
+    prazoEntrega = Me.txtPrazoEntrega.Value
     
     ' Limpar itens antigos da proposta na planilha
     For i = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row To 2 Step -1
@@ -376,6 +409,8 @@ Private Sub btnSalvarProposta_Click()
         wsPropostas.Cells(ultimaLinha, 7).Value = CDbl(Me.lstProdutosDaProposta.List(i, 5)) ' Coluna SUBTOTAL
         wsPropostas.Cells(ultimaLinha, 8).Value = novaReferencia ' Coluna REFERENCIA
         wsPropostas.Cells(ultimaLinha, 9).Value = vendedor ' Coluna VENDEDOR
+        wsPropostas.Cells(ultimaLinha, 10).Value = condicaoPagamento ' Coluna CONDICAO DE PAGAMENTO
+        wsPropostas.Cells(ultimaLinha, 11).Value = prazoEntrega ' Coluna PRAZO DE ENTREGA
         ultimaLinha = ultimaLinha + 1
     Next i
     
@@ -383,3 +418,10 @@ Private Sub btnSalvarProposta_Click()
 
     Unload Me
 End Sub
+
+
+
+
+'_______________________
+
+'Analise o codigo acima
