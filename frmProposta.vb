@@ -16,7 +16,7 @@ Private Sub UserForm_Initialize()
     ' Configurar a ListBox lstCliente (mantida como está)
     With Me.lstCliente
         .ColumnCount = 5
-        .ColumnWidths = "45;130;130;100;24"
+        .ColumnWidths = "42;130;110;90;24"
     End With
     
     ' Desabilitar o botão Selecionar Cliente por padrão
