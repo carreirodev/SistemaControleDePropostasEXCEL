@@ -1,16 +1,14 @@
 Private Sub UserForm_Initialize()
-    ' Configurando o ListView para ter colunas
-    With Me.lvwProdutosDaProposta
-        .View = lvwReport
-        .Gridlines = True
-        .FullRowSelect = True
-        .ColumnHeaders.Clear
-        .ColumnHeaders.Add , , "Item", 35
-        .ColumnHeaders.Add , , "Código", 55
-        .ColumnHeaders.Add , , "Descrição", 320
-        .ColumnHeaders.Add , , "Qtd", 35
-        .ColumnHeaders.Add , , "$ Unitário", 85
-        .ColumnHeaders.Add , , "$ Total", 85
+    ' Configurando o ListBox para ter colunas
+    With Me.lstProdutosDaProposta
+        .ColumnCount = 6
+        .ColumnWidths = "35;55;320;35;85;85"
+        .AddItem "Item"
+        .List(0, 1) = "Código"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Qtd"
+        .List(0, 4) = "$ Unitário"
+        .List(0, 5) = "$ Total"
     End With
     
     ' Configurar a ListBox lstCliente (mantida como está)
@@ -41,9 +39,7 @@ Private Sub UserForm_Initialize()
     Next cel
 End Sub
 
-
 Private Sub lstCliente_Click()
-    ' Verifica se algum item está selecionado
     If Me.lstCliente.ListIndex <> -1 Then
         ' Preenche os campos com as informações do cliente selecionado
         Me.txtID.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 0) ' ID
@@ -59,6 +55,19 @@ Private Sub lstCliente_Click()
         Me.btnSelecionarCliente.Enabled = False
     End If
 End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Private Sub btnBuscaCliente_Click()
     Dim wsClientes As Worksheet
@@ -265,7 +274,6 @@ Private Sub btnAdicionarProduto_Click()
     Dim precoUnitario As Double
     Dim quantidade As Long
     Dim subtotal As Double
-    Dim lvwItem As ListItem
     
     ' Obtendo os valores dos campos
     Item = CLng(Me.txtItem.Value)
@@ -275,13 +283,13 @@ Private Sub btnAdicionarProduto_Click()
     quantidade = CLng(Me.txtQTD.Value)
     subtotal = precoUnitario * quantidade
     
-    ' Adicionar o item ao ListView
-    Set lvwItem = Me.lvwProdutosDaProposta.ListItems.Add(, , Item)
-    lvwItem.ListSubItems.Add , , codigo
-    lvwItem.ListSubItems.Add , , descricao
-    lvwItem.ListSubItems.Add , , quantidade
-    lvwItem.ListSubItems.Add , , Format(precoUnitario, "#,##0.00")
-    lvwItem.ListSubItems.Add , , Format(subtotal, "#,##0.00")
+    ' Adicionar o item ao ListBox
+    Me.lstProdutosDaProposta.AddItem Item
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 1) = codigo
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 2) = descricao
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 3) = quantidade
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = Format(precoUnitario, "#,##0.00")
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = Format(subtotal, "#,##0.00")
     
     ' Limpar os campos de entrada
     Me.txtCodProduto.Value = ""
@@ -337,7 +345,6 @@ Private Sub btnSalvarProposta_Click()
     Dim novaReferencia As String
     Dim ultimaLinha As Long
     Dim i As Long
-    Dim lvwItem As ListItem
     Dim vendedor As String
     
     ' Definindo a planilha de propostas
@@ -358,31 +365,21 @@ Private Sub btnSalvarProposta_Click()
     ' Encontrar a próxima linha vazia para registrar a nova proposta
     ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
     
-    ' Iterar sobre os itens do ListView e adicionar à planilha
-    For Each lvwItem In Me.lvwProdutosDaProposta.ListItems
+    ' Iterar sobre os itens do ListBox e adicionar à planilha
+    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1 ' Começando de 1 para pular o cabeçalho
         wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
         wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
-        wsPropostas.Cells(ultimaLinha, 3).Value = lvwItem.Text ' Coluna ITEM
-        wsPropostas.Cells(ultimaLinha, 4).Value = lvwItem.ListSubItems(1).Text ' Coluna CODIGO
-        wsPropostas.Cells(ultimaLinha, 5).Value = CDbl(lvwItem.ListSubItems(4).Text) ' Coluna PRECO UNITARIO
-        wsPropostas.Cells(ultimaLinha, 6).Value = CLng(lvwItem.ListSubItems(3).Text) ' Coluna QUANTIDADE
-        wsPropostas.Cells(ultimaLinha, 7).Value = CDbl(lvwItem.ListSubItems(5).Text) ' Coluna SUBTOTAL
+        wsPropostas.Cells(ultimaLinha, 3).Value = Me.lstProdutosDaProposta.List(i, 0) ' Coluna ITEM
+        wsPropostas.Cells(ultimaLinha, 4).Value = Me.lstProdutosDaProposta.List(i, 1) ' Coluna CODIGO
+        wsPropostas.Cells(ultimaLinha, 5).Value = CDbl(Me.lstProdutosDaProposta.List(i, 4)) ' Coluna PRECO UNITARIO
+        wsPropostas.Cells(ultimaLinha, 6).Value = CLng(Me.lstProdutosDaProposta.List(i, 3)) ' Coluna QUANTIDADE
+        wsPropostas.Cells(ultimaLinha, 7).Value = CDbl(Me.lstProdutosDaProposta.List(i, 5)) ' Coluna SUBTOTAL
         wsPropostas.Cells(ultimaLinha, 8).Value = novaReferencia ' Coluna REFERENCIA
         wsPropostas.Cells(ultimaLinha, 9).Value = vendedor ' Coluna VENDEDOR
         ultimaLinha = ultimaLinha + 1
-    Next lvwItem
+    Next i
     
     MsgBox "Proposta salva com sucesso!", vbInformation
 
     Unload Me
 End Sub
-
-
-Private Sub btnFechar_Click()
-    ' Fecha o formulário sem nenhuma ação
-    Unload Me
-End Sub
-
-'#####################################
-
-'Analise o codigo acima
