@@ -17,9 +17,6 @@ Private Sub UserForm_Initialize()
         .ColumnWidths = "42;130;110;90;24"
     End With
     
-    ' Desabilitar o botão Selecionar Cliente por padrão
-    Me.btnSelecionarCliente.Enabled = False
-    
     ' Carregar os vendedores na ComboBox cmbVendedor
     Dim wsVendedores As Worksheet
     Dim rngVendedores As Range
@@ -69,11 +66,29 @@ Private Sub lstCliente_Click()
         Me.txtCidade.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 3) ' Cidade
         Me.txtEstado.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 4) ' Estado
         
-        ' Habilitar o botão Selecionar Cliente
-        Me.btnSelecionarCliente.Enabled = True
+        ' Desabilitar os campos para edição
+        Me.txtID.Enabled = False
+        Me.txtNomeCliente.Enabled = False
+        Me.txtPessoaContato.Enabled = False
+        Me.txtCidade.Enabled = False
+        Me.txtEstado.Enabled = False
+        
+        ' Desabilitar a ListBox para impedir novas seleções
+        Me.lstCliente.Enabled = False
+
+        ' Desabilitar o botão Limpar e Buscar Cliente
+        Me.btnLimparCliente.Enabled = False
+        Me.btnBuscaCliente.Enabled = False
+
+        ' Gerar novo número de proposta e registrar na planilha
+        CriarNovaProposta
     Else
-        ' Desabilitar o botão Selecionar Cliente se nenhum item estiver selecionado
-        Me.btnSelecionarCliente.Enabled = False
+        ' Se nenhum item estiver selecionado, manter os campos editáveis
+        Me.txtID.Enabled = True
+        Me.txtNomeCliente.Enabled = True
+        Me.txtPessoaContato.Enabled = True
+        Me.txtCidade.Enabled = True
+        Me.txtEstado.Enabled = True
     End If
 
     ' Verificar se pode habilitar o botão Salvar Proposta
@@ -89,8 +104,6 @@ Private Sub VerificarSalvarProposta()
         Me.btnSalvarProposta.Enabled = False
     End If
 End Sub
-
-
 
 
 
@@ -155,8 +168,6 @@ Private Sub btnLimparCliente_Click()
     Me.txtCidade.Enabled = False
     Me.txtEstado.Enabled = False
     
-    ' Desabilitar o botão Selecionar Cliente
-    Me.btnSelecionarCliente.Enabled = False
     
     ' Reabilitar a ListBox para permitir novas seleções
     Me.lstCliente.Enabled = True
@@ -165,24 +176,6 @@ Private Sub btnLimparCliente_Click()
     txtNomeCliente.SetFocus
 End Sub
 
-Private Sub btnSelecionarCliente_Click()
-    ' Desabilitar os campos para edição
-    Me.txtID.Enabled = False
-    Me.txtNomeCliente.Enabled = False
-    Me.txtPessoaContato.Enabled = False
-    Me.txtCidade.Enabled = False
-    Me.txtEstado.Enabled = False
-    
-    ' Desabilitar a ListBox para impedir novas seleções
-    Me.lstCliente.Enabled = False
-
-    ' Desabilitar o botão Limpar e Buscar Cliente
-    Me.btnLimparCliente.Enabled = False
-    Me.btnBuscaCliente.Enabled = False
-
-    ' Gerar novo número de proposta e registrar na planilha
-    CriarNovaProposta
-End Sub
 
 Private Sub CriarNovaProposta()
     Dim wsPropostas As Worksheet
