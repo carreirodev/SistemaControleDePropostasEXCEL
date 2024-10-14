@@ -14,7 +14,7 @@ Private Sub UserForm_Initialize()
     ' Configurar a ListBox lstCliente (mantida como está)
     With Me.lstCliente
         .ColumnCount = 5
-        .ColumnWidths = "42;130;110;90;24"
+        .ColumnWidths = "42;160;100;80;24"
     End With
     
     ' Carregar os vendedores na ComboBox cmbVendedor
@@ -103,6 +103,10 @@ Private Sub VerificarSalvarProposta()
     Else
         Me.btnSalvarProposta.Enabled = False
     End If
+End Sub
+
+Private Sub btnFechar_Click()
+    Unload Me
 End Sub
 
 
