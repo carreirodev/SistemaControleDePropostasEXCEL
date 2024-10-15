@@ -1,3 +1,9 @@
+Option Explicit ' É uma boa prática sempre incluir isso
+
+Private propostaExistenteCarregada  As Boolean
+
+
+
 Private Sub UserForm_Initialize()
     
 
@@ -100,7 +106,8 @@ Private Sub lstCliente_Click()
         Me.txtEstado.Enabled = True
     End If
 
-    ' Verificar se pode habilitar o botão Salvar Proposta
+    propostaExistenteCarregada = False
+    Me.btnAlterarProposta.Enabled = False
     VerificarSalvarProposta
 End Sub
 
@@ -290,8 +297,10 @@ Private Sub btnLimparCliente_Click()
     ' Reabilitar o botão Salvar Nova Proposta e desabilitar o botão Alterar Proposta
     Me.btnSalvarProposta.Enabled = True
     Me.btnAlterarProposta.Enabled = False
-
-        
+    propostaExistenteCarregada = False
+    Me.btnSalvarProposta.Enabled = False
+    Me.btnAlterarProposta.Enabled = False
+    
     VerificarSalvarProposta
     
 End Sub
@@ -454,11 +463,20 @@ Private Sub btnRemoverProduto_Click()
     If Me.lstProdutosDaProposta.ListIndex > 0 Then ' Não remover o cabeçalho
         Me.lstProdutosDaProposta.RemoveItem Me.lstProdutosDaProposta.ListIndex
         AtualizarValorTotal
-        VerificarSalvarProposta
+        
+        ' Verificar se deve habilitar/desabilitar botões
+        If propostaExistenteCarregada Then
+            Me.btnAlterarProposta.Enabled = True
+            Me.btnSalvarProposta.Enabled = False
+        Else
+            VerificarSalvarProposta
+            Me.btnAlterarProposta.Enabled = False
+        End If
     Else
         MsgBox "Selecione um produto para remover.", vbExclamation
     End If
 End Sub
+
 
 
 
@@ -496,6 +514,9 @@ End Sub
 Private Sub txtDescricao_Change()
     ValidarProduto
 End Sub
+
+
+
 
 Private Sub btnSalvarProposta_Click()
     Dim wsPropostas As Worksheet
@@ -575,8 +596,14 @@ Private Sub lstPropostasDoCliente_Click()
         ' Desabilitar o botão Salvar Nova Proposta e habilitar o botão Alterar Proposta
         Me.btnSalvarProposta.Enabled = False
         Me.btnAlterarProposta.Enabled = True
+        
+        ' Marcar que uma proposta existente foi carregada
+        propostaExistenteCarregada = True
     End If
 End Sub
+
+
+
 
 Private Sub CarregarDetalhesPropostaExistente(numeroProposta As String)
     Dim wsPropostas As Worksheet
@@ -634,6 +661,8 @@ Private Sub CarregarDetalhesPropostaExistente(numeroProposta As String)
     propostaExistenteCarregada = True
     Me.btnSalvarProposta.Enabled = False
     Me.btnAlterarProposta.Enabled = True
+    propostaExistenteCarregada = True
+    
 
 End Sub
 
@@ -654,6 +683,10 @@ Private Function ObterDescricaoProduto(codigoProduto As String) As String
     
     ObterDescricaoProduto = "Descrição não encontrada"
 End Function
+
+
+
+
 
 
 Private Sub btnAlterarProposta_Click()
@@ -722,6 +755,9 @@ Private Sub LimparFormulario()
     ' Reabilitar o botão Salvar Nova Proposta e desabilitar o botão Alterar Proposta
     Me.btnSalvarProposta.Enabled = True
     Me.btnAlterarProposta.Enabled = False
+
+   
+    Unload Me
     
 End Sub
 
