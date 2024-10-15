@@ -14,7 +14,7 @@ Private Sub UserForm_Initialize()
     ' Configurar a ListBox lstCliente (mantida como está)
     With Me.lstCliente
         .ColumnCount = 5
-        .ColumnWidths = "42;160;100;80;24"
+        .ColumnWidths = "50;200;140;70;24"
     End With
     
     ' Carregar os vendedores na ComboBox cmbVendedor
@@ -81,11 +81,14 @@ Private Sub lstCliente_Click()
         Me.lstCliente.Enabled = False
 
         ' Desabilitar o botão Limpar e Buscar Cliente
-        Me.btnLimparCliente.Enabled = False
+        ' Me.btnLimparCliente.Enabled = False
         Me.btnBuscaCliente.Enabled = False
 
         ' Gerar novo número de proposta e registrar na planilha
         CriarNovaProposta
+        
+        ' Carregar as propostas do cliente selecionado
+        CarregarPropostasDoCliente Me.txtID.Value
     Else
         ' Se nenhum item estiver selecionado, manter os campos editáveis
         Me.txtID.Enabled = True
@@ -98,6 +101,91 @@ Private Sub lstCliente_Click()
     ' Verificar se pode habilitar o botão Salvar Proposta
     VerificarSalvarProposta
 End Sub
+
+Private Sub CarregarPropostasDoCliente(clienteID As String)
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim ultimaLinha As Long
+    Dim propostaJaAdicionada As Collection
+    Dim valorTotal As Double
+    
+    ' Limpar o ListBox de propostas do cliente
+    Me.lstPropostasDoCliente.Clear
+    
+    ' Configurar as colunas do ListBox
+    With Me.lstPropostasDoCliente
+        .ColumnCount = 4
+        .ColumnWidths = "70;100;100;100"
+        .AddItem "Número"
+        .List(0, 1) = "Referência"
+        .List(0, 2) = "Vendedor"
+        .List(0, 3) = "Valor Total"
+    End With
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Encontrar a última linha com dados
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    
+    ' Definindo o intervalo de dados das propostas
+    Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
+    
+    ' Criar uma coleção para rastrear propostas já adicionadas
+    Set propostaJaAdicionada = New Collection
+    
+    ' Iterando sobre cada proposta
+    For Each cel In rngPropostas.Columns(2).Cells ' Coluna B para CLIENTE
+        If cel.Value = clienteID Then
+            Dim numeroProposta As String
+            numeroProposta = cel.Offset(0, -1).Value ' Coluna A para NUMERO
+            
+            ' Verificar se esta proposta já foi adicionada
+            On Error Resume Next
+            propostaJaAdicionada.Add numeroProposta, CStr(numeroProposta)
+            If Err.Number = 0 Then ' Se não houve erro, a proposta é nova
+                ' Calcular o valor total da proposta
+                valorTotal = CalcularValorTotalProposta(numeroProposta)
+                
+                ' Adicionar a proposta ao ListBox
+                Me.lstPropostasDoCliente.AddItem numeroProposta
+                Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 1) = cel.Offset(0, 6).Value  ' Coluna H para REFERENCIA
+                Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 2) = cel.Offset(0, 7).Value  ' Coluna I para VENDEDOR
+                Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 3) = Format(valorTotal, "#,##0.00")  ' Valor Total calculado
+            End If
+            On Error GoTo 0 ' Restaurar o tratamento de erro padrão
+        End If
+    Next cel
+End Sub
+
+Private Function CalcularValorTotalProposta(numeroProposta As String) As Double
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim valorTotal As Double
+    Dim ultimaLinha As Long
+    
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:G" & ultimaLinha)
+    
+    valorTotal = 0
+    
+    For Each cel In rngPropostas.Columns(1).Cells ' Coluna A para NUMERO
+        If cel.Value = numeroProposta Then
+            valorTotal = valorTotal + cel.Offset(0, 6).Value ' Coluna G para SUBTOTAL
+        End If
+    Next cel
+    
+    CalcularValorTotalProposta = valorTotal
+End Function
+
+
+
+
+
+
 
 
 Private Sub VerificarSalvarProposta()
@@ -165,7 +253,9 @@ Private Sub btnLimparCliente_Click()
     Me.txtPessoaContato.Value = ""
     Me.txtCidade.Value = ""
     Me.txtEstado.Value = ""
+    Me.txtNrProposta.Value = ""
     lstCliente.Clear
+    lstPropostasDoCliente.Clear
     
     ' Reabilitar os campos txtID e txtNomeCliente para edição
     Me.txtID.Enabled = True
@@ -179,6 +269,8 @@ Private Sub btnLimparCliente_Click()
     
     ' Reabilitar a ListBox para permitir novas seleções
     Me.lstCliente.Enabled = True
+
+    lstPropostasDoCliente.Clear
 
     ' Foco no nome
     txtNomeCliente.SetFocus
