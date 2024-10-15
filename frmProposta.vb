@@ -1,4 +1,6 @@
 Private Sub UserForm_Initialize()
+    
+
     ' Configurando o ListBox para ter colunas
     With Me.lstProdutosDaProposta
         .ColumnCount = 6
@@ -189,13 +191,14 @@ End Function
 
 
 Private Sub VerificarSalvarProposta()
-    ' Verificar se um cliente foi selecionado e há pelo menos um item na proposta
-    If Me.txtID.Value <> "" And Me.lstProdutosDaProposta.ListCount > 1 Then
+    If Me.txtID.Value <> "" And Me.lstProdutosDaProposta.ListCount > 1 And Not propostaExistenteCarregada Then
         Me.btnSalvarProposta.Enabled = True
     Else
         Me.btnSalvarProposta.Enabled = False
     End If
 End Sub
+
+
 
 Private Sub btnFechar_Click()
     Unload Me
@@ -269,11 +272,28 @@ Private Sub btnLimparCliente_Click()
     
     ' Reabilitar a ListBox para permitir novas seleções
     Me.lstCliente.Enabled = True
+    Me.btnBuscaCliente.Enabled = True
 
     lstPropostasDoCliente.Clear
 
     ' Foco no nome
     txtNomeCliente.SetFocus
+
+        Me.txtNrProposta.Value = ""
+    Me.txtReferencia.Value = ""
+    Me.cmbVendedor.Value = ""
+    Me.txtPrazoEntrega.Value = ""
+    Me.cmbCondPagamento.Value = ""
+    Me.txtValorTotal.Value = ""
+    Me.lstProdutosDaProposta.Clear
+    
+    ' Reabilitar o botão Salvar Nova Proposta e desabilitar o botão Alterar Proposta
+    Me.btnSalvarProposta.Enabled = True
+    Me.btnAlterarProposta.Enabled = False
+
+        
+    VerificarSalvarProposta
+    
 End Sub
 
 
@@ -442,6 +462,7 @@ End Sub
 
 
 
+
 Private Sub ValidarProduto()
     Dim ws As Worksheet
     Dim rng As Range
@@ -541,6 +562,167 @@ Private Sub AtualizarValorTotal()
     
     ' Atualizar o txtValorTotal com o valor calculado
     Me.txtValorTotal.Value = Format(valorTotal, "#,##0.00")
+End Sub
+
+
+Private Sub lstPropostasDoCliente_Click()
+    If Me.lstPropostasDoCliente.ListIndex > 0 Then ' Ignorar o cabeçalho
+        Dim numeroProposta As String
+        numeroProposta = Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListIndex, 0)
+        
+        CarregarDetalhesPropostaExistente numeroProposta
+        
+        ' Desabilitar o botão Salvar Nova Proposta e habilitar o botão Alterar Proposta
+        Me.btnSalvarProposta.Enabled = False
+        Me.btnAlterarProposta.Enabled = True
+    End If
+End Sub
+
+Private Sub CarregarDetalhesPropostaExistente(numeroProposta As String)
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim ultimaLinha As Long
+    
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
+    
+    ' Limpar a lista de produtos da proposta
+    Me.lstProdutosDaProposta.Clear
+    
+    ' Adicionar cabeçalho à lista de produtos
+    With Me.lstProdutosDaProposta
+        .AddItem "Item"
+        .List(0, 1) = "Código"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Qtd"
+        .List(0, 4) = "$ Unitário"
+        .List(0, 5) = "$ Total"
+    End With
+    
+    Dim valorTotal As Double
+    valorTotal = 0
+    
+    For Each cel In rngPropostas.Columns(1).Cells ' Coluna A para NUMERO
+        If cel.Value = numeroProposta Then
+            ' Preencher informações gerais da proposta
+            Me.txtNrProposta.Value = numeroProposta
+            Me.txtReferencia.Value = cel.Offset(0, 7).Value ' Coluna H para REFERENCIA
+            Me.cmbVendedor.Value = cel.Offset(0, 8).Value ' Coluna I para VENDEDOR
+            Me.txtPrazoEntrega.Value = cel.Offset(0, 10).Value ' Coluna K para PRAZO DE ENTREGA
+            Me.cmbCondPagamento.Value = cel.Offset(0, 9).Value ' Coluna J para CONDICAO DE PAGAMENTO
+            
+            ' Adicionar item à lista de produtos da proposta
+            Me.lstProdutosDaProposta.AddItem cel.Offset(0, 2).Value ' Coluna C para ITEM
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 1) = cel.Offset(0, 3).Value ' Coluna D para CODIGO
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 2) = ObterDescricaoProduto(cel.Offset(0, 3).Value) ' Obter descrição do produto
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 3) = cel.Offset(0, 5).Value ' Coluna F para QUANTIDADE
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' Coluna E para PRECO UNITARIO
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' Coluna G para SUBTOTAL
+            
+            valorTotal = valorTotal + cel.Offset(0, 6).Value
+        End If
+    Next cel
+    
+    ' Atualizar o valor total
+    Me.txtValorTotal.Value = Format(valorTotal, "#,##0.00")
+
+    Me.btnSalvarProposta.Enabled = False
+    Me.btnAlterarProposta.Enabled = True
+
+    propostaExistenteCarregada = True
+    Me.btnSalvarProposta.Enabled = False
+    Me.btnAlterarProposta.Enabled = True
+
+End Sub
+
+Private Function ObterDescricaoProduto(codigoProduto As String) As String
+    Dim wsPrecos As Worksheet
+    Dim rngPrecos As Range
+    Dim cel As Range
+    
+    Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    Set rngPrecos = wsPrecos.ListObjects("TabPrecos").DataBodyRange
+    
+    For Each cel In rngPrecos.Columns(1).Cells ' Coluna Produto
+        If cel.Value = codigoProduto Then
+            ObterDescricaoProduto = cel.Offset(0, 1).Value ' Coluna Descrição
+            Exit Function
+        End If
+    Next cel
+    
+    ObterDescricaoProduto = "Descrição não encontrada"
+End Function
+
+
+Private Sub btnAlterarProposta_Click()
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim numeroProposta As String
+    Dim ultimaLinha As Long
+    Dim i As Long
+    
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
+    
+    numeroProposta = Me.txtNrProposta.Value
+    
+    ' Remover todos os registros antigos da proposta
+    Application.ScreenUpdating = False
+    For i = rngPropostas.Rows.Count To 1 Step -1
+        If rngPropostas.Cells(i, 1).Value = numeroProposta Then
+            rngPropostas.Rows(i).Delete
+        End If
+    Next i
+    
+    ' Adicionar novos registros da proposta atualizada no final da planilha
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row + 1
+    
+    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1 ' Começando de 1 para pular o cabeçalho
+        wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta
+        wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value
+        wsPropostas.Cells(ultimaLinha, 3).Value = Me.lstProdutosDaProposta.List(i, 0)
+        wsPropostas.Cells(ultimaLinha, 4).Value = Me.lstProdutosDaProposta.List(i, 1)
+        wsPropostas.Cells(ultimaLinha, 5).Value = Format(CDbl(Me.lstProdutosDaProposta.List(i, 4)), "#,##0.00")
+        wsPropostas.Cells(ultimaLinha, 6).Value = CLng(Me.lstProdutosDaProposta.List(i, 3))
+        wsPropostas.Cells(ultimaLinha, 7).Value = Format(CDbl(Me.lstProdutosDaProposta.List(i, 5)), "#,##0.00")
+        wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value
+        wsPropostas.Cells(ultimaLinha, 9).Value = Me.cmbVendedor.Value
+        wsPropostas.Cells(ultimaLinha, 10).Value = Me.cmbCondPagamento.Value
+        wsPropostas.Cells(ultimaLinha, 11).Value = Me.txtPrazoEntrega.Value
+        ultimaLinha = ultimaLinha + 1
+    Next i
+    
+    Application.ScreenUpdating = True
+    
+    MsgBox "Proposta alterada com sucesso!", vbInformation
+    
+    ' Atualizar a lista de propostas do cliente
+    CarregarPropostasDoCliente Me.txtID.Value
+    
+    ' Resetar o formulário para um estado inicial
+    LimparFormulario
+End Sub
+
+
+
+Private Sub LimparFormulario()
+    ' Limpar todos os campos e listas relevantes
+    Me.txtNrProposta.Value = ""
+    Me.txtReferencia.Value = ""
+    Me.cmbVendedor.Value = ""
+    Me.txtPrazoEntrega.Value = ""
+    Me.cmbCondPagamento.Value = ""
+    Me.txtValorTotal.Value = ""
+    Me.lstProdutosDaProposta.Clear
+    
+    ' Reabilitar o botão Salvar Nova Proposta e desabilitar o botão Alterar Proposta
+    Me.btnSalvarProposta.Enabled = True
+    Me.btnAlterarProposta.Enabled = False
+    
 End Sub
 
 
