@@ -54,6 +54,10 @@ Private Sub UserForm_Initialize()
 
     ' Desabilitar o botão Salvar Proposta por padrão
     Me.btnSalvarProposta.Enabled = False    
+
+    ' Inicializar o valor total
+    Me.txtValorTotal.Value = "0.00"
+
 End Sub
 
 
@@ -328,7 +332,22 @@ Private Sub btnAdicionarProduto_Click()
 
     ' Verificar se pode habilitar o botão Salvar Proposta
     VerificarSalvarProposta
+
+    ' Atualizar o valor total
+    AtualizarValorTotal
 End Sub
+
+
+Private Sub btnRemoverProduto_Click()
+    If Me.lstProdutosDaProposta.ListIndex > 0 Then ' Não remover o cabeçalho
+        Me.lstProdutosDaProposta.RemoveItem Me.lstProdutosDaProposta.ListIndex
+        AtualizarValorTotal
+        VerificarSalvarProposta
+    Else
+        MsgBox "Selecione um produto para remover.", vbExclamation
+    End If
+End Sub
+
 
 
 Private Sub ValidarProduto()
@@ -416,6 +435,21 @@ Private Sub btnSalvarProposta_Click()
     Unload Me
 End Sub
 
+Private Sub AtualizarValorTotal()
+    Dim i As Long
+    Dim valorTotal As Double
+    
+    valorTotal = 0
+    
+    ' Iterar sobre todos os itens na lstProdutosDaProposta, exceto o cabeçalho
+    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1
+        ' Somar o valor total de cada item (coluna 5)
+        valorTotal = valorTotal + CDbl(Me.lstProdutosDaProposta.List(i, 5))
+    Next i
+    
+    ' Atualizar o txtValorTotal com o valor calculado
+    Me.txtValorTotal.Value = Format(valorTotal, "#,##0.00")
+End Sub
 
 
 
