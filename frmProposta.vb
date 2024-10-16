@@ -518,57 +518,6 @@ End Sub
 
 
 
-Private Sub btnSalvarProposta_Click()
-    Dim wsPropostas As Worksheet
-    Dim numeroProposta As String
-    Dim novaReferencia As String
-    Dim ultimaLinha As Long
-    Dim i As Long
-    Dim vendedor As String
-    Dim condicaoPagamento As String
-    Dim prazoEntrega As String
-    
-    ' Definindo a planilha de propostas
-    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
-    
-    ' Obtendo o número da proposta e a nova referência
-    numeroProposta = Me.txtNrProposta.Value
-    novaReferencia = Me.txtReferencia.Value
-    vendedor = Me.cmbVendedor.Value
-    condicaoPagamento = Me.cmbCondPagamento.Value
-    prazoEntrega = Me.txtPrazoEntrega.Value
-    
-    ' Limpar itens antigos da proposta na planilha
-    For i = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row To 2 Step -1
-        If wsPropostas.Cells(i, 1).Value = numeroProposta Then
-            wsPropostas.Rows(i).Delete
-        End If
-    Next i
-    
-    ' Encontrar a próxima linha vazia para registrar a nova proposta
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
-    
-    ' Iterar sobre os itens do ListBox e adicionar à planilha
-    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1 ' Começando de 1 para pular o cabeçalho
-        wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
-        wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
-        wsPropostas.Cells(ultimaLinha, 3).Value = Me.lstProdutosDaProposta.List(i, 0) ' Coluna ITEM
-        wsPropostas.Cells(ultimaLinha, 4).Value = Me.lstProdutosDaProposta.List(i, 1) ' Coluna CODIGO
-        wsPropostas.Cells(ultimaLinha, 5).Value = CDbl(Me.lstProdutosDaProposta.List(i, 4)) ' Coluna PRECO UNITARIO
-        wsPropostas.Cells(ultimaLinha, 6).Value = CLng(Me.lstProdutosDaProposta.List(i, 3)) ' Coluna QUANTIDADE
-        wsPropostas.Cells(ultimaLinha, 7).Value = CDbl(Me.lstProdutosDaProposta.List(i, 5)) ' Coluna SUBTOTAL
-        wsPropostas.Cells(ultimaLinha, 8).Value = novaReferencia ' Coluna REFERENCIA
-        wsPropostas.Cells(ultimaLinha, 9).Value = vendedor ' Coluna VENDEDOR
-        wsPropostas.Cells(ultimaLinha, 10).Value = condicaoPagamento ' Coluna CONDICAO DE PAGAMENTO
-        wsPropostas.Cells(ultimaLinha, 11).Value = prazoEntrega ' Coluna PRAZO DE ENTREGA
-        ultimaLinha = ultimaLinha + 1
-    Next i
-    
-    MsgBox "Proposta salva com sucesso!", vbInformation
-
-    Unload Me
-End Sub
-
 Private Sub AtualizarValorTotal()
     Dim i As Long
     Dim valorTotal As Double
@@ -686,6 +635,89 @@ End Function
 
 
 
+Private Sub btnSalvarProposta_Click()
+    Dim wsPropostas As Worksheet
+    Dim numeroProposta As String
+    Dim novaReferencia As String
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim vendedor As String
+    Dim condicaoPagamento As String
+    Dim prazoEntrega As String
+    Dim itensOrdenados As Collection
+    Dim item As Variant
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    
+    ' Obtendo o número da proposta e a nova referência
+    numeroProposta = Me.txtNrProposta.Value
+    novaReferencia = Me.txtReferencia.Value
+    vendedor = Me.cmbVendedor.Value
+    condicaoPagamento = Me.cmbCondPagamento.Value
+    prazoEntrega = Me.txtPrazoEntrega.Value
+    
+    ' Limpar itens antigos da proposta na planilha
+    For i = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row To 2 Step -1
+        If wsPropostas.Cells(i, 1).Value = numeroProposta Then
+            wsPropostas.Rows(i).Delete
+        End If
+    Next i
+    
+    ' Encontrar a próxima linha vazia para registrar a nova proposta
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, 1).End(xlUp).Row + 1
+    
+    ' Criar uma coleção para armazenar os itens ordenados
+    Set itensOrdenados = New Collection
+    
+    ' Adicionar itens à coleção
+    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1 ' Começando de 1 para pular o cabeçalho
+        Set item = CreateObject("Scripting.Dictionary")
+        item("Item") = CLng(Me.lstProdutosDaProposta.List(i, 0))
+        item("Codigo") = Me.lstProdutosDaProposta.List(i, 1)
+        item("PrecoUnitario") = CDbl(Me.lstProdutosDaProposta.List(i, 4))
+        item("Quantidade") = CLng(Me.lstProdutosDaProposta.List(i, 3))
+        item("Subtotal") = CDbl(Me.lstProdutosDaProposta.List(i, 5))
+        
+        ' Adicionar o item na posição correta
+        If itensOrdenados.Count = 0 Then
+            itensOrdenados.Add item
+        Else
+            Dim j As Long
+            For j = 1 To itensOrdenados.Count
+                If item("Item") < itensOrdenados(j)("Item") Then
+                    itensOrdenados.Add item, , j
+                    Exit For
+                ElseIf j = itensOrdenados.Count Then
+                    itensOrdenados.Add item
+                    Exit For
+                End If
+            Next j
+        End If
+    Next i
+    
+    ' Iterar sobre os itens ordenados e adicionar à planilha
+    For Each item In itensOrdenados
+        wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta ' Coluna NUMERO
+        wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value ' Coluna CLIENTE
+        wsPropostas.Cells(ultimaLinha, 3).Value = item("Item") ' Coluna ITEM
+        wsPropostas.Cells(ultimaLinha, 4).Value = item("Codigo") ' Coluna CODIGO
+        wsPropostas.Cells(ultimaLinha, 5).Value = item("PrecoUnitario") ' Coluna PRECO UNITARIO
+        wsPropostas.Cells(ultimaLinha, 6).Value = item("Quantidade") ' Coluna QUANTIDADE
+        wsPropostas.Cells(ultimaLinha, 7).Value = item("Subtotal") ' Coluna SUBTOTAL
+        wsPropostas.Cells(ultimaLinha, 8).Value = novaReferencia ' Coluna REFERENCIA
+        wsPropostas.Cells(ultimaLinha, 9).Value = vendedor ' Coluna VENDEDOR
+        wsPropostas.Cells(ultimaLinha, 10).Value = condicaoPagamento ' Coluna CONDICAO DE PAGAMENTO
+        wsPropostas.Cells(ultimaLinha, 11).Value = prazoEntrega ' Coluna PRAZO DE ENTREGA
+        ultimaLinha = ultimaLinha + 1
+    Next item
+    
+    MsgBox "Proposta salva com sucesso!", vbInformation
+
+    Unload Me
+End Sub
+
+
 
 
 
@@ -696,6 +728,8 @@ Private Sub btnAlterarProposta_Click()
     Dim numeroProposta As String
     Dim ultimaLinha As Long
     Dim i As Long
+    Dim itensOrdenados As Collection
+    Dim item As Variant
     
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
@@ -711,23 +745,52 @@ Private Sub btnAlterarProposta_Click()
         End If
     Next i
     
+    ' Criar uma coleção para armazenar os itens ordenados
+    Set itensOrdenados = New Collection
+    
+    ' Adicionar itens à coleção
+    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1 ' Começando de 1 para pular o cabeçalho
+        Set item = CreateObject("Scripting.Dictionary")
+        item("Item") = CLng(Me.lstProdutosDaProposta.List(i, 0))
+        item("Codigo") = Me.lstProdutosDaProposta.List(i, 1)
+        item("PrecoUnitario") = CDbl(Me.lstProdutosDaProposta.List(i, 4))
+        item("Quantidade") = CLng(Me.lstProdutosDaProposta.List(i, 3))
+        item("Subtotal") = CDbl(Me.lstProdutosDaProposta.List(i, 5))
+        
+        ' Adicionar o item na posição correta
+        If itensOrdenados.Count = 0 Then
+            itensOrdenados.Add item
+        Else
+            Dim j As Long
+            For j = 1 To itensOrdenados.Count
+                If item("Item") < itensOrdenados(j)("Item") Then
+                    itensOrdenados.Add item, , j
+                    Exit For
+                ElseIf j = itensOrdenados.Count Then
+                    itensOrdenados.Add item
+                    Exit For
+                End If
+            Next j
+        End If
+    Next i
+    
     ' Adicionar novos registros da proposta atualizada no final da planilha
     ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row + 1
     
-    For i = 1 To Me.lstProdutosDaProposta.ListCount - 1 ' Começando de 1 para pular o cabeçalho
+    For Each item In itensOrdenados
         wsPropostas.Cells(ultimaLinha, 1).Value = numeroProposta
         wsPropostas.Cells(ultimaLinha, 2).Value = Me.txtID.Value
-        wsPropostas.Cells(ultimaLinha, 3).Value = Me.lstProdutosDaProposta.List(i, 0)
-        wsPropostas.Cells(ultimaLinha, 4).Value = Me.lstProdutosDaProposta.List(i, 1)
-        wsPropostas.Cells(ultimaLinha, 5).Value = Format(CDbl(Me.lstProdutosDaProposta.List(i, 4)), "#,##0.00")
-        wsPropostas.Cells(ultimaLinha, 6).Value = CLng(Me.lstProdutosDaProposta.List(i, 3))
-        wsPropostas.Cells(ultimaLinha, 7).Value = Format(CDbl(Me.lstProdutosDaProposta.List(i, 5)), "#,##0.00")
+        wsPropostas.Cells(ultimaLinha, 3).Value = item("Item")
+        wsPropostas.Cells(ultimaLinha, 4).Value = item("Codigo")
+        wsPropostas.Cells(ultimaLinha, 5).Value = Format(item("PrecoUnitario"), "#,##0.00")
+        wsPropostas.Cells(ultimaLinha, 6).Value = item("Quantidade")
+        wsPropostas.Cells(ultimaLinha, 7).Value = Format(item("Subtotal"), "#,##0.00")
         wsPropostas.Cells(ultimaLinha, 8).Value = Me.txtReferencia.Value
         wsPropostas.Cells(ultimaLinha, 9).Value = Me.cmbVendedor.Value
         wsPropostas.Cells(ultimaLinha, 10).Value = Me.cmbCondPagamento.Value
         wsPropostas.Cells(ultimaLinha, 11).Value = Me.txtPrazoEntrega.Value
         ultimaLinha = ultimaLinha + 1
-    Next i
+    Next item
     
     Application.ScreenUpdating = True
     
@@ -739,6 +802,9 @@ Private Sub btnAlterarProposta_Click()
     ' Resetar o formulário para um estado inicial
     LimparFormulario
 End Sub
+
+
+
 
 
 
