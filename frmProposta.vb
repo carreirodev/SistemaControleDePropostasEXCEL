@@ -3,7 +3,6 @@ Option Explicit ' É uma boa prática sempre incluir isso
 Private propostaExistenteCarregada  As Boolean
 
 
-
 Private Sub UserForm_Initialize()
     
 
@@ -111,6 +110,7 @@ Private Sub lstCliente_Click()
     VerificarSalvarProposta
 End Sub
 
+
 Private Sub CarregarPropostasDoCliente(clienteID As String)
     Dim wsPropostas As Worksheet
     Dim rngPropostas As Range
@@ -168,6 +168,7 @@ Private Sub CarregarPropostasDoCliente(clienteID As String)
     Next cel
 End Sub
 
+
 Private Function CalcularValorTotalProposta(numeroProposta As String) As Double
     Dim wsPropostas As Worksheet
     Dim rngPropostas As Range
@@ -191,12 +192,6 @@ Private Function CalcularValorTotalProposta(numeroProposta As String) As Double
 End Function
 
 
-
-
-
-
-
-
 Private Sub VerificarSalvarProposta()
     If Me.txtID.Value <> "" And Me.lstProdutosDaProposta.ListCount > 1 And Not propostaExistenteCarregada Then
         Me.btnSalvarProposta.Enabled = True
@@ -210,7 +205,6 @@ End Sub
 Private Sub btnFechar_Click()
     Unload Me
 End Sub
-
 
 
 Private Sub btnBuscaCliente_Click()
@@ -255,6 +249,7 @@ Private Sub btnBuscaCliente_Click()
         MsgBox "Nenhum cliente encontrado com os critérios fornecidos.", vbInformation
     End If
 End Sub
+
 
 Private Sub btnLimparCliente_Click()
     ' Limpar os campos
@@ -337,6 +332,7 @@ Private Sub CriarNovaProposta()
     Me.txtNrProposta.Value = novoNumero
 End Sub
 
+
 Private Sub btnBuscarProduto_Click()
     Dim wsPrecos As Worksheet
     Dim rngPrecos As Range
@@ -376,6 +372,7 @@ Private Sub btnBuscarProduto_Click()
         MsgBox "Produto não encontrado.", vbInformation
     End If
 End Sub
+
 
 Private Sub btnAdicionarProduto_Click()
     ' Verificar se o número da proposta está preenchido
@@ -479,8 +476,6 @@ End Sub
 
 
 
-
-
 Private Sub ValidarProduto()
     Dim ws As Worksheet
     Dim rng As Range
@@ -507,14 +502,15 @@ Private Sub ValidarProduto()
     btnAdicionarProduto.Enabled = produtoEncontrado And descricaoCorreta
 End Sub
 
+
 Private Sub txtCodProduto_Change()
     ValidarProduto
 End Sub
 
+
 Private Sub txtDescricao_Change()
     ValidarProduto
 End Sub
-
 
 
 
@@ -535,6 +531,7 @@ Private Sub AtualizarValorTotal()
 End Sub
 
 
+
 Private Sub lstPropostasDoCliente_Click()
     If Me.lstPropostasDoCliente.ListIndex > 0 Then ' Ignorar o cabeçalho
         Dim numeroProposta As String
@@ -550,7 +547,6 @@ Private Sub lstPropostasDoCliente_Click()
         propostaExistenteCarregada = True
     End If
 End Sub
-
 
 
 
@@ -614,6 +610,7 @@ Private Sub CarregarDetalhesPropostaExistente(numeroProposta As String)
     
 
 End Sub
+
 
 Private Function ObterDescricaoProduto(codigoProduto As String) As String
     Dim wsPrecos As Worksheet
@@ -719,8 +716,6 @@ End Sub
 
 
 
-
-
 Private Sub btnAlterarProposta_Click()
     Dim wsPropostas As Worksheet
     Dim rngPropostas As Range
@@ -802,9 +797,6 @@ Private Sub btnAlterarProposta_Click()
     ' Resetar o formulário para um estado inicial
     LimparFormulario
 End Sub
-
-
-
 
 
 
