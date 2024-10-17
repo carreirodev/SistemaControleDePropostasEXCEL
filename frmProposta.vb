@@ -116,8 +116,10 @@ Private Sub CarregarPropostasDoCliente(clienteID As String)
     Dim rngPropostas As Range
     Dim cel As Range
     Dim ultimaLinha As Long
-    Dim propostaJaAdicionada As Collection
+    Dim propostasOrdenadas As New Collection
     Dim valorTotal As Double
+    Dim numeroProposta As String
+    Dim i As Long
     
     ' Limpar o ListBox de propostas do cliente
     Me.lstPropostasDoCliente.Clear
@@ -141,33 +143,70 @@ Private Sub CarregarPropostasDoCliente(clienteID As String)
     ' Definindo o intervalo de dados das propostas
     Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
     
-    ' Criar uma coleção para rastrear propostas já adicionadas
-    Set propostaJaAdicionada = New Collection
-    
-    ' Iterando sobre cada proposta
+    ' Iterando sobre cada proposta e armazenando em uma coleção ordenada
     For Each cel In rngPropostas.Columns(2).Cells ' Coluna B para CLIENTE
         If cel.Value = clienteID Then
-            Dim numeroProposta As String
             numeroProposta = cel.Offset(0, -1).Value ' Coluna A para NUMERO
             
             ' Verificar se esta proposta já foi adicionada
-            On Error Resume Next
-            propostaJaAdicionada.Add numeroProposta, CStr(numeroProposta)
-            If Err.Number = 0 Then ' Se não houve erro, a proposta é nova
+            If Not ExisteNaColecao(propostasOrdenadas, numeroProposta) Then
                 ' Calcular o valor total da proposta
                 valorTotal = CalcularValorTotalProposta(numeroProposta)
                 
-                ' Adicionar a proposta ao ListBox
-                Me.lstPropostasDoCliente.AddItem numeroProposta
-                Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 1) = cel.Offset(0, 6).Value  ' Coluna H para REFERENCIA
-                Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 2) = cel.Offset(0, 7).Value  ' Coluna I para VENDEDOR
-                Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 3) = Format(valorTotal, "#,##0.00")  ' Valor Total calculado
+                ' Criar um dicionário para armazenar os detalhes da proposta
+                Dim proposta As Object
+                Set proposta = CreateObject("Scripting.Dictionary")
+                proposta("Numero") = numeroProposta
+                proposta("Referencia") = cel.Offset(0, 6).Value  ' Coluna H para REFERENCIA
+                proposta("Vendedor") = cel.Offset(0, 7).Value  ' Coluna I para VENDEDOR
+                proposta("ValorTotal") = valorTotal
+                
+                ' Adicionar a proposta à coleção ordenada
+                AdicionarOrdenado propostasOrdenadas, proposta
             End If
-            On Error GoTo 0 ' Restaurar o tratamento de erro padrão
         End If
     Next cel
+    
+    ' Adicionar as propostas ordenadas ao ListBox
+    For i = 1 To propostasOrdenadas.Count
+        Dim prop As Object
+        Set prop = propostasOrdenadas(i)
+        Me.lstPropostasDoCliente.AddItem prop("Numero")
+        Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 1) = prop("Referencia")
+        Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 2) = prop("Vendedor")
+        Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 3) = Format(prop("ValorTotal"), "#,##0.00")
+    Next i
 End Sub
 
+Private Function ExisteNaColecao(col As Collection, chave As String) As Boolean
+    Dim item As Variant
+    For Each item In col
+        If item("Numero") = chave Then
+            ExisteNaColecao = True
+            Exit Function
+        End If
+    Next item
+    ExisteNaColecao = False
+End Function
+
+Private Sub AdicionarOrdenado(col As Collection, novaProposta As Object)
+    Dim i As Long
+    Dim inserido As Boolean
+    
+    inserido = False
+    
+    For i = 1 To col.Count
+        If col(i)("Numero") > novaProposta("Numero") Then
+            col.Add novaProposta, , i
+            inserido = True
+            Exit For
+        End If
+    Next i
+    
+    If Not inserido Then
+        col.Add novaProposta
+    End If
+End Sub
 
 Private Function CalcularValorTotalProposta(numeroProposta As String) As Double
     Dim wsPropostas As Worksheet
@@ -412,7 +451,7 @@ Private Sub btnAdicionarProduto_Click()
     End If
 
     ' Verificar se é uma atualização ou adição de novo item
-    If btnAdicionarProduto.Caption = "Atualizar Produto" Then
+    If btnAdicionarProduto.Caption = "ATUALIZAR PRODUTO" Then
         ' Atualizar o item existente
         AtualizarItemExistente
     Else
@@ -432,12 +471,12 @@ Private Sub btnAdicionarProduto_Click()
     LimparCamposProduto
     
     ' Resetar o botão e habilitar o campo de código do produto
-    btnAdicionarProduto.Caption = "Adicionar Produto"
+    btnAdicionarProduto.Caption = "ADICIONAR PRODUTO"
     txtCodProduto.Enabled = True
     
     ' Esconder o botão de cancelar edição, se existir
     If Not btnCancelarEdicao Is Nothing Then
-        btnCancelarEdicao.Visible = False
+        btnCancelarEdicao.Visible = True
     End If
     
     ' Reposicionar o cursor para o campo txtCodProduto
@@ -829,7 +868,7 @@ Private Sub lstProdutosDaProposta_Click()
         txtCodProduto.Enabled = False
         
         ' Mudar o texto do botão para indicar que está editando
-        btnAdicionarProduto.Caption = "Atualizar Produto"
+        btnAdicionarProduto.Caption = "ATUALIZAR PRODUTO"
     End If
 End Sub
 
@@ -892,9 +931,9 @@ End Sub
 
 Private Sub btnCancelarEdicao_Click()
     LimparCamposProduto
-    btnAdicionarProduto.Caption = "Adicionar Produto"
+    btnAdicionarProduto.Caption = "ADICIONAR PRODUTO"
     txtCodProduto.Enabled = True
-    btnCancelarEdicao.Visible = False
+    ' btnCancelarEdicao.Visible = False
 End Sub
 
 
