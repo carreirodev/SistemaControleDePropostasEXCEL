@@ -411,42 +411,37 @@ Private Sub btnAdicionarProduto_Click()
         Exit Sub
     End If
 
-    ' Continuar com a adição do produto
-    Dim Item As Long
-    Dim codigo As String
-    Dim descricao As String
-    Dim precoUnitario As Double
-    Dim quantidade As Long
-    Dim subtotal As Double
-    
-    ' Obtendo os valores dos campos
-    Item = CLng(Me.txtItem.Value)
-    codigo = Me.txtCodProduto.Value
-    descricao = Me.txtDescricao.Value
-    precoUnitario = CDbl(Me.txtPreco.Value)
-    quantidade = CLng(Me.txtQTD.Value)
-    subtotal = precoUnitario * quantidade
-    
-    ' Adicionar o item ao ListBox
-    Me.lstProdutosDaProposta.AddItem Item
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 1) = codigo
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 2) = descricao
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 3) = quantidade
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = Format(precoUnitario, "#,##0.00")
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = Format(subtotal, "#,##0.00")
-    
+    ' Verificar se é uma atualização ou adição de novo item
+    If btnAdicionarProduto.Caption = "Atualizar Produto" Then
+        ' Atualizar o item existente
+        AtualizarItemExistente
+    Else
+        ' Adicionar novo item
+        AdicionarNovoItem
+        
+        ' Incrementar o número do item apenas para novos produtos
+        If IsNumeric(Me.txtItem.Value) Then
+            Me.txtItem.Value = CLng(Me.txtItem.Value) + 1
+        Else
+            ' Se o campo estiver vazio ou não for numérico, começar do 1
+            Me.txtItem.Value = 1
+        End If
+    End If
+
     ' Limpar os campos de entrada
-    Me.txtCodProduto.Value = ""
-    Me.txtDescricao.Value = ""
-    Me.txtPreco.Value = ""
-    Me.txtQTD.Value = ""
-    Me.txtItem.Value = ""
+    LimparCamposProduto
+    
+    ' Resetar o botão e habilitar o campo de código do produto
+    btnAdicionarProduto.Caption = "Adicionar Produto"
+    txtCodProduto.Enabled = True
+    
+    ' Esconder o botão de cancelar edição, se existir
+    If Not btnCancelarEdicao Is Nothing Then
+        btnCancelarEdicao.Visible = False
+    End If
     
     ' Reposicionar o cursor para o campo txtCodProduto
     Me.txtCodProduto.SetFocus
-    
-    ' Incrementar o número do item para o próximo produto
-    Me.txtItem.Value = Item + 1
 
     ' Verificar se pode habilitar o botão Salvar Proposta
     VerificarSalvarProposta
@@ -819,6 +814,88 @@ Private Sub LimparFormulario()
     
 End Sub
 
+
+
+
+Private Sub lstProdutosDaProposta_Click()
+    If lstProdutosDaProposta.ListIndex > 0 Then ' Ignorar o cabeçalho
+        txtItem.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 0)
+        txtCodProduto.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 1)
+        txtDescricao.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 2)
+        txtQTD.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 3)
+        txtPreco.Value = lstProdutosDaProposta.List(lstProdutosDaProposta.ListIndex, 4)
+        
+        ' Desabilitar a edição do código do produto
+        txtCodProduto.Enabled = False
+        
+        ' Mudar o texto do botão para indicar que está editando
+        btnAdicionarProduto.Caption = "Atualizar Produto"
+    End If
+End Sub
+
+Private Sub AtualizarItemExistente()
+    Dim index As Integer
+    index = lstProdutosDaProposta.ListIndex
+    
+    If index > 0 Then ' Ignorar o cabeçalho
+        Dim precoUnitario As Double
+        Dim quantidade As Long
+        Dim subtotal As Double
+        
+        precoUnitario = CDbl(txtPreco.Value)
+        quantidade = CLng(txtQTD.Value)
+        subtotal = precoUnitario * quantidade
+        
+        lstProdutosDaProposta.List(index, 0) = txtItem.Value
+        lstProdutosDaProposta.List(index, 2) = txtDescricao.Value
+        lstProdutosDaProposta.List(index, 3) = quantidade
+        lstProdutosDaProposta.List(index, 4) = Format(precoUnitario, "#,##0.00")
+        lstProdutosDaProposta.List(index, 5) = Format(subtotal, "#,##0.00")
+    End If
+End Sub
+
+Private Sub AdicionarNovoItem()
+    Dim Item As Long
+    Dim codigo As String
+    Dim descricao As String
+    Dim precoUnitario As Double
+    Dim quantidade As Long
+    Dim subtotal As Double
+    
+    ' Obtendo os valores dos campos
+    Item = CLng(Me.txtItem.Value)
+    codigo = Me.txtCodProduto.Value
+    descricao = Me.txtDescricao.Value
+    precoUnitario = CDbl(Me.txtPreco.Value)
+    quantidade = CLng(Me.txtQTD.Value)
+    subtotal = precoUnitario * quantidade
+    
+    ' Adicionar o item ao ListBox
+    Me.lstProdutosDaProposta.AddItem Item
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 1) = codigo
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 2) = descricao
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 3) = quantidade
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = Format(precoUnitario, "#,##0.00")
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = Format(subtotal, "#,##0.00")
+End Sub
+
+
+Private Sub LimparCamposProduto()
+    Me.txtCodProduto.Value = ""
+    Me.txtDescricao.Value = ""
+    Me.txtPreco.Value = ""
+    Me.txtQTD.Value = ""
+    ' Não limpar o campo txtItem aqui, pois ele é incrementado para novos itens
+End Sub
+
+
+
+Private Sub btnCancelarEdicao_Click()
+    LimparCamposProduto
+    btnAdicionarProduto.Caption = "Adicionar Produto"
+    txtCodProduto.Enabled = True
+    btnCancelarEdicao.Visible = False
+End Sub
 
 
 ' _______________________
