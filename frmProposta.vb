@@ -969,9 +969,16 @@ Private Sub btnImprimir_Click()
     
     ' Preencher informações da proposta
     With wsNovaProposta
-        .Range("I5").Value = Format(Date, "DD/MM/YYYY")
-        .Range("B6").Value = numeroProposta
-        .Range("F6").Value = Me.txtReferencia.Value
+        ' Limpar as células I6 e J6
+        .Range("I6:J6").ClearContents
+        
+        ' Colocar a data como texto na célula K6
+        .Range("K6").Value = Format(Date, "dd ""de"" mmmm ""de"" yyyy")
+        .Range("K6").NumberFormat = "@"
+        .Range("K6").HorizontalAlignment = xlRight
+        
+        .Range("B7").Value = numeroProposta ' Mudado para B7
+        .Range("F7").Value = Me.txtReferencia.Value ' Mudado para F7
         
         ' Preencher informações do cliente
         Dim clienteID As String
@@ -980,13 +987,13 @@ Private Sub btnImprimir_Click()
         Set rngCliente = wsClientes.Range("A:H").Find(What:=clienteID, LookIn:=xlValues, LookAt:=xlWhole)
         
         If Not rngCliente Is Nothing Then
-            .Range("A8").Value = rngCliente.Offset(0, 1).Value ' Nome do cliente
-            .Range("B9").Value = rngCliente.Offset(0, 2).Value ' Contato
-            .Range("B10").Value = rngCliente.Offset(0, 3).Value ' Endereço
-            .Range("B11").Value = rngCliente.Offset(0, 4).Value & " / " & rngCliente.Offset(0, 5).Value ' Cidade / Estado
-            .Range("I9").Value = "'" & rngCliente.Offset(0, 6).Value ' Telefone com apóstrofo na frente
-            .Range("I9").NumberFormat = "@" ' Manter formato de texto (por precaução)
-            .Range("I10").Value = rngCliente.Offset(0, 7).Value ' Email
+            .Range("A9").Value = rngCliente.Offset(0, 1).Value ' Nome do cliente, mudado para A9
+            .Range("B10").Value = rngCliente.Offset(0, 2).Value ' Contato
+            .Range("B11").Value = rngCliente.Offset(0, 3).Value ' Endereço
+            .Range("B12").Value = rngCliente.Offset(0, 4).Value & " / " & rngCliente.Offset(0, 5).Value ' Cidade / Estado
+            .Range("G10").Value = "'" & rngCliente.Offset(0, 6).Value ' Telefone com apóstrofo na frente
+            .Range("G10").NumberFormat = "@" ' Manter formato de texto (por precaução)
+            .Range("G11").Value = rngCliente.Offset(0, 7).Value ' Email
         End If
 
         ' Preencher itens da proposta
@@ -994,7 +1001,7 @@ Private Sub btnImprimir_Click()
         Set rngProposta = wsPropostas.Range("A:K").Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
         
         If Not rngProposta Is Nothing Then
-            i = 14 ' Linha inicial para os itens (após o cabeçalho)
+            i = 15 ' Linha inicial para os itens (após o cabeçalho)
             Do While rngProposta.Value = numeroProposta
                 .Cells(i, 1).Value = rngProposta.Offset(0, 2).Value ' Item
                 .Cells(i, 2).Value = rngProposta.Offset(0, 5).Value ' Quantidade
@@ -1018,22 +1025,26 @@ Private Sub btnImprimir_Click()
             Loop
             
             ' Preencher informações finais
-            .Range("I" & i + 1).Value = Format(Application.Sum(.Range("J14:J" & i - 1)), "#,##0.00") ' Valor Total
+            .Range("I" & i + 1).Value = Format(Application.Sum(.Range("J15:J" & i - 1)), "#,##0.00") ' Valor Total
             .Range("D" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
             .Range("D" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
-            .Range("A" & i + 5).Value = Me.cmbVendedor.Value ' Vendedor
+            .Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
         End If
+        
+        ' Ajustar larguras das colunas
+        .Columns("A:B").ColumnWidth = 8.09
+        .Columns("C:G").ColumnWidth = 9.64
+        .Columns("H:K").ColumnWidth = 6
     End With
-    
-
-    Dim col As Range
-    For Each col In wsNovaProposta.UsedRange.Columns
-        col.ColumnWidth = 8.09
-    Next col
-
     
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
 End Sub
+
+
+
+
+
+
 
 
 
