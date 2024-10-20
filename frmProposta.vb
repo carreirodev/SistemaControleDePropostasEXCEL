@@ -969,7 +969,7 @@ Private Sub btnImprimir_Click()
     
     ' Preencher informações da proposta
     With wsNovaProposta
-        .Range("I5").Value = Format(Date, "DD ""de"" MMMM ""de"" YYYY")
+        .Range("I5").Value = Format(Date, "DD/MM/YYYY")
         .Range("B6").Value = numeroProposta
         .Range("F6").Value = Me.txtReferencia.Value
         
@@ -984,11 +984,11 @@ Private Sub btnImprimir_Click()
             .Range("B9").Value = rngCliente.Offset(0, 2).Value ' Contato
             .Range("B10").Value = rngCliente.Offset(0, 3).Value ' Endereço
             .Range("B11").Value = rngCliente.Offset(0, 4).Value & " / " & rngCliente.Offset(0, 5).Value ' Cidade / Estado
-            .Range("J9").Value = rngCliente.Offset(0, 6).Value ' Telefone
-            .Range("J9").NumberFormat = "@" ' Formatar como texto
-            .Range("J10").Value = rngCliente.Offset(0, 7).Value ' Email
+            .Range("I9").Value = "'" & rngCliente.Offset(0, 6).Value ' Telefone com apóstrofo na frente
+            .Range("I9").NumberFormat = "@" ' Manter formato de texto (por precaução)
+            .Range("I10").Value = rngCliente.Offset(0, 7).Value ' Email
         End If
-        
+
         ' Preencher itens da proposta
         Dim rngProposta As Range
         Set rngProposta = wsPropostas.Range("A:K").Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
@@ -1025,11 +1025,16 @@ Private Sub btnImprimir_Click()
         End If
     End With
     
-    ' Ajustar largura das colunas
-    wsNovaProposta.Columns.AutoFit
+
+    Dim col As Range
+    For Each col In wsNovaProposta.UsedRange.Columns
+        col.ColumnWidth = 8.09
+    Next col
+
     
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
 End Sub
+
 
 
 
