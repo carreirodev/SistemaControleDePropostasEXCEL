@@ -975,7 +975,17 @@ Private Sub btnImprimir_Click()
         .Range("L6").HorizontalAlignment = xlRight
         
         .Range("B7").Value = numeroProposta
-        .Range("F8").Value = Me.txtReferencia.Value
+        
+        ' Tratamento para a Referência
+        Dim referenciaValor As String
+        referenciaValor = Trim(Me.txtReferencia.Value)
+        If referenciaValor <> "" Then
+            .Range("F7").Value = "Referência:"
+            .Range("G7").Value = referenciaValor
+        Else
+            .Range("F7").Value = ""
+            .Range("G7").Value = ""
+        End If
         
         ' Preencher informações do cliente
         Dim clienteID As String
@@ -988,9 +998,31 @@ Private Sub btnImprimir_Click()
             .Range("B10").Value = rngCliente.Offset(0, 2).Value ' Contato
             .Range("B11").Value = rngCliente.Offset(0, 3).Value ' Endereço
             .Range("B12").Value = rngCliente.Offset(0, 4).Value & " / " & rngCliente.Offset(0, 5).Value ' Cidade / Estado
-            .Range("H10").Value = "'" & rngCliente.Offset(0, 6).Value ' Telefone com apóstrofo na frente
-            .Range("H10").NumberFormat = "@" ' Manter formato de texto (por precaução)
-            .Range("H11").Value = rngCliente.Offset(0, 7).Value ' Email
+            
+            ' Tratamento específico para o telefone
+            Dim telefoneCliente As String
+            telefoneCliente = Trim(rngCliente.Offset(0, 6).Value)
+            
+            If telefoneCliente <> "" Then
+                .Range("G10").Value = "Telefone:"
+                .Range("H10").Value = "'" & telefoneCliente
+                .Range("H10").NumberFormat = "@" ' Manter formato de texto
+            Else
+                .Range("G10").Value = ""
+                .Range("H10").Value = ""
+            End If
+            
+            ' Tratamento específico para o email
+            Dim emailCliente As String
+            emailCliente = Trim(rngCliente.Offset(0, 7).Value)
+            
+            If emailCliente <> "" Then
+                .Range("G11").Value = "Email:"
+                .Range("H11").Value = emailCliente
+            Else
+                .Range("G11").Value = ""
+                .Range("H11").Value = ""
+            End If
         End If
 
         ' Preencher itens da proposta
@@ -1046,8 +1078,9 @@ Private Sub btnImprimir_Click()
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
 
     Unload Me
-
 End Sub
+
+
 
 
 
