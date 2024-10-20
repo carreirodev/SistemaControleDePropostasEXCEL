@@ -969,16 +969,13 @@ Private Sub btnImprimir_Click()
     
     ' Preencher informações da proposta
     With wsNovaProposta
-        ' Limpar as células I6 e J6
-        .Range("I6:J6").ClearContents
+        ' Colocar a data como texto na célula A6
+        .Range("L6").Value = Format(Date, "dd ""de"" mmmm ""de"" yyyy")
+        .Range("L6").NumberFormat = "@"
+        .Range("L6").HorizontalAlignment = xlRight
         
-        ' Colocar a data como texto na célula K6
-        .Range("K6").Value = Format(Date, "dd ""de"" mmmm ""de"" yyyy")
-        .Range("K6").NumberFormat = "@"
-        .Range("K6").HorizontalAlignment = xlRight
-        
-        .Range("B7").Value = numeroProposta ' Mudado para B7
-        .Range("F7").Value = Me.txtReferencia.Value ' Mudado para F7
+        .Range("B7").Value = numeroProposta
+        .Range("F8").Value = Me.txtReferencia.Value
         
         ' Preencher informações do cliente
         Dim clienteID As String
@@ -987,13 +984,13 @@ Private Sub btnImprimir_Click()
         Set rngCliente = wsClientes.Range("A:H").Find(What:=clienteID, LookIn:=xlValues, LookAt:=xlWhole)
         
         If Not rngCliente Is Nothing Then
-            .Range("A9").Value = rngCliente.Offset(0, 1).Value ' Nome do cliente, mudado para A9
+            .Range("A9").Value = rngCliente.Offset(0, 1).Value ' Nome do cliente
             .Range("B10").Value = rngCliente.Offset(0, 2).Value ' Contato
             .Range("B11").Value = rngCliente.Offset(0, 3).Value ' Endereço
             .Range("B12").Value = rngCliente.Offset(0, 4).Value & " / " & rngCliente.Offset(0, 5).Value ' Cidade / Estado
-            .Range("G10").Value = "'" & rngCliente.Offset(0, 6).Value ' Telefone com apóstrofo na frente
-            .Range("G10").NumberFormat = "@" ' Manter formato de texto (por precaução)
-            .Range("G11").Value = rngCliente.Offset(0, 7).Value ' Email
+            .Range("H10").Value = "'" & rngCliente.Offset(0, 6).Value ' Telefone com apóstrofo na frente
+            .Range("H10").NumberFormat = "@" ' Manter formato de texto (por precaução)
+            .Range("H11").Value = rngCliente.Offset(0, 7).Value ' Email
         End If
 
         ' Preencher itens da proposta
@@ -1005,49 +1002,54 @@ Private Sub btnImprimir_Click()
             Do While rngProposta.Value = numeroProposta
                 .Cells(i, 1).Value = rngProposta.Offset(0, 2).Value ' Item
                 .Cells(i, 2).Value = rngProposta.Offset(0, 5).Value ' Quantidade
+                .Cells(i, 3).Value = rngProposta.Offset(0, 3).Value ' Código do Produto
                 
                 ' Buscar descrição e outras informações do produto
                 Dim rngProduto As Range
                 Set rngProduto = wsPrecos.Range("A:I").Find(What:=rngProposta.Offset(0, 3).Value, LookIn:=xlValues, LookAt:=xlWhole)
                 
-                    If Not rngProduto Is Nothing Then
-                        .Cells(i, 3).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
-                                            vbNewLine & _
-                                            "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
-                                            "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
-                                            "SIMPRO: " & rngProduto.Offset(0, 7).Value
-                        
-                        ' Ajustar a altura da linha para acomodar o texto adicional
-                        .Rows(i).RowHeight = 60 ' Ajuste este valor conforme necessário
-                    End If
+                If Not rngProduto Is Nothing Then
+                    .Cells(i, 4).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
+                                        vbNewLine & _
+                                        "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
+                                        "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
+                                        "SIMPRO: " & rngProduto.Offset(0, 7).Value
+                    
+                    ' Ajustar a altura da linha para acomodar o texto adicional
+                    .Rows(i).RowHeight = 60 ' Ajuste este valor conforme necessário
+                End If
                 
                 ' Configurar a célula para quebra de texto
-                .Cells(i, 3).WrapText = True
+                .Cells(i, 4).WrapText = True
 
-                    
-                
-                .Cells(i, 8).Value = Format(rngProposta.Offset(0, 4).Value, "#,##0.00") ' Preço Unitário
-                .Cells(i, 10).Value = Format(rngProposta.Offset(0, 6).Value, "#,##0.00") ' Subtotal
+                .Cells(i, 9).Value = Format(rngProposta.Offset(0, 4).Value, "#,##0.00") ' Preço Unitário
+                .Cells(i, 11).Value = Format(rngProposta.Offset(0, 6).Value, "#,##0.00") ' Subtotal
                 
                 i = i + 1
                 Set rngProposta = wsPropostas.Range("A:K").FindNext(rngProposta)
             Loop
             
             ' Preencher informações finais
-            .Range("I" & i + 1).Value = Format(Application.Sum(.Range("J15:J" & i - 1)), "#,##0.00") ' Valor Total
+            .Range("K" & i + 1).Value = Format(Application.Sum(.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
             .Range("D" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
             .Range("D" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
             .Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
         End If
         
-        ' Ajustar larguras das colunas
-        .Columns("A:B").ColumnWidth = 8.09
-        .Columns("C:G").ColumnWidth = 9.64
-        .Columns("H:K").ColumnWidth = 6
+        ' Ajustar larguras das colunas conforme especificado
+        .Columns("A:B").ColumnWidth = 4.82
+        .Columns("C").ColumnWidth = 7.91
+        .Columns("D:H").ColumnWidth = 9.36
+        .Columns("I:L").ColumnWidth = 5.27
     End With
     
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
+
+    Unload Me
+
 End Sub
+
+
 
 
 
