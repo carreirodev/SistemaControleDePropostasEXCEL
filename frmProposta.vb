@@ -960,9 +960,26 @@ Private Sub btnImprimir_Click()
     ' Obter o número da proposta atual
     numeroProposta = Me.txtNrProposta.Value
     
+    ' Criar nome da nova planilha
+    Dim novoNomePlanilha As String
+    novoNomePlanilha = "Proposta_" & numeroProposta
+
+    ' Verificar se já existe uma planilha com esse nome e adicionar letra se necessário
+    Dim letra As String
+    letra = ""
+    Do While SheetExists(novoNomePlanilha & IIf(letra = "", "", "-" & letra))
+        If letra = "" Then
+            letra = "A"
+        Else
+            letra = Chr(Asc(letra) + 1)
+        End If
+    Loop
+
+    novoNomePlanilha = novoNomePlanilha & IIf(letra = "", "", "-" & letra)
+    
     ' Criar nova planilha para a proposta
     Set wsNovaProposta = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
-    wsNovaProposta.Name = "Proposta_" & numeroProposta
+    wsNovaProposta.Name = novoNomePlanilha
     
     ' Copiar o modelo para a nova planilha
     wsModelo.UsedRange.Copy wsNovaProposta.Range("A1")
@@ -1120,14 +1137,13 @@ End Sub
 
 
 
-
-
-
-
-
-
-
-
+Private Function SheetExists(ByVal sheetName As String) As Boolean
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(sheetName)
+    On Error GoTo 0
+    SheetExists = Not ws Is Nothing
+End Function
 
 
 
