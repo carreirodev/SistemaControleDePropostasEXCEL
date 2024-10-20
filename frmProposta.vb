@@ -1010,12 +1010,21 @@ Private Sub btnImprimir_Click()
                 Dim rngProduto As Range
                 Set rngProduto = wsPrecos.Range("A:I").Find(What:=rngProposta.Offset(0, 3).Value, LookIn:=xlValues, LookAt:=xlWhole)
                 
-                If Not rngProduto Is Nothing Then
-                    .Cells(i, 3).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
-                                         "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
-                                         "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
-                                         "SIMPRO: " & rngProduto.Offset(0, 7).Value
-                End If
+                    If Not rngProduto Is Nothing Then
+                        .Cells(i, 3).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
+                                            vbNewLine & _
+                                            "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
+                                            "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
+                                            "SIMPRO: " & rngProduto.Offset(0, 7).Value
+                        
+                        ' Ajustar a altura da linha para acomodar o texto adicional
+                        .Rows(i).RowHeight = 60 ' Ajuste este valor conforme necessário
+                    End If
+                
+                ' Configurar a célula para quebra de texto
+                .Cells(i, 3).WrapText = True
+
+                    
                 
                 .Cells(i, 8).Value = Format(rngProposta.Offset(0, 4).Value, "#,##0.00") ' Preço Unitário
                 .Cells(i, 10).Value = Format(rngProposta.Offset(0, 6).Value, "#,##0.00") ' Subtotal
