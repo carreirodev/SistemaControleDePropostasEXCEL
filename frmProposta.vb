@@ -996,8 +996,46 @@ Private Sub btnImprimir_Click()
         If Not rngCliente Is Nothing Then
             .Range("A9").Value = rngCliente.Offset(0, 1).Value ' Nome do cliente
             .Range("B10").Value = rngCliente.Offset(0, 2).Value ' Contato
-            .Range("B11").Value = rngCliente.Offset(0, 3).Value ' Endereço
-            .Range("B12").Value = rngCliente.Offset(0, 4).Value & " / " & rngCliente.Offset(0, 5).Value ' Cidade / Estado
+            
+            ' Tratamento para Endereço, Cidade e Estado
+            Dim enderecoCliente As String
+            Dim cidadeCliente As String
+            Dim estadoCliente As String
+            Dim cidadeEstado As String
+
+            enderecoCliente = Trim(rngCliente.Offset(0, 3).Value)
+            cidadeCliente = Trim(rngCliente.Offset(0, 4).Value)
+            estadoCliente = Trim(rngCliente.Offset(0, 5).Value)
+
+            ' Montar string de cidade/estado
+            If cidadeCliente <> "" And estadoCliente <> "" Then
+                cidadeEstado = cidadeCliente & " / " & estadoCliente
+            ElseIf cidadeCliente <> "" Then
+                cidadeEstado = cidadeCliente
+            ElseIf estadoCliente <> "" Then
+                cidadeEstado = estadoCliente
+            Else
+                cidadeEstado = ""
+            End If
+
+            ' Verificar se há pelo menos uma informação de endereço
+            If enderecoCliente <> "" Or cidadeCliente <> "" Or estadoCliente <> "" Then
+                .Range("A11").Value = "End.:"
+
+                ' Preencher o endereço
+                If enderecoCliente <> "" Then
+                    .Range("B11").Value = enderecoCliente
+                    .Range("B12").Value = cidadeEstado
+                Else
+                    .Range("B11").Value = cidadeEstado
+                    .Range("B12").Value = ""
+                End If
+            Else
+                ' Se não houver informações de endereço, limpar as células
+                .Range("A11").Value = ""
+                .Range("B11").Value = ""
+                .Range("B12").Value = ""
+            End If
             
             ' Tratamento específico para o telefone
             Dim telefoneCliente As String
@@ -1079,6 +1117,8 @@ Private Sub btnImprimir_Click()
 
     Unload Me
 End Sub
+
+
 
 
 
