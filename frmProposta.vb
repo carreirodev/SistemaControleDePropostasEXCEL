@@ -503,6 +503,7 @@ Private Sub btnRemoverProduto_Click()
             VerificarSalvarProposta
             Me.btnAlterarProposta.Enabled = False
         End If
+        txtCodProduto.Enabled = True
     Else
         MsgBox "Selecione um produto para remover.", vbExclamation
     End If
@@ -924,6 +925,7 @@ Private Sub LimparCamposProduto()
     Me.txtDescricao.Value = ""
     Me.txtPreco.Value = ""
     Me.txtQTD.Value = ""
+    Me.txtItem.Value = ""
     ' Não limpar o campo txtItem aqui, pois ele é incrementado para novos itens
 End Sub
 
@@ -931,7 +933,7 @@ End Sub
 
 Private Sub btnCancelarEdicao_Click()
     LimparCamposProduto
-    btnAdicionarProduto.Caption = "ADICIONAR PRODUTO"
+    btnAdicionarProduto.Caption = "INCLUIR"
     txtCodProduto.Enabled = True
     ' btnCancelarEdicao.Visible = False
 End Sub
