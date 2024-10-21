@@ -70,6 +70,9 @@ End Sub
 
 Private Sub lstCliente_Click()
     If Me.lstCliente.ListIndex <> -1 Then
+        ' Limpar informações da proposta anterior
+        LimparInformacoesProposta
+        
         ' Preenche os campos com as informações do cliente selecionado
         Me.txtID.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 0) ' ID
         Me.txtNomeCliente.Value = Me.lstCliente.List(Me.lstCliente.ListIndex, 1) ' Nome
@@ -105,10 +108,41 @@ Private Sub lstCliente_Click()
         Me.txtEstado.Enabled = True
     End If
 
-    propostaExistenteCarregada = False
-    Me.btnAlterarProposta.Enabled = False
     VerificarSalvarProposta
 End Sub
+
+
+
+Private Sub LimparInformacoesProposta()
+    ' Limpar campos relacionados à proposta
+    Me.txtNrProposta.Value = ""
+    Me.txtReferencia.Value = ""
+    Me.cmbVendedor.Value = ""
+    Me.txtPrazoEntrega.Value = ""
+    Me.cmbCondPagamento.Value = ""
+    Me.txtValorTotal.Value = "0.00"
+    
+    ' Limpar a lista de produtos da proposta
+    Me.lstProdutosDaProposta.Clear
+    With Me.lstProdutosDaProposta
+        .AddItem "Item"
+        .List(0, 1) = "Código"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Qtd"
+        .List(0, 4) = "$ Unitário"
+        .List(0, 5) = "$ Total"
+    End With
+    
+    ' Resetar variáveis de controle
+    propostaExistenteCarregada = False
+    Me.btnSalvarProposta.Enabled = False
+    Me.btnAlterarProposta.Enabled = False
+    
+    ' Limpar campos de produto
+    LimparCamposProduto
+    Me.txtItem.Value = "1"
+End Sub
+
 
 
 Private Sub CarregarPropostasDoCliente(clienteID As String)
