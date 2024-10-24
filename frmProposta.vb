@@ -1133,10 +1133,20 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     Dim rngProposta As Range
     Dim ultimaLinha As Long
     Dim i As Long
+    Dim countItens As Long
     
     ' Definir o intervalo de dados das propostas
     ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
     Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
+    
+    ' Contar o número de itens na proposta
+    countItens = Application.WorksheetFunction.CountIf(wsPropostas.Range("A2:A" & ultimaLinha), numeroProposta)
+    
+    ' Replicar a formatação da linha 15 para as linhas subsequentes
+    If countItens > 1 Then
+        wsNovaProposta.Rows("15:15").Copy
+        wsNovaProposta.Rows("16:" & 15 + countItens - 1).Insert Shift:=xlDown
+    End If
     
     i = 15 ' Linha inicial para os itens (após o cabeçalho)
     
@@ -1175,8 +1185,11 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     ' Preencher informações finais
     wsNovaProposta.Range("K" & i + 1).Value = Format(Application.Sum(wsNovaProposta.Range("K15:K" & i - 1)), "#,##0.00") ' Subtotal
     wsNovaProposta.Range("J" & i + 1).Value = Format(Application.Sum(wsNovaProposta.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
-    wsNovaProposta.Range("D" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
-    wsNovaProposta.Range("D" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
+    
+    ' Preencher Condição de Pagamento e Prazo de Entrega
+    wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
+    wsNovaProposta.Range("E" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
+    
     wsNovaProposta.Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
 End Sub
 
@@ -1187,6 +1200,7 @@ Private Function SheetExists(ByVal sheetName As String) As Boolean
     On Error GoTo 0
     SheetExists = Not ws Is Nothing
 End Function
+
 
 
 
