@@ -1151,7 +1151,8 @@ Private Sub btnImprimir_Click()
             Loop
             
             ' Preencher informações finais
-            .Range("K" & i + 1).Value = Format(Application.Sum(.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
+            .Range("K" & i + 1).Value = Format(Application.Sum(.Range("K15:K" & i - 1)), "#,##0.00") ' Subtotal
+            .Range("J" & i + 1).Value = Format(Application.Sum(.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
             .Range("D" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
             .Range("D" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
             .Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
@@ -1168,6 +1169,7 @@ Private Sub btnImprimir_Click()
 
     Unload Me
 End Sub
+
 
 
 
