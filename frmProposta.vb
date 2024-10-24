@@ -1169,7 +1169,7 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
                                     "SIMPRO: " & rngProduto.Offset(0, 7).Value
                 
                 ' Ajustar a altura da linha para acomodar o texto adicional
-                wsNovaProposta.Rows(i).RowHeight = 60 ' Ajuste este valor conforme necessário
+                wsNovaProposta.Rows(i).RowHeight = 75.00 ' Ajuste este valor conforme necessário
             End If
             
             ' Configurar a célula para quebra de texto
