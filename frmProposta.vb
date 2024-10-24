@@ -974,7 +974,6 @@ End Sub
 
 
 
-
 Private Sub btnImprimir_Click()
     Dim wsModelo As Worksheet
     Dim wsNovaProposta As Worksheet
@@ -1115,48 +1114,7 @@ Private Sub btnImprimir_Click()
         End If
 
         ' Preencher itens da proposta
-        Dim rngProposta As Range
-        Set rngProposta = wsPropostas.Range("A:K").Find(What:=numeroProposta, LookIn:=xlValues, LookAt:=xlWhole)
-        
-        If Not rngProposta Is Nothing Then
-            i = 15 ' Linha inicial para os itens (após o cabeçalho)
-            Do While rngProposta.Value = numeroProposta
-                .Cells(i, 1).Value = rngProposta.Offset(0, 2).Value ' Item
-                .Cells(i, 2).Value = rngProposta.Offset(0, 5).Value ' Quantidade
-                .Cells(i, 3).Value = rngProposta.Offset(0, 3).Value ' Código do Produto
-                
-                ' Buscar descrição e outras informações do produto
-                Dim rngProduto As Range
-                Set rngProduto = wsPrecos.Range("A:I").Find(What:=rngProposta.Offset(0, 3).Value, LookIn:=xlValues, LookAt:=xlWhole)
-                
-                If Not rngProduto Is Nothing Then
-                    .Cells(i, 4).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
-                                        vbNewLine & _
-                                        "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
-                                        "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
-                                        "SIMPRO: " & rngProduto.Offset(0, 7).Value
-                    
-                    ' Ajustar a altura da linha para acomodar o texto adicional
-                    .Rows(i).RowHeight = 60 ' Ajuste este valor conforme necessário
-                End If
-                
-                ' Configurar a célula para quebra de texto
-                .Cells(i, 4).WrapText = True
-
-                .Cells(i, 9).Value = Format(rngProposta.Offset(0, 4).Value, "#,##0.00") ' Preço Unitário
-                .Cells(i, 11).Value = Format(rngProposta.Offset(0, 6).Value, "#,##0.00") ' Subtotal
-                
-                i = i + 1
-                Set rngProposta = wsPropostas.Range("A:K").FindNext(rngProposta)
-            Loop
-            
-            ' Preencher informações finais
-            .Range("K" & i + 1).Value = Format(Application.Sum(.Range("K15:K" & i - 1)), "#,##0.00") ' Subtotal
-            .Range("J" & i + 1).Value = Format(Application.Sum(.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
-            .Range("D" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
-            .Range("D" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
-            .Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
-        End If
+        PreencherItensProposta wsNovaProposta, wsPropostas, wsPrecos, numeroProposta
         
         ' Ajustar larguras das colunas conforme especificado
         .Columns("A:B").ColumnWidth = 4.82
@@ -1170,8 +1128,57 @@ Private Sub btnImprimir_Click()
     Unload Me
 End Sub
 
+Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As Worksheet, wsPrecos As Worksheet, numeroProposta As String)
+    Dim rngPropostas As Range
+    Dim rngProposta As Range
+    Dim ultimaLinha As Long
+    Dim i As Long
+    
+    ' Definir o intervalo de dados das propostas
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
+    
+    i = 15 ' Linha inicial para os itens (após o cabeçalho)
+    
+    ' Iterar sobre cada linha na planilha de propostas
+    For Each rngProposta In rngPropostas.Rows
+        If rngProposta.Cells(1, 1).Value = numeroProposta Then
+            wsNovaProposta.Cells(i, 1).Value = rngProposta.Cells(1, 3).Value ' Item
+            wsNovaProposta.Cells(i, 2).Value = rngProposta.Cells(1, 6).Value ' Quantidade
+            wsNovaProposta.Cells(i, 3).Value = rngProposta.Cells(1, 4).Value ' Código do Produto
+            
+            ' Buscar descrição e outras informações do produto
+            Dim rngProduto As Range
+            Set rngProduto = wsPrecos.Range("A:I").Find(What:=rngProposta.Cells(1, 4).Value, LookIn:=xlValues, LookAt:=xlWhole)
+            
+            If Not rngProduto Is Nothing Then
+                wsNovaProposta.Cells(i, 4).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
+                                    vbNewLine & _
+                                    "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
+                                    "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
+                                    "SIMPRO: " & rngProduto.Offset(0, 7).Value
+                
+                ' Ajustar a altura da linha para acomodar o texto adicional
+                wsNovaProposta.Rows(i).RowHeight = 60 ' Ajuste este valor conforme necessário
+            End If
+            
+            ' Configurar a célula para quebra de texto
+            wsNovaProposta.Cells(i, 4).WrapText = True
 
-
+            wsNovaProposta.Cells(i, 9).Value = Format(rngProposta.Cells(1, 5).Value, "#,##0.00") ' Preço Unitário
+            wsNovaProposta.Cells(i, 11).Value = Format(rngProposta.Cells(1, 7).Value, "#,##0.00") ' Subtotal
+            
+            i = i + 1
+        End If
+    Next rngProposta
+    
+    ' Preencher informações finais
+    wsNovaProposta.Range("K" & i + 1).Value = Format(Application.Sum(wsNovaProposta.Range("K15:K" & i - 1)), "#,##0.00") ' Subtotal
+    wsNovaProposta.Range("J" & i + 1).Value = Format(Application.Sum(wsNovaProposta.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
+    wsNovaProposta.Range("D" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
+    wsNovaProposta.Range("D" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
+    wsNovaProposta.Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
+End Sub
 
 Private Function SheetExists(ByVal sheetName As String) As Boolean
     Dim ws As Worksheet
@@ -1187,6 +1194,12 @@ End Function
 
 
 
+
+
+
+
 ' _______________________
 
 ' Analise o codigo acima
+
+
