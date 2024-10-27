@@ -1126,6 +1126,33 @@ Private Sub btnImprimir_Click()
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
 
     Unload Me
+
+    With wsNovaProposta.PageSetup
+    ' Definindo as margens de impressão
+    .LeftMargin = Application.InchesToPoints(0.5)
+    .RightMargin = Application.InchesToPoints(0.5)
+    .TopMargin = Application.InchesToPoints(0.2)
+    .BottomMargin = Application.InchesToPoints(0.2)
+    
+    ' Definindo as margens de cabeçalho e rodapé
+    .HeaderMargin = Application.InchesToPoints(0)
+    .FooterMargin = Application.InchesToPoints(0)
+    
+    ' Centralizar horizontalmente
+    .CenterHorizontally = True
+    
+    ' Definindo títulos de impressão
+    .PrintTitleRows = "$1:$5"
+    
+    ' Ajustar para 1 página de largura e 10 de altura
+    .FitToPagesWide = 1
+    .FitToPagesTall = 10
+
+    ' Ajustar A4
+    .PaperSize = xlPaperA4
+End With
+
+
 End Sub
 
 Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As Worksheet, wsPrecos As Worksheet, numeroProposta As String)
@@ -1190,8 +1217,30 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
     wsNovaProposta.Range("E" & i + 3).Value = Me.txtPrazoEntrega.Value ' Prazo de Entrega
     
-    wsNovaProposta.Range("A" & i + 6).Value = Me.cmbVendedor.Value ' Vendedor
+    ' Preencher informações do vendedor
+    Dim vendedorNome As String
+    Dim vendedorEmail As String
+    Dim vendedorFone As String
+    Dim wsVendedores As Worksheet
+    Dim rngVendedor As Range
+    
+    vendedorNome = Me.cmbVendedor.Value
+    Set wsVendedores = ThisWorkbook.Sheets("VENDEDORES")
+    Set rngVendedor = wsVendedores.Range("A:C").Find(What:=vendedorNome, LookIn:=xlValues, LookAt:=xlWhole)
+    
+    If Not rngVendedor Is Nothing Then
+        vendedorEmail = rngVendedor.Offset(0, 1).Value
+        vendedorFone = rngVendedor.Offset(0, 2).Value
+    Else
+        vendedorEmail = "Email não encontrado"
+        vendedorFone = "Fone não encontrado"
+    End If
+    
+    wsNovaProposta.Range("A" & i + 6).Value = vendedorNome ' Vendedor
+    wsNovaProposta.Range("A" & i + 7).Value = vendedorEmail ' Email
+    wsNovaProposta.Range("A" & i + 8).Value = vendedorFone ' Fone
 End Sub
+
 
 Private Function SheetExists(ByVal sheetName As String) As Boolean
     Dim ws As Worksheet
