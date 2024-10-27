@@ -1219,27 +1219,42 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     
     ' Preencher informações do vendedor
     Dim vendedorNome As String
+    Dim vendedorCargo As String
     Dim vendedorEmail As String
     Dim vendedorFone As String
     Dim wsVendedores As Worksheet
     Dim rngVendedor As Range
+    Dim linhaVendedor As Long
     
     vendedorNome = Me.cmbVendedor.Value
     Set wsVendedores = ThisWorkbook.Sheets("VENDEDORES")
-    Set rngVendedor = wsVendedores.Range("A:C").Find(What:=vendedorNome, LookIn:=xlValues, LookAt:=xlWhole)
+    Set rngVendedor = wsVendedores.Range("A:D").Find(What:=vendedorNome, LookIn:=xlValues, LookAt:=xlWhole)
     
     If Not rngVendedor Is Nothing Then
         vendedorEmail = rngVendedor.Offset(0, 1).Value
         vendedorFone = rngVendedor.Offset(0, 2).Value
+        vendedorCargo = rngVendedor.Offset(0, 3).Value
     Else
         vendedorEmail = "Email não encontrado"
         vendedorFone = "Fone não encontrado"
+        vendedorCargo = ""
     End If
     
-    wsNovaProposta.Range("A" & i + 6).Value = vendedorNome ' Vendedor
-    wsNovaProposta.Range("A" & i + 7).Value = vendedorEmail ' Email
-    wsNovaProposta.Range("A" & i + 8).Value = vendedorFone ' Fone
+    linhaVendedor = i + 6
+    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorNome ' Vendedor
+    
+    If vendedorCargo <> "" Then
+        linhaVendedor = linhaVendedor + 1
+        wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorCargo ' Cargo
+    End If
+    
+    linhaVendedor = linhaVendedor + 1
+    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorEmail ' Email
+    
+    linhaVendedor = linhaVendedor + 1
+    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorFone ' Fone
 End Sub
+
 
 
 Private Function SheetExists(ByVal sheetName As String) As Boolean
