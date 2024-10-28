@@ -590,13 +590,14 @@ Private Sub AtualizarValorTotal()
     
     ' Iterar sobre todos os itens na lstProdutosDaProposta, exceto o cabeçalho
     For i = 1 To Me.lstProdutosDaProposta.ListCount - 1
-        ' Somar o valor total de cada item (coluna 5)
-        valorTotal = valorTotal + CDbl(Me.lstProdutosDaProposta.List(i, 5))
+        ' Converter o valor string para double, considerando formatação regional
+        valorTotal = valorTotal + CDbl(Replace(Replace(Me.lstProdutosDaProposta.List(i, 5), ".", ","), ",", "."))
     Next i
     
     ' Atualizar o txtValorTotal com o valor calculado
-    Me.txtValorTotal.Value = Format(valorTotal, "#,##0.00")
+    Me.txtValorTotal.Value = FormatarNumero(valorTotal)
 End Sub
+
 
 
 
@@ -915,17 +916,18 @@ Private Sub AtualizarItemExistente()
         Dim quantidade As Long
         Dim subtotal As Double
         
-        precoUnitario = CDbl(txtPreco.Value)
+        precoUnitario = CDbl(Replace(Replace(txtPreco.Value, ".", ","), ",", "."))
         quantidade = CLng(txtQTD.Value)
         subtotal = precoUnitario * quantidade
         
         lstProdutosDaProposta.List(index, 0) = txtItem.Value
         lstProdutosDaProposta.List(index, 2) = txtDescricao.Value
         lstProdutosDaProposta.List(index, 3) = quantidade
-        lstProdutosDaProposta.List(index, 4) = Format(precoUnitario, "#,##0.00")
-        lstProdutosDaProposta.List(index, 5) = Format(subtotal, "#,##0.00")
+        lstProdutosDaProposta.List(index, 4) = FormatarNumero(precoUnitario)
+        lstProdutosDaProposta.List(index, 5) = FormatarNumero(subtotal)
     End If
 End Sub
+
 
 Private Sub AdicionarNovoItem()
     Dim Item As Long
@@ -939,7 +941,7 @@ Private Sub AdicionarNovoItem()
     Item = CLng(Me.txtItem.Value)
     codigo = Me.txtCodProduto.Value
     descricao = Me.txtDescricao.Value
-    precoUnitario = CDbl(Me.txtPreco.Value)
+    precoUnitario = CDbl(Replace(Replace(Me.txtPreco.Value, ".", ","), ",", ".")) ' Converte considerando separador decimal
     quantidade = CLng(Me.txtQTD.Value)
     subtotal = precoUnitario * quantidade
     
@@ -948,9 +950,10 @@ Private Sub AdicionarNovoItem()
     Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 1) = codigo
     Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 2) = descricao
     Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 3) = quantidade
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = Format(precoUnitario, "#,##0.00")
-    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = Format(subtotal, "#,##0.00")
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = FormatarNumero(precoUnitario)
+    Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = FormatarNumero(subtotal)
 End Sub
+
 
 
 Private Sub LimparCamposProduto()
@@ -1202,16 +1205,32 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
             ' Configurar a célula para quebra de texto
             wsNovaProposta.Cells(i, 4).WrapText = True
 
-            wsNovaProposta.Cells(i, 9).Value = Format(rngProposta.Cells(1, 5).Value, "#,##0.00") ' Preço Unitário
-            wsNovaProposta.Cells(i, 11).Value = Format(rngProposta.Cells(1, 7).Value, "#,##0.00") ' Subtotal
+            ' Formatação dos valores numéricos
+            Dim precoUnitario As Double
+            Dim subtotal As Double
+            
+            precoUnitario = CDbl(rngProposta.Cells(1, 5).Value)
+            subtotal = CDbl(rngProposta.Cells(1, 7).Value)
+            
+            wsNovaProposta.Cells(i, 9).Value = precoUnitario
+            wsNovaProposta.Cells(i, 9).NumberFormat = "#,##0.00"
+            
+            wsNovaProposta.Cells(i, 11).Value = subtotal
+            wsNovaProposta.Cells(i, 11).NumberFormat = "#,##0.00"
             
             i = i + 1
         End If
     Next rngProposta
     
     ' Preencher informações finais
-    wsNovaProposta.Range("K" & i + 1).Value = Format(Application.Sum(wsNovaProposta.Range("K15:K" & i - 1)), "#,##0.00") ' Subtotal
-    wsNovaProposta.Range("J" & i + 1).Value = Format(Application.Sum(wsNovaProposta.Range("K15:K" & i - 1)), "#,##0.00") ' Valor Total
+    Dim valorTotal As Double
+    valorTotal = Application.Sum(wsNovaProposta.Range("K15:K" & i - 1))
+    
+    wsNovaProposta.Range("K" & i + 1).Value = valorTotal
+    wsNovaProposta.Range("K" & i + 1).NumberFormat = "#,##0.00"
+    
+    wsNovaProposta.Range("J" & i + 1).Value = valorTotal
+    wsNovaProposta.Range("J" & i + 1).NumberFormat = "#,##0.00"
     
     ' Preencher Condição de Pagamento e Prazo de Entrega
     wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value ' Condição de Pagamento
@@ -1257,6 +1276,7 @@ End Sub
 
 
 
+
 Private Function SheetExists(ByVal sheetName As String) As Boolean
     Dim ws As Worksheet
     On Error Resume Next
@@ -1267,9 +1287,19 @@ End Function
 
 
 
+Private Function FormatarNumero(ByVal valor As Double, Optional casasDecimais As Integer = 2) As String
+    ' Usa a configuração regional do sistema do usuário
+    FormatarNumero = Format(valor, "#,##0" & IIf(casasDecimais > 0, "." & String(casasDecimais, "0"), ""))
+End Function
 
 
 
+Private Function ConvertToNumber(ByVal strValue As String) As Double
+    ' Remove formatação de milhares e ajusta separador decimal
+    Dim cleanValue As String
+    cleanValue = Replace(Replace(strValue, ".", ""), ",", ".")
+    ConvertToNumber = CDbl(cleanValue)
+End Function
 
 
 
