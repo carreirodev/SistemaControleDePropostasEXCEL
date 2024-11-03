@@ -977,8 +977,193 @@ End Sub
 
 
 
-Private Sub btnImprimir_Click()
 
+
+
+Private Function SheetExists(ByVal sheetName As String) As Boolean
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(sheetName)
+    On Error GoTo 0
+    SheetExists = Not ws Is Nothing
+End Function
+
+
+
+Private Function FormatarNumero(ByVal valor As Double, Optional casasDecimais As Integer = 2) As String
+    ' Usa a configuração regional do sistema do usuário
+    FormatarNumero = Format(valor, "#,##0" & IIf(casasDecimais > 0, "." & String(casasDecimais, "0"), ""))
+End Function
+
+
+
+Private Function ConvertToNumber(ByVal strValue As String) As Double
+    ' Remove formatação de milhares e ajusta separador decimal
+    Dim cleanValue As String
+    cleanValue = Replace(Replace(strValue, ".", ""), ",", ".")
+    ConvertToNumber = CDbl(cleanValue)
+End Function
+
+
+Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As Worksheet, wsPrecos As Worksheet, numeroProposta As String)
+    Dim rngPropostas As Range
+    Dim rngProposta As Range
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim countItens As Long
+    
+    ' Definir o intervalo de dados das propostas
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
+    
+    ' Contar o número de itens na proposta
+    countItens = Application.WorksheetFunction.CountIf(wsPropostas.Range("A2:A" & ultimaLinha), numeroProposta)
+    
+    ' Replicar a formatação da linha 15 para as linhas subsequentes
+    If countItens > 1 Then
+        wsNovaProposta.Rows("15:15").Copy
+        wsNovaProposta.Rows("16:" & 15 + countItens - 1).Insert Shift:=xlDown
+    End If
+    
+    i = 15 ' Linha inicial para os itens (após o cabeçalho)
+    Dim linhasCabecalho As Range
+    Set linhasCabecalho = wsNovaProposta.Range("A14:L14") ' Ajuste conforme necessário
+    
+    ' Iterar sobre cada linha na planilha de propostas
+    For Each rngProposta In rngPropostas.Rows
+        If rngProposta.Cells(1, 1).Value = numeroProposta Then
+            ' Verificar se é necessário inserir um novo cabeçalho
+            If (i - 14) Mod 45 = 0 Then ' Assumindo 45 linhas por página
+                linhasCabecalho.Copy
+                wsNovaProposta.Rows(i).Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+                i = i + 1
+            End If
+            
+            wsNovaProposta.Cells(i, 1).Value = rngProposta.Cells(1, 3).Value ' Item
+            wsNovaProposta.Cells(i, 2).Value = rngProposta.Cells(1, 6).Value ' Quantidade
+            wsNovaProposta.Cells(i, 3).Value = rngProposta.Cells(1, 4).Value ' Código do Produto
+            
+            ' Buscar descrição e outras informações do produto
+            Dim rngProduto As Range
+            Set rngProduto = wsPrecos.Range("A:I").Find(What:=rngProposta.Cells(1, 4).Value, LookIn:=xlValues, LookAt:=xlWhole)
+            
+            If Not rngProduto Is Nothing Then
+                wsNovaProposta.Cells(i, 4).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
+                                    vbNewLine & _
+                                    "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
+                                    "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
+                                    "SIMPRO: " & rngProduto.Offset(0, 7).Value
+                
+                ' Ajustar a altura da linha para acomodar o texto adicional
+                wsNovaProposta.Rows(i).RowHeight = 75.00
+            End If
+            
+            ' Configurar a célula para quebra de texto
+            wsNovaProposta.Cells(i, 4).WrapText = True
+
+            ' Formatação dos valores numéricos
+            Dim precoUnitario As Double
+            Dim subtotal As Double
+            
+            precoUnitario = CDbl(rngProposta.Cells(1, 5).Value)
+            subtotal = CDbl(rngProposta.Cells(1, 7).Value)
+            
+            wsNovaProposta.Cells(i, 9).Value = precoUnitario
+            wsNovaProposta.Cells(i, 9).NumberFormat = "#,##0.00"
+            
+            wsNovaProposta.Cells(i, 11).Value = subtotal
+            wsNovaProposta.Cells(i, 11).NumberFormat = "#,##0.00"
+            
+            i = i + 1
+        End If
+    Next rngProposta
+    
+    ' Chamar a função de ajuste de quebra de página antes de adicionar as informações finais
+    AjustarQuebrasPageina wsNovaProposta, i, linhasCabecalho
+    
+    ' Preencher informações finais
+    Dim valorTotal As Double
+    valorTotal = Application.Sum(wsNovaProposta.Range("K15:K" & i - 1))
+    
+    wsNovaProposta.Range("K" & i + 1).Value = valorTotal
+    wsNovaProposta.Range("K" & i + 1).NumberFormat = "#,##0.00"
+    
+    wsNovaProposta.Range("J" & i + 1).Value = valorTotal
+    wsNovaProposta.Range("J" & i + 1).NumberFormat = "#,##0.00"
+    
+    ' Preencher Condição de Pagamento e Prazo de Entrega
+    wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value
+    wsNovaProposta.Range("E" & i + 3).Value = Me.txtPrazoEntrega.Value
+    
+    ' Preencher informações do vendedor
+    Dim vendedorNome As String
+    Dim vendedorCargo As String
+    Dim vendedorEmail As String
+    Dim vendedorFone As String
+    Dim wsVendedores As Worksheet
+    Dim rngVendedor As Range
+    Dim linhaVendedor As Long
+    
+    vendedorNome = Me.cmbVendedor.Value
+    Set wsVendedores = ThisWorkbook.Sheets("VENDEDORES")
+    Set rngVendedor = wsVendedores.Range("A:D").Find(What:=vendedorNome, LookIn:=xlValues, LookAt:=xlWhole)
+    
+    If Not rngVendedor Is Nothing Then
+        vendedorEmail = rngVendedor.Offset(0, 1).Value
+        vendedorFone = rngVendedor.Offset(0, 2).Value
+        vendedorCargo = rngVendedor.Offset(0, 3).Value
+    Else
+        vendedorEmail = "Email não encontrado"
+        vendedorFone = "Fone não encontrado"
+        vendedorCargo = ""
+    End If
+    
+    linhaVendedor = i + 6
+    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorNome
+    
+    If vendedorCargo <> "" Then
+        linhaVendedor = linhaVendedor + 1
+        wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorCargo
+    End If
+    
+    linhaVendedor = linhaVendedor + 1
+    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorEmail
+    
+    linhaVendedor = linhaVendedor + 1
+    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorFone
+End Sub
+
+
+Private Sub AjustarQuebrasPageina(ws As Worksheet, linhaInicial As Long, linhasCabecalho As Range)
+
+    Const LINHAS_RODAPE As Long = 8 ' Ajuste conforme necessário
+    Const LINHAS_POR_PAGINA As Long = 45 ' Ajuste conforme necessário
+    Dim ultimaLinhaPagina As Long
+    Dim linhasRestantes As Long
+    Dim linhaAtual As Long
+    linhaAtual = linhaInicial
+    ' Calcular quantas linhas restam até o final da página atual
+    ultimaLinhaPagina = Application.WorksheetFunction.Floor(linhaAtual / LINHAS_POR_PAGINA, 1) * LINHAS_POR_PAGINA + LINHAS_POR_PAGINA
+    linhasRestantes = ultimaLinhaPagina - linhaAtual
+    ' Se não houver espaço suficiente para as informações finais
+    If linhasRestantes < LINHAS_RODAPE + 3 Then ' +3 para margem de segurança
+        ' Inserir um novo cabeçalho
+        linhasCabecalho.Copy
+        ws.Rows(ultimaLinhaPagina + 1).Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+        ' Mover as informações finais para a próxima página
+        ws.Range(ws.Cells(linhaAtual, 1), ws.Cells(linhaAtual + LINHAS_RODAPE - 1, 12)).Cut _
+            ws.Cells(ultimaLinhaPagina + 2, 1)
+        ' Limpar as células originais das informações finais
+        ws.Range(ws.Cells(linhaAtual, 1), ws.Cells(linhaAtual + LINHAS_RODAPE - 1, 12)).Clear
+    End If
+    ' Definir a área de impressão
+    ws.PageSetup.PrintArea = "$A$1:$L$" & (ultimaLinhaPagina + LINHAS_RODAPE + 2)
+End Sub
+
+
+
+
+Private Sub btnImprimir_Click()
     Dim wsModelo As Worksheet
     Dim wsNovaProposta As Worksheet
     Dim wsPropostas As Worksheet
@@ -987,16 +1172,20 @@ Private Sub btnImprimir_Click()
     Dim numeroProposta As String
     Dim ultimaLinha As Long
     Dim i As Long, j As Long
+    
     ' Definir as planilhas
     Set wsModelo = ThisWorkbook.Sheets("IMPRESSAO")
     Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
     Set wsClientes = ThisWorkbook.Sheets("CLIENTES")
     Set wsPrecos = ThisWorkbook.Sheets("ListaDePrecos")
+    
     ' Obter o número da proposta atual
     numeroProposta = Me.txtNrProposta.Value
+    
     ' Criar nome da nova planilha
     Dim novoNomePlanilha As String
     novoNomePlanilha = "Proposta_" & numeroProposta
+    
     ' Verificar se já existe uma planilha com esse nome e adicionar letra se necessário
     Dim letra As String
     letra = ""
@@ -1008,11 +1197,14 @@ Private Sub btnImprimir_Click()
         End If
     Loop
     novoNomePlanilha = novoNomePlanilha & IIf(letra = "", "", "-" & letra)
+    
     ' Criar nova planilha para a proposta
     Set wsNovaProposta = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
     wsNovaProposta.Name = novoNomePlanilha
+    
     ' Copiar o modelo para a nova planilha
     wsModelo.UsedRange.Copy wsNovaProposta.Range("A1")
+    
     ' Preencher informações da proposta
     With wsNovaProposta
         ' Colocar a data como texto na célula A6
@@ -1020,6 +1212,7 @@ Private Sub btnImprimir_Click()
         .Range("L6").NumberFormat = "@"
         .Range("L6").HorizontalAlignment = xlRight
         .Range("C7").Value = numeroProposta
+        
         ' Tratamento para a Referência
         Dim referenciaValor As String
         referenciaValor = Trim(Me.txtReferencia.Value)
@@ -1030,6 +1223,7 @@ Private Sub btnImprimir_Click()
             .Range("F7").Value = ""
             .Range("G7").Value = ""
         End If
+        
         ' Preencher informações do cliente
         Dim clienteID As String
         clienteID = Me.txtID.Value
@@ -1095,14 +1289,17 @@ Private Sub btnImprimir_Click()
                 .Range("H11").Value = ""
             End If
         End If
+        
         ' Preencher itens da proposta
         PreencherItensProposta wsNovaProposta, wsPropostas, wsPrecos, numeroProposta
+        
         ' Ajustar larguras das colunas conforme especificado
         .Columns("A:B").ColumnWidth = 4.82
         .Columns("C").ColumnWidth = 7.91
         .Columns("D:H").ColumnWidth = 9.36
         .Columns("I:L").ColumnWidth = 5.27
     End With
+    
     ' Configurações de página e controle de quebra
     With wsNovaProposta.PageSetup
         .LeftMargin = Application.InchesToPoints(0.5)
@@ -1112,211 +1309,31 @@ Private Sub btnImprimir_Click()
         .HeaderMargin = Application.InchesToPoints(0)
         .FooterMargin = Application.InchesToPoints(0)
         .CenterHorizontally = True
-        .PrintTitleRows = "$1:$5"
+        .PrintTitleRows = "$1:$14" ' Isso fará o cabeçalho principal e o cabeçalho dos itens se repetirem em todas as páginas
         .FitToPagesWide = 1
         .FitToPagesTall = 10
         .PaperSize = xlPaperA4
         ' NOVAS CONFIGURAÇÕES PARA CONTROLE DE QUEBRA DE PÁGINA
         .PrintArea = wsNovaProposta.UsedRange.Address
     End With
+    
     ' Atualizar ultimaLinha para a última linha da área usada
     ultimaLinha = wsNovaProposta.UsedRange.Rows.Count
+    
     ' Forçar que as últimas linhas fiquem juntas
     With wsNovaProposta.Range(wsNovaProposta.Cells(ultimaLinha - 10, 1), wsNovaProposta.Cells(ultimaLinha, 12))
         .Rows.Group
         .EntireRow.PageBreak = xlPageBreakManual
     End With
+    
     ' Adicionar uma quebra de página manual antes das últimas 10 linhas
     If ultimaLinha > 15 Then ' Só adiciona se houver mais de 15 linhas (5 de cabeçalho + 10 finais)
         wsNovaProposta.HPageBreaks.Add Before:=wsNovaProposta.Cells(ultimaLinha - 10, 1)
     End If
+    
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
     Unload Me
 End Sub
-
-
-
-
-
-Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As Worksheet, wsPrecos As Worksheet, numeroProposta As String)
-    Dim rngPropostas As Range
-    Dim rngProposta As Range
-    Dim ultimaLinha As Long
-    Dim i As Long
-    Dim countItens As Long
-    
-    ' Definir o intervalo de dados das propostas
-    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
-    Set rngPropostas = wsPropostas.Range("A2:K" & ultimaLinha)
-    
-    ' Contar o número de itens na proposta
-    countItens = Application.WorksheetFunction.CountIf(wsPropostas.Range("A2:A" & ultimaLinha), numeroProposta)
-    
-    ' Replicar a formatação da linha 15 para as linhas subsequentes
-    If countItens > 1 Then
-        wsNovaProposta.Rows("15:15").Copy
-        wsNovaProposta.Rows("16:" & 15 + countItens - 1).Insert Shift:=xlDown
-    End If
-    
-    i = 15 ' Linha inicial para os itens (após o cabeçalho)
-    
-    ' Iterar sobre cada linha na planilha de propostas
-    For Each rngProposta In rngPropostas.Rows
-        If rngProposta.Cells(1, 1).Value = numeroProposta Then
-            wsNovaProposta.Cells(i, 1).Value = rngProposta.Cells(1, 3).Value ' Item
-            wsNovaProposta.Cells(i, 2).Value = rngProposta.Cells(1, 6).Value ' Quantidade
-            wsNovaProposta.Cells(i, 3).Value = rngProposta.Cells(1, 4).Value ' Código do Produto
-            
-            ' Buscar descrição e outras informações do produto
-            Dim rngProduto As Range
-            Set rngProduto = wsPrecos.Range("A:I").Find(What:=rngProposta.Cells(1, 4).Value, LookIn:=xlValues, LookAt:=xlWhole)
-            
-            If Not rngProduto Is Nothing Then
-                wsNovaProposta.Cells(i, 4).Value = rngProduto.Offset(0, 1).Value & vbNewLine & _
-                                    vbNewLine & _
-                                    "NCM: " & rngProduto.Offset(0, 5).Value & vbNewLine & _
-                                    "ANVISA: " & rngProduto.Offset(0, 3).Value & vbNewLine & _
-                                    "SIMPRO: " & rngProduto.Offset(0, 7).Value
-                
-                ' Ajustar a altura da linha para acomodar o texto adicional
-                wsNovaProposta.Rows(i).RowHeight = 75.00
-            End If
-            
-            ' Configurar a célula para quebra de texto
-            wsNovaProposta.Cells(i, 4).WrapText = True
-
-            ' Formatação dos valores numéricos
-            Dim precoUnitario As Double
-            Dim subtotal As Double
-            
-            precoUnitario = CDbl(rngProposta.Cells(1, 5).Value)
-            subtotal = CDbl(rngProposta.Cells(1, 7).Value)
-            
-            wsNovaProposta.Cells(i, 9).Value = precoUnitario
-            wsNovaProposta.Cells(i, 9).NumberFormat = "#,##0.00"
-            
-            wsNovaProposta.Cells(i, 11).Value = subtotal
-            wsNovaProposta.Cells(i, 11).NumberFormat = "#,##0.00"
-            
-            i = i + 1
-        End If
-    Next rngProposta
-    
-    ' Chamar a função de ajuste de quebra de página antes de adicionar as informações finais
-    AjustarQuebrasPageina wsNovaProposta, i
-    
-    ' Preencher informações finais
-    Dim valorTotal As Double
-    valorTotal = Application.Sum(wsNovaProposta.Range("K15:K" & i - 1))
-    
-    wsNovaProposta.Range("K" & i + 1).Value = valorTotal
-    wsNovaProposta.Range("K" & i + 1).NumberFormat = "#,##0.00"
-    
-    wsNovaProposta.Range("J" & i + 1).Value = valorTotal
-    wsNovaProposta.Range("J" & i + 1).NumberFormat = "#,##0.00"
-    
-    ' Preencher Condição de Pagamento e Prazo de Entrega
-    wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value
-    wsNovaProposta.Range("E" & i + 3).Value = Me.txtPrazoEntrega.Value
-    
-    ' Preencher informações do vendedor
-    Dim vendedorNome As String
-    Dim vendedorCargo As String
-    Dim vendedorEmail As String
-    Dim vendedorFone As String
-    Dim wsVendedores As Worksheet
-    Dim rngVendedor As Range
-    Dim linhaVendedor As Long
-    
-    vendedorNome = Me.cmbVendedor.Value
-    Set wsVendedores = ThisWorkbook.Sheets("VENDEDORES")
-    Set rngVendedor = wsVendedores.Range("A:D").Find(What:=vendedorNome, LookIn:=xlValues, LookAt:=xlWhole)
-    
-    If Not rngVendedor Is Nothing Then
-        vendedorEmail = rngVendedor.Offset(0, 1).Value
-        vendedorFone = rngVendedor.Offset(0, 2).Value
-        vendedorCargo = rngVendedor.Offset(0, 3).Value
-    Else
-        vendedorEmail = "Email não encontrado"
-        vendedorFone = "Fone não encontrado"
-        vendedorCargo = ""
-    End If
-    
-    linhaVendedor = i + 6
-    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorNome
-    
-    If vendedorCargo <> "" Then
-        linhaVendedor = linhaVendedor + 1
-        wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorCargo
-    End If
-    
-    linhaVendedor = linhaVendedor + 1
-    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorEmail
-    
-    linhaVendedor = linhaVendedor + 1
-    wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorFone
-End Sub
-
-
-
-
-
-Private Function SheetExists(ByVal sheetName As String) As Boolean
-    Dim ws As Worksheet
-    On Error Resume Next
-    Set ws = ThisWorkbook.Sheets(sheetName)
-    On Error GoTo 0
-    SheetExists = Not ws Is Nothing
-End Function
-
-
-
-Private Function FormatarNumero(ByVal valor As Double, Optional casasDecimais As Integer = 2) As String
-    ' Usa a configuração regional do sistema do usuário
-    FormatarNumero = Format(valor, "#,##0" & IIf(casasDecimais > 0, "." & String(casasDecimais, "0"), ""))
-End Function
-
-
-
-Private Function ConvertToNumber(ByVal strValue As String) As Double
-    ' Remove formatação de milhares e ajusta separador decimal
-    Dim cleanValue As String
-    cleanValue = Replace(Replace(strValue, ".", ""), ",", ".")
-    ConvertToNumber = CDbl(cleanValue)
-End Function
-
-
-
-
-Private Sub AjustarQuebrasPageina(ws As Worksheet, linhaInicial As Long)
-    Const LINHAS_RODAPE As Long = 8 ' Ajuste conforme necessário
-    Const LINHAS_POR_PAGINA As Long = 45 ' Ajuste conforme necessário
-    
-    Dim ultimaLinhaPagina As Long
-    Dim linhasRestantes As Long
-    Dim linhaAtual As Long
-    
-    linhaAtual = linhaInicial
-    
-    ' Calcular quantas linhas restam até o final da página atual
-    ultimaLinhaPagina = Application.WorksheetFunction.Floor(linhaAtual / LINHAS_POR_PAGINA, 1) * LINHAS_POR_PAGINA + LINHAS_POR_PAGINA
-    linhasRestantes = ultimaLinhaPagina - linhaAtual
-    
-    ' Se não houver espaço suficiente para as informações finais
-    If linhasRestantes < LINHAS_RODAPE + 3 Then ' +3 para margem de segurança
-        ' Inserir linhas em branco para forçar a quebra de página
-        Dim linhasInserir As Long
-        linhasInserir = LINHAS_POR_PAGINA - linhasRestantes
-        
-        ' Inserir linhas em branco
-        ws.Rows(linhaAtual & ":" & linhaAtual).Insert Shift:=xlDown, _
-            CopyOrigin:=xlFormatFromLeftOrAbove
-        
-        ' Ajustar a altura das linhas inseridas para mínimo
-        ws.Rows(linhaAtual & ":" & (linhaAtual + linhasInserir - 1)).RowHeight = 0
-    End If
-End Sub
-
 
 
 
