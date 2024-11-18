@@ -111,6 +111,18 @@ Private Sub lstCliente_Click()
     VerificarSalvarProposta
 End Sub
 
+Private Sub AplicarFormatoMoeda(ByRef celula As Range)
+
+    On Error Resume Next
+    ' Tenta limpar a formatação, se falhar (devido a células mescladas), continua
+    celula.ClearFormats
+    On Error GoTo 0 ' Restaura o tratamento de erro normal
+    With celula
+        .NumberFormat = "General" ' Reset para formato geral
+        .NumberFormat = """R$"" #,##0.00" ' Aplica novo formato
+    End With
+End Sub
+
 
 
 Private Sub LimparInformacoesProposta()
@@ -581,23 +593,24 @@ Private Sub txtDescricao_Change()
 End Sub
 
 
-
 Private Sub AtualizarValorTotal()
     Dim i As Long
     Dim valorTotal As Double
+    Dim valorItem As String
     
     valorTotal = 0
     
     ' Iterar sobre todos os itens na lstProdutosDaProposta, exceto o cabeçalho
     For i = 1 To Me.lstProdutosDaProposta.ListCount - 1
-        ' Converter o valor string para double, considerando formatação regional
-        valorTotal = valorTotal + CDbl(Replace(Replace(Me.lstProdutosDaProposta.List(i, 5), ".", ","), ",", "."))
+        valorItem = Me.lstProdutosDaProposta.List(i, 5)
+        If Len(Trim(valorItem)) > 0 Then
+            valorTotal = valorTotal + ConvertToNumber(valorItem)
+        End If
     Next i
     
     ' Atualizar o txtValorTotal com o valor calculado
     Me.txtValorTotal.Value = FormatarNumero(valorTotal)
 End Sub
-
 
 
 
@@ -941,7 +954,7 @@ Private Sub AdicionarNovoItem()
     Item = CLng(Me.txtItem.Value)
     codigo = Me.txtCodProduto.Value
     descricao = Me.txtDescricao.Value
-    precoUnitario = CDbl(Replace(Replace(Me.txtPreco.Value, ".", ","), ",", ".")) ' Converte considerando separador decimal
+    precoUnitario = ConvertToNumber(Me.txtPreco.Value) ' Converte considerando separador decimal
     quantidade = CLng(Me.txtQTD.Value)
     subtotal = precoUnitario * quantidade
     
@@ -991,18 +1004,75 @@ End Function
 
 
 Private Function FormatarNumero(ByVal valor As Double, Optional casasDecimais As Integer = 2) As String
-    ' Usa a configuração regional do sistema do usuário
-    FormatarNumero = Format(valor, "#,##0" & IIf(casasDecimais > 0, "." & String(casasDecimais, "0"), ""))
+    Dim formatString As String
+    Dim decimalSep As String
+    Dim thousandsSep As String
+    
+    decimalSep = GetDecimalSeparator()
+    thousandsSep = GetThousandsSeparator()
+    
+    formatString = "#" & thousandsSep & "##0"
+    If casasDecimais > 0 Then
+        formatString = formatString & decimalSep & String(casasDecimais, "0")
+    End If
+    
+    FormatarNumero = Format(valor, formatString)
 End Function
 
 
 
 Private Function ConvertToNumber(ByVal strValue As String) As Double
-    ' Remove formatação de milhares e ajusta separador decimal
+    On Error GoTo TratarErro
+    
     Dim cleanValue As String
-    cleanValue = Replace(Replace(strValue, ".", ""), ",", ".")
-    ConvertToNumber = CDbl(cleanValue)
+    
+    ' Remove espaços em branco
+    cleanValue = Trim(strValue)
+    
+    ' Remove qualquer caractere que não seja número, vírgula ou ponto
+    Dim i As Long
+    Dim char As String
+    Dim newValue As String
+    
+    For i = 1 To Len(cleanValue)
+        char = Mid(cleanValue, i, 1)
+        If char Like "[0-9]" Or char = "," Or char = "." Then
+            newValue = newValue & char
+        End If
+    Next i
+    
+    ' Se não houver valor numérico, retorna 0
+    If Len(newValue) = 0 Then
+        ConvertToNumber = 0
+        Exit Function
+    End If
+    
+    ' Determina qual é o separador decimal baseado no último separador encontrado
+    Dim ultimoPonto As Long
+    Dim ultimaVirgula As Long
+    
+    ultimoPonto = InStrRev(newValue, ".")
+    ultimaVirgula = InStrRev(newValue, ",")
+    
+    ' Remove todos os separadores exceto o último
+    If ultimoPonto > ultimaVirgula Then
+        ' Último separador é ponto, então usa ponto como decimal
+        newValue = Replace(newValue, ",", "")
+        ConvertToNumber = Val(newValue)
+    Else
+        ' Último separador é vírgula ou não há separadores
+        newValue = Replace(newValue, ".", "")
+        newValue = Replace(newValue, ",", ".")
+        ConvertToNumber = Val(newValue)
+    End If
+    
+    Exit Function
+
+TratarErro:
+    ConvertToNumber = 0
 End Function
+
+
 
 
 Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As Worksheet, wsPrecos As Worksheet, numeroProposta As String)
@@ -1069,10 +1139,10 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
             subtotal = CDbl(rngProposta.Cells(1, 7).Value)
             
             wsNovaProposta.Cells(i, 9).Value = precoUnitario
-            wsNovaProposta.Cells(i, 9).NumberFormat = "#,##0.00"
+            AplicarFormatoMoeda wsNovaProposta.Cells(i, 9)
             
             wsNovaProposta.Cells(i, 11).Value = subtotal
-            wsNovaProposta.Cells(i, 11).NumberFormat = "#,##0.00"
+            AplicarFormatoMoeda wsNovaProposta.Cells(i, 11)
             
             i = i + 1
         End If
@@ -1086,10 +1156,10 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     valorTotal = Application.Sum(wsNovaProposta.Range("K15:K" & i - 1))
     
     wsNovaProposta.Range("K" & i + 1).Value = valorTotal
-    wsNovaProposta.Range("K" & i + 1).NumberFormat = "#,##0.00"
+    AplicarFormatoMoeda wsNovaProposta.Range("K" & (i + 1))
     
     wsNovaProposta.Range("J" & i + 1).Value = valorTotal
-    wsNovaProposta.Range("J" & i + 1).NumberFormat = "#,##0.00"
+    AplicarFormatoMoeda wsNovaProposta.Range("J" & (i + 1))
     
     ' Preencher Condição de Pagamento e Prazo de Entrega
     wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value
@@ -1335,6 +1405,43 @@ Private Sub btnImprimir_Click()
     Unload Me
 End Sub
 
+
+Private Function GetDecimalSeparator() As String
+    GetDecimalSeparator = Application.International(xlDecimalSeparator)
+End Function
+
+Private Function GetThousandsSeparator() As String
+    GetThousandsSeparator = Application.International(xlThousandsSeparator)
+End Function
+
+
+Private Function FormatarMoeda(ByVal valor As Double) As String
+    FormatarMoeda = FormatCurrency(valor, 2, vbTrue, vbTrue, vbTrue)
+End Function
+
+
+Private Function ValidarValorNumerico(ByVal strValue As String) As Boolean
+    Dim decimalSep As String
+    Dim thousandsSep As String
+    
+    decimalSep = GetDecimalSeparator()
+    thousandsSep = GetThousandsSeparator()
+    
+    ' Remove espaços
+    strValue = Trim(strValue)
+    
+    ' Verifica se está vazio
+    If strValue = "" Then
+        ValidarValorNumerico = False
+        Exit Function
+    End If
+    
+    ' Tenta converter para número
+    On Error Resume Next
+    ConvertToNumber strValue
+    ValidarValorNumerico = (Err.Number = 0)
+    On Error GoTo 0
+End Function
 
 
 
