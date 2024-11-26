@@ -990,9 +990,6 @@ End Sub
 
 
 
-
-
-
 Private Function SheetExists(ByVal sheetName As String) As Boolean
     Dim ws As Worksheet
     On Error Resume Next
@@ -1333,19 +1330,30 @@ Private Sub btnImprimir_Click()
     
     ' Configurações básicas de página
     With wsNovaProposta.PageSetup
-        .Orientation = xlPortrait
-        .PaperSize = xlPaperA4
-        .Zoom = False
-        .FitToPagesWide = 1
-        .FitToPagesTall = False
-        .LeftMargin = Application.CentimetersToPoints(2)
-        .RightMargin = Application.CentimetersToPoints(2)
-        .TopMargin = Application.CentimetersToPoints(1)
-        .BottomMargin = Application.CentimetersToPoints(1)
-        .HeaderMargin = Application.CentimetersToPoints(0.5)
-        .FooterMargin = Application.CentimetersToPoints(0.5)
-        .CenterHorizontally = True
-        .CenterVertically = False
+        .PaperSize = xlPaperA4                                    ' Tamanho A4
+        .Orientation = xlPortrait                                  ' Orientação Retrato
+        .LeftMargin = Application.CentimetersToPoints(0.6)        ' Margem esquerda 0.6cm
+        .RightMargin = Application.CentimetersToPoints(0.6)       ' Margem direita 0.6cm
+        .TopMargin = Application.CentimetersToPoints(0.5)         ' Margem superior 0.5cm
+        .BottomMargin = Application.CentimetersToPoints(0.5)      ' Margem inferior 0.5cm
+        .HeaderMargin = Application.CentimetersToPoints(0)        ' Margem do cabeçalho
+        .FooterMargin = Application.CentimetersToPoints(0)        ' Margem do rodapé
+        .CenterHorizontally = True                                ' Centralizar horizontalmente
+        .Zoom = False                                             ' Desabilitar zoom
+        .FitToPagesWide = 1                                       ' Ajustar para 1 página de largura
+        .FitToPagesTall = False                                   ' Altura pode variar conforme necessário
+    End With
+
+    ' Configurar área de impressão e repetir linhas
+    With wsNovaProposta
+        ' Definir área de impressão (ajuste conforme necessário)
+        .PageSetup.PrintArea = .UsedRange.Address
+        
+        ' Configurar linhas a repetir no topo (cabeçalho)
+        .PageSetup.PrintTitleRows = "$1:$8"
+        
+        ' Ajustar visualização
+        .DisplayPageBreaks = True
     End With
     
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
