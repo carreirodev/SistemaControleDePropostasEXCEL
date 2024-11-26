@@ -5,6 +5,11 @@ Private propostaExistenteCarregada  As Boolean
 
 Private Sub UserForm_Initialize()
     
+    With Me.cmbFrete
+        .Clear
+        .AddItem "FOB"
+        .AddItem "CIF"
+    End With
 
     ' Configurando o ListBox para ter colunas
     With Me.lstProdutosDaProposta
@@ -133,6 +138,7 @@ Private Sub LimparInformacoesProposta()
     Me.txtPrazoEntrega.Value = ""
     Me.cmbCondPagamento.Value = ""
     Me.txtValorTotal.Value = "0.00"
+    Me.cmbFrete.Value = ""
     
     ' Limpar a lista de produtos da proposta
     Me.lstProdutosDaProposta.Clear
@@ -282,6 +288,12 @@ Private Sub VerificarSalvarProposta()
         Me.btnSalvarProposta.Enabled = True
     Else
         Me.btnSalvarProposta.Enabled = False
+    End If
+    If Me.txtID.Value <> "" And Me.lstProdutosDaProposta.ListCount > 1 _
+            And Me.cmbFrete.Value <> "" And Not propostaExistenteCarregada Then
+            Me.btnSalvarProposta.Enabled = True
+        Else
+            Me.btnSalvarProposta.Enabled = False
     End If
 End Sub
 
@@ -666,6 +678,7 @@ Private Sub CarregarDetalhesPropostaExistente(numeroProposta As String)
             Me.cmbVendedor.Value = cel.Offset(0, 8).Value ' Coluna I para VENDEDOR
             Me.txtPrazoEntrega.Value = cel.Offset(0, 10).Value ' Coluna K para PRAZO DE ENTREGA
             Me.cmbCondPagamento.Value = cel.Offset(0, 9).Value ' Coluna J para CONDICAO DE PAGAMENTO
+            Me.cmbFrete.Value = cel.Offset(0, 11).Value ' Coluna L para FRETE
             
             ' Adicionar item à lista de produtos da proposta
             Me.lstProdutosDaProposta.AddItem cel.Offset(0, 2).Value ' Coluna C para ITEM
@@ -788,6 +801,7 @@ Private Sub btnSalvarProposta_Click()
         wsPropostas.Cells(ultimaLinha, 9).Value = vendedor ' Coluna VENDEDOR
         wsPropostas.Cells(ultimaLinha, 10).Value = condicaoPagamento ' Coluna CONDICAO DE PAGAMENTO
         wsPropostas.Cells(ultimaLinha, 11).Value = prazoEntrega ' Coluna PRAZO DE ENTREGA
+        wsPropostas.Cells(ultimaLinha, 12).Value = Me.cmbFrete.Value ' Coluna L para FRETE
         ultimaLinha = ultimaLinha + 1
     Next Item
     
@@ -866,6 +880,8 @@ Private Sub btnAlterarProposta_Click()
         wsPropostas.Cells(ultimaLinha, 9).Value = Me.cmbVendedor.Value
         wsPropostas.Cells(ultimaLinha, 10).Value = Me.cmbCondPagamento.Value
         wsPropostas.Cells(ultimaLinha, 11).Value = Me.txtPrazoEntrega.Value
+        wsPropostas.Cells(ultimaLinha, 12).Value = Me.cmbFrete.Value ' Coluna L para FRETE
+
         ultimaLinha = ultimaLinha + 1
     Next Item
     
@@ -1149,6 +1165,8 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     ' Preencher Condição de Pagamento e Prazo de Entrega
     wsNovaProposta.Range("E" & i + 2).Value = Me.cmbCondPagamento.Value
     wsNovaProposta.Range("E" & i + 3).Value = Me.txtPrazoEntrega.Value
+    wsNovaProposta.Range("E" & i + 4).Value = Me.cmbFrete.Value
+
     
     ' Preencher informações do vendedor
     Dim vendedorNome As String
@@ -1173,7 +1191,7 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
         vendedorCargo = ""
     End If
     
-    linhaVendedor = i + 6
+    linhaVendedor = i + 8
     wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorNome
     
     If vendedorCargo <> "" Then
