@@ -1068,8 +1068,8 @@ Private Function ConvertToNumber(ByVal strValue As String) As Double
     
     Exit Function
 
-TratarErro:
-    ConvertToNumber = 0
+    TratarErro:
+        ConvertToNumber = 0
 End Function
 
 
@@ -1096,19 +1096,10 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     End If
     
     i = 15 ' Linha inicial para os itens (após o cabeçalho)
-    Dim linhasCabecalho As Range
-    Set linhasCabecalho = wsNovaProposta.Range("A14:L14") ' Ajuste conforme necessário
     
     ' Iterar sobre cada linha na planilha de propostas
     For Each rngProposta In rngPropostas.Rows
         If rngProposta.Cells(1, 1).Value = numeroProposta Then
-            ' Verificar se é necessário inserir um novo cabeçalho
-            If (i - 14) Mod 45 = 0 Then ' Assumindo 45 linhas por página
-                linhasCabecalho.Copy
-                wsNovaProposta.Rows(i).Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
-                i = i + 1
-            End If
-            
             wsNovaProposta.Cells(i, 1).Value = rngProposta.Cells(1, 3).Value ' Item
             wsNovaProposta.Cells(i, 2).Value = rngProposta.Cells(1, 6).Value ' Quantidade
             wsNovaProposta.Cells(i, 3).Value = rngProposta.Cells(1, 4).Value ' Código do Produto
@@ -1147,9 +1138,6 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
             i = i + 1
         End If
     Next rngProposta
-    
-    ' Chamar a função de ajuste de quebra de página antes de adicionar as informações finais
-    AjustarQuebrasPageina wsNovaProposta, i, linhasCabecalho
     
     ' Preencher informações finais
     Dim valorTotal As Double
@@ -1201,33 +1189,6 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
     
     linhaVendedor = linhaVendedor + 1
     wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorFone
-End Sub
-
-
-Private Sub AjustarQuebrasPageina(ws As Worksheet, linhaInicial As Long, linhasCabecalho As Range)
-
-    Const LINHAS_RODAPE As Long = 8 ' Ajuste conforme necessário
-    Const LINHAS_POR_PAGINA As Long = 45 ' Ajuste conforme necessário
-    Dim ultimaLinhaPagina As Long
-    Dim linhasRestantes As Long
-    Dim linhaAtual As Long
-    linhaAtual = linhaInicial
-    ' Calcular quantas linhas restam até o final da página atual
-    ultimaLinhaPagina = Application.WorksheetFunction.Floor(linhaAtual / LINHAS_POR_PAGINA, 1) * LINHAS_POR_PAGINA + LINHAS_POR_PAGINA
-    linhasRestantes = ultimaLinhaPagina - linhaAtual
-    ' Se não houver espaço suficiente para as informações finais
-    If linhasRestantes < LINHAS_RODAPE + 3 Then ' +3 para margem de segurança
-        ' Inserir um novo cabeçalho
-        linhasCabecalho.Copy
-        ws.Rows(ultimaLinhaPagina + 1).Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
-        ' Mover as informações finais para a próxima página
-        ws.Range(ws.Cells(linhaAtual, 1), ws.Cells(linhaAtual + LINHAS_RODAPE - 1, 12)).Cut _
-            ws.Cells(ultimaLinhaPagina + 2, 1)
-        ' Limpar as células originais das informações finais
-        ws.Range(ws.Cells(linhaAtual, 1), ws.Cells(linhaAtual + LINHAS_RODAPE - 1, 12)).Clear
-    End If
-    ' Definir a área de impressão
-    ws.PageSetup.PrintArea = "$A$1:$L$" & (ultimaLinhaPagina + LINHAS_RODAPE + 2)
 End Sub
 
 
@@ -1370,49 +1331,40 @@ Private Sub btnImprimir_Click()
         .Columns("I:L").ColumnWidth = 5.27
     End With
     
-    ' Configurações de página e controle de quebra
+    ' Configurações básicas de página
     With wsNovaProposta.PageSetup
-        .LeftMargin = Application.InchesToPoints(0.5)
-        .RightMargin = Application.InchesToPoints(0.5)
-        .TopMargin = Application.InchesToPoints(0.2)
-        .BottomMargin = Application.InchesToPoints(0.2)
-        .HeaderMargin = Application.InchesToPoints(0)
-        .FooterMargin = Application.InchesToPoints(0)
-        .CenterHorizontally = True
-        .PrintTitleRows = "$1:$14" ' Isso fará o cabeçalho principal e o cabeçalho dos itens se repetirem em todas as páginas
-        .FitToPagesWide = 1
-        .FitToPagesTall = 10
+        .Orientation = xlPortrait
         .PaperSize = xlPaperA4
-        ' NOVAS CONFIGURAÇÕES PARA CONTROLE DE QUEBRA DE PÁGINA
-        .PrintArea = wsNovaProposta.UsedRange.Address
+        .Zoom = False
+        .FitToPagesWide = 1
+        .FitToPagesTall = False
+        .LeftMargin = Application.CentimetersToPoints(2)
+        .RightMargin = Application.CentimetersToPoints(2)
+        .TopMargin = Application.CentimetersToPoints(1)
+        .BottomMargin = Application.CentimetersToPoints(1)
+        .HeaderMargin = Application.CentimetersToPoints(0.5)
+        .FooterMargin = Application.CentimetersToPoints(0.5)
+        .CenterHorizontally = True
+        .CenterVertically = False
     End With
-    
-    ' Atualizar ultimaLinha para a última linha da área usada
-    ultimaLinha = wsNovaProposta.UsedRange.Rows.Count
-    
-    ' Forçar que as últimas linhas fiquem juntas
-    With wsNovaProposta.Range(wsNovaProposta.Cells(ultimaLinha - 10, 1), wsNovaProposta.Cells(ultimaLinha, 12))
-        .Rows.Group
-        .EntireRow.PageBreak = xlPageBreakManual
-    End With
-    
-    ' Adicionar uma quebra de página manual antes das últimas 10 linhas
-    If ultimaLinha > 15 Then ' Só adiciona se houver mais de 15 linhas (5 de cabeçalho + 10 finais)
-        wsNovaProposta.HPageBreaks.Add Before:=wsNovaProposta.Cells(ultimaLinha - 10, 1)
-    End If
     
     MsgBox "Proposta criada com sucesso na planilha: " & wsNovaProposta.Name, vbInformation
     Unload Me
 End Sub
 
 
+
+
 Private Function GetDecimalSeparator() As String
     GetDecimalSeparator = Application.International(xlDecimalSeparator)
 End Function
 
+
+
 Private Function GetThousandsSeparator() As String
     GetThousandsSeparator = Application.International(xlThousandsSeparator)
 End Function
+
 
 
 Private Function FormatarMoeda(ByVal valor As Double) As String
