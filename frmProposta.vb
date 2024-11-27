@@ -631,17 +631,15 @@ Private Sub lstPropostasDoCliente_Click()
         Dim numeroProposta As String
         numeroProposta = Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListIndex, 0)
         
-        CarregarDetalhesPropostaExistente numeroProposta
+        ' Carregar todos os detalhes da proposta
+        CarregarDetalhesPropostaCompleta numeroProposta
         
         ' Desabilitar o botão Salvar Nova Proposta e habilitar o botão Alterar Proposta
         Me.btnSalvarProposta.Enabled = False
         Me.btnAlterarProposta.Enabled = True
-        
-        ' Marcar que uma proposta existente foi carregada
         propostaExistenteCarregada = True
     End If
 End Sub
-
 
 
 Private Sub CarregarDetalhesPropostaExistente(numeroProposta As String)
@@ -1428,6 +1426,201 @@ End Function
 
 
 
+
+Private Sub btnBuscaProposta_Click()
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim ultimaLinha As Long
+    Dim numeroBusca As String
+    Dim encontrado As Boolean
+    Dim propostasUnicas As Collection
+    
+    ' Verificar se foi digitado algum número para busca
+    numeroBusca = Trim(Me.txtBuscaProposta.Value)
+    If numeroBusca = "" Then
+        MsgBox "Por favor, digite um número de proposta para buscar.", vbInformation
+        Me.txtBuscaProposta.SetFocus
+        Exit Sub
+    End If
+    
+    ' Definindo a planilha de propostas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:L" & ultimaLinha)
+    
+    ' Criar coleção para armazenar propostas únicas
+    Set propostasUnicas = New Collection
+    
+    ' Limpando a ListBox antes de adicionar novos itens
+    Me.lstPropostasDoCliente.Clear
+    
+    ' Configurar as colunas do ListBox
+    With Me.lstPropostasDoCliente
+        .ColumnCount = 4
+        .ColumnWidths = "70;100;100;100"
+        .AddItem "Número"
+        .List(0, 1) = "Referência"
+        .List(0, 2) = "Vendedor"
+        .List(0, 3) = "Valor Total"
+    End With
+    
+    ' Primeiro, coletar todas as propostas únicas que correspondem ao critério
+    On Error Resume Next
+    For Each cel In rngPropostas.Columns(1).Cells ' Coluna A para NUMERO
+        If InStr(1, cel.Value, numeroBusca, vbTextCompare) > 0 Then
+            ' Tentar adicionar à coleção (On Error Resume Next evita erro de chave duplicada)
+            propostasUnicas.Add cel.Value, CStr(cel.Value)
+            encontrado = True
+        End If
+    Next cel
+    On Error GoTo 0
+    
+    ' Se encontrou propostas, adicionar à ListBox
+    If encontrado Then
+        Dim proposta As Variant
+        For Each proposta In propostasUnicas
+            ' Encontrar a primeira ocorrência desta proposta para obter os detalhes
+            For Each cel In rngPropostas.Columns(1).Cells
+                If cel.Value = proposta Then
+                    Me.lstPropostasDoCliente.AddItem cel.Value ' Número da proposta
+                    Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 1) = cel.Offset(0, 7).Value ' Referência
+                    Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 2) = cel.Offset(0, 8).Value ' Vendedor
+                    Me.lstPropostasDoCliente.List(Me.lstPropostasDoCliente.ListCount - 1, 3) = _
+                        Format(CalcularValorTotalProposta(cel.Value), "#,##0.00") ' Valor Total
+                    Exit For
+                End If
+            Next cel
+        Next proposta
+        
+    Else
+        MsgBox "Nenhuma proposta encontrada com o número: " & numeroBusca, vbInformation
+    End If
+End Sub
+
+
+
+Private Sub CarregarDetalhesPropostaCompleta(numeroProposta As String)
+    Dim wsPropostas As Worksheet
+    Dim wsClientes As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim clienteID As String
+    Dim ultimaLinha As Long
+    
+    ' Definir as planilhas
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    Set wsClientes = ThisWorkbook.Sheets("CLIENTES")
+    
+    ' Encontrar última linha das propostas
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:L" & ultimaLinha)
+    
+    ' Limpar informações anteriores
+    LimparInformacoesProposta
+    
+    ' Encontrar a proposta
+    For Each cel In rngPropostas.Columns(1).Cells
+        If cel.Value = numeroProposta Then
+            ' Obter o ID do cliente
+            clienteID = cel.Offset(0, 1).Value
+            
+            ' Buscar informações do cliente
+            Dim rngCliente As Range
+            Set rngCliente = wsClientes.Range("A:H").Find(What:=clienteID, _
+                                                         LookIn:=xlValues, _
+                                                         LookAt:=xlWhole)
+            
+            If Not rngCliente Is Nothing Then
+                ' Preencher campos do cliente
+                Me.txtID.Value = clienteID
+                Me.txtNomeCliente.Value = rngCliente.Offset(0, 1).Value
+                Me.txtPessoaContato.Value = rngCliente.Offset(0, 2).Value
+                Me.txtCidade.Value = rngCliente.Offset(0, 4).Value
+                Me.txtEstado.Value = rngCliente.Offset(0, 5).Value
+                
+                ' Desabilitar campos do cliente
+                Me.txtID.Enabled = False
+                Me.txtNomeCliente.Enabled = False
+                Me.txtPessoaContato.Enabled = False
+                Me.txtCidade.Enabled = False
+                Me.txtEstado.Enabled = False
+                
+                ' Desabilitar controles de busca de cliente
+                Me.lstCliente.Enabled = False
+                Me.btnBuscaCliente.Enabled = False
+            End If
+            
+            ' Carregar informações da proposta
+            Me.txtNrProposta.Value = numeroProposta
+            Me.txtReferencia.Value = cel.Offset(0, 7).Value
+            Me.cmbVendedor.Value = cel.Offset(0, 8).Value
+            Me.cmbCondPagamento.Value = cel.Offset(0, 9).Value
+            Me.txtPrazoEntrega.Value = cel.Offset(0, 10).Value
+            Me.cmbFrete.Value = cel.Offset(0, 11).Value
+            
+            ' Carregar produtos da proposta
+            CarregarProdutosDaProposta numeroProposta
+            
+            Exit For
+        End If
+    Next cel
+End Sub
+
+
+
+Private Sub MostrarInformacoesCliente(clienteID As String, rngCliente As Range)
+    Debug.Print "------- Informações do Cliente -------"
+    Debug.Print "ID: " & clienteID
+    Debug.Print "Nome: " & rngCliente.Offset(0, 1).Value
+    Debug.Print "Contato: " & rngCliente.Offset(0, 2).Value
+    Debug.Print "Cidade: " & rngCliente.Offset(0, 4).Value
+    Debug.Print "Estado: " & rngCliente.Offset(0, 5).Value
+    Debug.Print "-----------------------------------"
+End Sub
+
+
+Private Sub CarregarProdutosDaProposta(numeroProposta As String)
+    Dim wsPropostas As Worksheet
+    Dim rngPropostas As Range
+    Dim cel As Range
+    Dim ultimaLinha As Long
+    
+    Set wsPropostas = ThisWorkbook.Sheets("ListaDePropostas")
+    ultimaLinha = wsPropostas.Cells(wsPropostas.Rows.Count, "A").End(xlUp).Row
+    Set rngPropostas = wsPropostas.Range("A2:L" & ultimaLinha)
+    
+    ' Limpar e configurar o ListBox de produtos
+    Me.lstProdutosDaProposta.Clear
+    With Me.lstProdutosDaProposta
+        .AddItem "Item"
+        .List(0, 1) = "Código"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Qtd"
+        .List(0, 4) = "$ Unitário"
+        .List(0, 5) = "$ Total"
+    End With
+    
+    ' Carregar os produtos
+    For Each cel In rngPropostas.Columns(1).Cells
+        If cel.Value = numeroProposta Then
+            Me.lstProdutosDaProposta.AddItem cel.Offset(0, 2).Value ' Item
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 1) = cel.Offset(0, 3).Value ' Código
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 2) = ObterDescricaoProduto(cel.Offset(0, 3).Value)
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 3) = cel.Offset(0, 5).Value ' Quantidade
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 4) = Format(cel.Offset(0, 4).Value, "#,##0.00") ' Preço Unitário
+            Me.lstProdutosDaProposta.List(Me.lstProdutosDaProposta.ListCount - 1, 5) = Format(cel.Offset(0, 6).Value, "#,##0.00") ' Subtotal
+        End If
+    Next cel
+    
+    ' Atualizar o valor total
+    AtualizarValorTotal
+End Sub
+
+
+
+
+
 ' _______________________
 
-' Analise o codigo acima pois preciso resolver um problema no arquivo criado para impressao
+'Analise o codigo acima pois preciso fazer mais algumas implementacoes em relacao a buscar propostas
