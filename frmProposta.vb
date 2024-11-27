@@ -1191,7 +1191,7 @@ Private Sub PreencherItensProposta(wsNovaProposta As Worksheet, wsPropostas As W
         vendedorCargo = ""
     End If
     
-    linhaVendedor = i + 8
+    linhaVendedor = i + 10
     wsNovaProposta.Range("A" & linhaVendedor).Value = vendedorNome
     
     If vendedorCargo <> "" Then
@@ -1352,15 +1352,20 @@ Private Sub btnImprimir_Click()
         .Orientation = xlPortrait                                  ' Orientação Retrato
         .LeftMargin = Application.CentimetersToPoints(0.6)        ' Margem esquerda 0.6cm
         .RightMargin = Application.CentimetersToPoints(0.6)       ' Margem direita 0.6cm
-        .TopMargin = Application.CentimetersToPoints(0.5)         ' Margem superior 0.5cm
-        .BottomMargin = Application.CentimetersToPoints(0.5)      ' Margem inferior 0.5cm
+        .TopMargin = Application.CentimetersToPoints(0.8)         ' Margem superior 0.5cm
+        .BottomMargin = Application.CentimetersToPoints(1.0)      ' Margem inferior 0.5cm
         .HeaderMargin = Application.CentimetersToPoints(0)        ' Margem do cabeçalho
-        .FooterMargin = Application.CentimetersToPoints(0)        ' Margem do rodapé
+        .FooterMargin = Application.CentimetersToPoints(0.5)        ' Margem do rodapé
         .CenterHorizontally = True                                ' Centralizar horizontalmente
         .Zoom = False                                             ' Desabilitar zoom
         .FitToPagesWide = 1                                       ' Ajustar para 1 página de largura
         .FitToPagesTall = False                                   ' Altura pode variar conforme necessário
+
+        .RightFooter = "&8&P de &N"
     End With
+
+
+    
 
     ' Configurar área de impressão e repetir linhas
     With wsNovaProposta
