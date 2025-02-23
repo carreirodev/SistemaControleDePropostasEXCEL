@@ -1,3 +1,76 @@
+Private Sub UserForm_Initialize()
+    btnBuscarProduto.Enabled = False
+    btnAdicionarProduto.Enabled = False
+    
+    ' Inicializa o ListBox
+    With lstProdutosDaProposta
+        .Clear
+        .ColumnCount = 6  ' Aumentado para 6 colunas
+        .ColumnWidths = "40;60;200;70;70;70"  ' Adicionada largura para a nova coluna
+    End With
+    
+    ' Adiciona o cabeçalho
+    lstProdutosDaProposta.AddItem ""
+    lstProdutosDaProposta.List(0, 0) = "Item"
+    lstProdutosDaProposta.List(0, 1) = "Qtd"
+    lstProdutosDaProposta.List(0, 2) = "Descrição"
+    lstProdutosDaProposta.List(0, 3) = "Código"
+    lstProdutosDaProposta.List(0, 4) = "Preço"
+    lstProdutosDaProposta.List(0, 5) = "Sub Total"  ' Nova coluna
+End Sub
+
+
+
+Private Sub txtNomeCliente_Change()
+    CheckEnableBuscarProduto
+End Sub
+
+Private Sub txtCidade_Change()
+    CheckEnableBuscarProduto
+End Sub
+
+Private Sub txtEstado_Change()
+    CheckEnableBuscarProduto
+End Sub
+
+Private Sub CheckEnableBuscarProduto()
+    btnBuscarProduto.Enabled = (Trim(txtNomeCliente.Value) <> "" And _
+                                Trim(txtCidade.Value) <> "" And _
+                                Trim(txtEstado.Value) <> "")
+End Sub
+
+Private Sub txtCodProduto_Change()
+    CheckEnableAdicionarProduto
+End Sub
+
+Private Sub txtDescricao_Change()
+    CheckEnableAdicionarProduto
+End Sub
+
+Private Sub txtPreco_Change()
+    CheckEnableAdicionarProduto
+End Sub
+
+Private Sub txtQTD_Change()
+    CheckEnableAdicionarProduto
+End Sub
+
+Private Sub txtItem_Change()
+    CheckEnableAdicionarProduto
+End Sub
+
+Private Sub CheckEnableAdicionarProduto()
+    btnAdicionarProduto.Enabled = (Trim(txtNomeCliente.Value) <> "" And _
+                                   Trim(txtCidade.Value) <> "" And _
+                                   Trim(txtEstado.Value) <> "" And _
+                                   Trim(txtCodProduto.Value) <> "" And _
+                                   Trim(txtDescricao.Value) <> "" And _
+                                   Trim(txtPreco.Value) <> "" And _
+                                   Trim(txtQTD.Value) <> "" And _
+                                   Trim(txtItem.Value) <> "")
+End Sub
+
+
 
 Private Sub btnBuscaCliente_Click()
     ' Abre o formulário frmCliente
@@ -13,85 +86,6 @@ End Sub
 
 
 
-Private Sub btnNovaProposta_Click()
-    ' Verifica se os campos obrigatórios estão preenchidos
-    If Trim(txtNomeCliente.Value) = "" Or Trim(txtCidade.Value) = "" Or Trim(txtEstado.Value) = "" Then
-        MsgBox "Os campos Nome do Cliente, Cidade e Estado são obrigatórios!", vbExclamation
-        Exit Sub
-    End If
-
-    ' Obtém a data atual no formato yyyy-mm-dd
-    Dim dataAtual As String
-    dataAtual = Format(Date, "yyyy-mm-dd")
-
-    ' Obtém as iniciais do cliente
-    Dim iniciais As String
-    iniciais = ObterIniciaisCliente(txtNomeCliente.Value)
-
-    ' Obtém e incrementa o número sequencial
-    Dim ws As Worksheet
-    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
-    Dim numeroSequencial As Long
-    numeroSequencial = ws.Range("U1").Value
-
-    ' Formata o número sequencial com 5 dígitos (00001)
-    Dim numeroFormatado As String
-    numeroFormatado = Format(numeroSequencial, "00000")
-
-    ' Monta o número da proposta
-    Dim numeroProposta As String
-    numeroProposta = dataAtual & "_" & iniciais & "_" & numeroFormatado
-
-    ' Incrementa o número sequencial
-    ws.Range("U1").Value = numeroSequencial + 1
-
-    ' Preenche o campo txtNovaProposta
-    txtNovaProposta.Value = numeroProposta
-    
-    ' Encontra a próxima linha vazia na coluna A
-    Dim ultimaLinha As Long
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
-    
-    ' Adiciona as informações na planilha
-    With ws
-        .Cells(ultimaLinha, "A").Value = numeroProposta        ' Número da Proposta
-        .Cells(ultimaLinha, "B").Value = txtNomeCliente.Value  ' Nome do Cliente
-        .Cells(ultimaLinha, "C").Value = txtCidade.Value       ' Cidade
-        .Cells(ultimaLinha, "D").Value = txtEstado.Value       ' Estado
-        .Cells(ultimaLinha, "E").Value = txtPessoaContato.Value ' Pessoa de Contato
-        .Cells(ultimaLinha, "F").Value = txtFone.Value         ' Telefone
-        .Cells(ultimaLinha, "G").Value = txtEmail.Value        ' Email
-    End With
-    
-    ' Desabilita os botões
-    btnNovaProposta.Enabled = False
-    btnBuscaCliente.Enabled = False
-    
-    ' Opcional: Mensagem informando que a proposta foi criada
-    MsgBox "Proposta " & numeroProposta & " criada com sucesso!", vbInformation
-End Sub
-
-
-
-Private Function ObterIniciaisCliente(nomeCompleto As String) As String
-    Dim palavras() As String
-    Dim iniciais As String
-    
-    ' Remove espaços extras e divide o nome em palavras
-    palavras = Split(Trim(nomeCompleto))
-    
-    ' Se tiver pelo menos duas palavras
-    If UBound(palavras) >= 1 Then
-        ' Pega a primeira letra de cada uma das duas primeiras palavras
-        iniciais = UCase(Left(palavras(0), 1) & Left(palavras(1), 1))
-    Else
-        ' Se tiver apenas uma palavra, usa as duas primeiras letras
-        iniciais = UCase(Left(palavras(0), 2))
-    End If
-    
-    ObterIniciaisCliente = iniciais
-End Function
-
 
 Private Sub btnBuscarProduto_Click()
     Dim ws As Worksheet
@@ -101,43 +95,154 @@ Private Sub btnBuscarProduto_Click()
     Dim encontrado As Boolean
     Dim preco As Double
     
-    ' Define a planilha "TabelaPrecos"
-    Set ws = ThisWorkbook.Worksheets("TabelaPrecos")
-    
-    ' Obtém o código do produto digitado
+    Set ws = ThisWorkbook.Worksheets("ListaDePrecos")
     codigo = Trim(txtCodProduto.Value)
     
-    ' Verifica se o código foi digitado
     If codigo = "" Then
         MsgBox "Por favor, digite um código de produto.", vbExclamation
         Exit Sub
     End If
     
-    ' Encontra a última linha com dados
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     
-    ' Procura o código na coluna A
     encontrado = False
-    For i = 2 To ultimaLinha ' Assumindo que a primeira linha é cabeçalho
+    For i = 2 To ultimaLinha
         If ws.Cells(i, "A").Value = codigo Then
-            ' Preenche os campos com as informações encontradas
             txtDescricao.Value = ws.Cells(i, "B").Value
-            
-            ' Obtém o preço e formata corretamente
             preco = CDbl(ws.Cells(i, "C").Value)
-            txtPreco.Value = Format(preco, "#,##0.00") ' <-- Ajuste aqui
-            
+            txtPreco.Value = Format(preco, "#,##0.00")
             encontrado = True
             Exit For
         End If
     Next i
     
-    ' Se não encontrou o produto, exibe uma mensagem
     If Not encontrado Then
         MsgBox "Produto não encontrado.", vbExclamation
-        ' Limpa os campos
         txtDescricao.Value = ""
         txtPreco.Value = ""
     End If
+    
+    CheckEnableAdicionarProduto
 End Sub
 
+
+
+Private Sub btnAdicionarProduto_Click()
+    Dim subTotal As Double
+    
+    ' Verifica se é o primeiro item
+    If txtNovaProposta.Value = "" Then
+        GerarNumeroProposta
+    End If
+    
+    ' Calcula o Sub Total
+    subTotal = CDbl(txtQTD.Value) * CDbl(Replace(txtPreco.Value, ",", "."))
+    
+    ' Adiciona o item à lista
+    With lstProdutosDaProposta
+        .AddItem ""
+        .List(.ListCount - 1, 0) = txtItem.Value
+        .List(.ListCount - 1, 1) = txtQTD.Value
+        .List(.ListCount - 1, 2) = txtDescricao.Value
+        .List(.ListCount - 1, 3) = txtCodProduto.Value
+        .List(.ListCount - 1, 4) = txtPreco.Value
+        .List(.ListCount - 1, 5) = Format(subTotal, "#,##0.00")  ' Novo Sub Total
+    End With
+    
+    ' Limpa os campos do produto
+    txtItem.Value = ""
+    txtQTD.Value = ""
+    txtCodProduto.Value = ""
+    txtDescricao.Value = ""
+    txtPreco.Value = ""
+    
+    ' Desabilita o botão Adicionar Produto
+    btnAdicionarProduto.Enabled = False
+    
+    ' Incrementa automaticamente o número do item
+    txtItem.Value = lstProdutosDaProposta.ListCount
+End Sub
+
+
+
+Private Sub GerarNumeroProposta()
+    Dim ws As Worksheet
+    Dim ultimoNumero As Long
+    Dim novoNumero As String
+    Dim iniciais As String
+    
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
+    
+    ' Obter o último número da proposta
+    ultimoNumero = ws.Range("U1").Value
+    
+    ' Incrementar o número
+    ultimoNumero = ultimoNumero + 1
+    
+    ' Atualizar o número na planilha
+    ws.Range("U1").Value = ultimoNumero
+    
+    ' Gerar as iniciais do cliente
+    iniciais = Left(txtNomeCliente.Value, 1) & Mid(txtNomeCliente.Value, InStr(txtNomeCliente.Value, " ") + 1, 1)
+    
+    ' Formatar o novo número da proposta
+    novoNumero = Format(Date, "yyyy-mm-dd") & "_" & UCase(iniciais) & "_" & Format(ultimoNumero, "00000")
+    
+    ' Atualizar o campo txtNovaProposta
+    txtNovaProposta.Value = novoNumero
+End Sub
+
+
+
+Private Sub btnSalvarNovaProposta_Click()
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
+    
+    ' Encontrar a última linha preenchida
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
+    
+    ' Salvar cada item da proposta
+    For i = 1 To lstProdutosDaProposta.ListCount - 1  ' -1 para ignorar o cabeçalho
+        ws.Cells(ultimaLinha, "A").Value = txtNovaProposta.Value
+        ws.Cells(ultimaLinha, "B").Value = txtNomeCliente.Value
+        ws.Cells(ultimaLinha, "C").Value = txtCidade.Value
+        ws.Cells(ultimaLinha, "D").Value = txtEstado.Value
+        ws.Cells(ultimaLinha, "E").Value = txtPessoaContato.Value
+        ws.Cells(ultimaLinha, "F").Value = txtFone.Value
+        ws.Cells(ultimaLinha, "G").Value = txtEmail.Value
+        ws.Cells(ultimaLinha, "H").Value = lstProdutosDaProposta.List(i, 0)  ' Item
+        ws.Cells(ultimaLinha, "I").Value = lstProdutosDaProposta.List(i, 3)  ' Código
+        ws.Cells(ultimaLinha, "J").Value = lstProdutosDaProposta.List(i, 4)  ' Preço
+        ws.Cells(ultimaLinha, "K").Value = lstProdutosDaProposta.List(i, 1)  ' Quantidade
+        
+        ultimaLinha = ultimaLinha + 1
+    Next i
+    
+    MsgBox "Proposta salva com sucesso!", vbInformation
+    
+    ' Limpar o formulário
+    LimparFormulario
+End Sub
+
+
+
+Private Sub LimparFormulario()
+    ' ... (código anterior permanece o mesmo)
+    
+    ' Limpa e reinicializa o ListBox
+    With lstProdutosDaProposta
+        .Clear
+        .AddItem ""
+        .List(0, 0) = "Item"
+        .List(0, 1) = "Qtd"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Código"
+        .List(0, 4) = "Preço"
+        .List(0, 5) = "Sub Total"  ' Nova coluna
+    End With
+    
+    ' ... (código posterior permanece o mesmo)
+End Sub
