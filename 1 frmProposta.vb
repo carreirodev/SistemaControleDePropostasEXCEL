@@ -52,9 +52,25 @@ Private Sub btnNovaProposta_Click()
     Dim ultimaLinha As Long
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
     
-    ' Adiciona o número da proposta na planilha
-    ws.Cells(ultimaLinha, "A").Value = numeroProposta
+    ' Adiciona as informações na planilha
+    With ws
+        .Cells(ultimaLinha, "A").Value = numeroProposta        ' Número da Proposta
+        .Cells(ultimaLinha, "B").Value = txtNomeCliente.Value  ' Nome do Cliente
+        .Cells(ultimaLinha, "C").Value = txtCidade.Value       ' Cidade
+        .Cells(ultimaLinha, "D").Value = txtEstado.Value       ' Estado
+        .Cells(ultimaLinha, "E").Value = txtPessoaContato.Value ' Pessoa de Contato
+        .Cells(ultimaLinha, "F").Value = txtFone.Value         ' Telefone
+        .Cells(ultimaLinha, "G").Value = txtEmail.Value        ' Email
+    End With
+    
+    ' Desabilita os botões
+    btnNovaProposta.Enabled = False
+    btnBuscaCliente.Enabled = False
+    
+    ' Opcional: Mensagem informando que a proposta foi criada
+    MsgBox "Proposta " & numeroProposta & " criada com sucesso!", vbInformation
 End Sub
+
 
 
 Private Function ObterIniciaisCliente(nomeCompleto As String) As String
@@ -75,4 +91,53 @@ Private Function ObterIniciaisCliente(nomeCompleto As String) As String
     
     ObterIniciaisCliente = iniciais
 End Function
+
+
+Private Sub btnBuscarProduto_Click()
+    Dim ws As Worksheet
+    Dim codigo As String
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim encontrado As Boolean
+    Dim preco As Double
+    
+    ' Define a planilha "TabelaPrecos"
+    Set ws = ThisWorkbook.Worksheets("TabelaPrecos")
+    
+    ' Obtém o código do produto digitado
+    codigo = Trim(txtCodProduto.Value)
+    
+    ' Verifica se o código foi digitado
+    If codigo = "" Then
+        MsgBox "Por favor, digite um código de produto.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Encontra a última linha com dados
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Procura o código na coluna A
+    encontrado = False
+    For i = 2 To ultimaLinha ' Assumindo que a primeira linha é cabeçalho
+        If ws.Cells(i, "A").Value = codigo Then
+            ' Preenche os campos com as informações encontradas
+            txtDescricao.Value = ws.Cells(i, "B").Value
+            
+            ' Obtém o preço e formata corretamente
+            preco = CDbl(ws.Cells(i, "C").Value)
+            txtPreco.Value = Format(preco, "#,##0.00") ' <-- Ajuste aqui
+            
+            encontrado = True
+            Exit For
+        End If
+    Next i
+    
+    ' Se não encontrou o produto, exibe uma mensagem
+    If Not encontrado Then
+        MsgBox "Produto não encontrado.", vbExclamation
+        ' Limpa os campos
+        txtDescricao.Value = ""
+        txtPreco.Value = ""
+    End If
+End Sub
 
