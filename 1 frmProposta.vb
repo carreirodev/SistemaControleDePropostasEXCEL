@@ -6,7 +6,7 @@ Private Sub UserForm_Initialize()
     With lstProdutosDaProposta
         .Clear
         .ColumnCount = 6  ' Aumentado para 6 colunas
-        .ColumnWidths = "40;60;200;70;70;70"  ' Adicionada largura para a nova coluna
+        .ColumnWidths = "40;60;340;90;90;120"  ' Adicionada largura para a nova coluna
     End With
     
     ' Adiciona o cabeçalho
@@ -94,17 +94,13 @@ Private Sub btnBuscarProduto_Click()
     Dim i As Long
     Dim encontrado As Boolean
     Dim preco As Double
-    
     Set ws = ThisWorkbook.Worksheets("ListaDePrecos")
     codigo = Trim(txtCodProduto.Value)
-    
     If codigo = "" Then
         MsgBox "Por favor, digite um código de produto.", vbExclamation
         Exit Sub
     End If
-    
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-    
     encontrado = False
     For i = 2 To ultimaLinha
         If ws.Cells(i, "A").Value = codigo Then
@@ -115,28 +111,36 @@ Private Sub btnBuscarProduto_Click()
             Exit For
         End If
     Next i
-    
     If Not encontrado Then
         MsgBox "Produto não encontrado.", vbExclamation
         txtDescricao.Value = ""
         txtPreco.Value = ""
     End If
-    
     CheckEnableAdicionarProduto
 End Sub
 
 
 
+
+
+
 Private Sub btnAdicionarProduto_Click()
     Dim subTotal As Double
+    Dim preco As Double
+    Dim quantidade As Double
     
     ' Verifica se é o primeiro item
     If txtNovaProposta.Value = "" Then
         GerarNumeroProposta
     End If
     
+    ' Converte os valores de texto para números
+    preco = CDbl(Replace(txtPreco.Value, ".", ""))
+    preco = CDbl(Replace(preco, ",", "."))
+    quantidade = CDbl(txtQTD.Value)
+    
     ' Calcula o Sub Total
-    subTotal = CDbl(txtQTD.Value) * CDbl(Replace(txtPreco.Value, ",", "."))
+    subTotal = quantidade * preco
     
     ' Adiciona o item à lista
     With lstProdutosDaProposta
@@ -145,8 +149,8 @@ Private Sub btnAdicionarProduto_Click()
         .List(.ListCount - 1, 1) = txtQTD.Value
         .List(.ListCount - 1, 2) = txtDescricao.Value
         .List(.ListCount - 1, 3) = txtCodProduto.Value
-        .List(.ListCount - 1, 4) = txtPreco.Value
-        .List(.ListCount - 1, 5) = Format(subTotal, "#,##0.00")  ' Novo Sub Total
+        .List(.ListCount - 1, 4) = Format(preco, "#,##0.00")
+        .List(.ListCount - 1, 5) = Format(subTotal, "#,##0.00") ' Novo Sub Total
     End With
     
     ' Limpa os campos do produto
@@ -162,6 +166,7 @@ Private Sub btnAdicionarProduto_Click()
     ' Incrementa automaticamente o número do item
     txtItem.Value = lstProdutosDaProposta.ListCount
 End Sub
+
 
 
 
@@ -198,14 +203,13 @@ Private Sub btnSalvarNovaProposta_Click()
     Dim ws As Worksheet
     Dim ultimaLinha As Long
     Dim i As Long
-    
     Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
     
     ' Encontrar a última linha preenchida
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
     
     ' Salvar cada item da proposta
-    For i = 1 To lstProdutosDaProposta.ListCount - 1  ' -1 para ignorar o cabeçalho
+    For i = 1 To lstProdutosDaProposta.ListCount - 1 ' -1 para ignorar o cabeçalho
         ws.Cells(ultimaLinha, "A").Value = txtNovaProposta.Value
         ws.Cells(ultimaLinha, "B").Value = txtNomeCliente.Value
         ws.Cells(ultimaLinha, "C").Value = txtCidade.Value
@@ -213,11 +217,10 @@ Private Sub btnSalvarNovaProposta_Click()
         ws.Cells(ultimaLinha, "E").Value = txtPessoaContato.Value
         ws.Cells(ultimaLinha, "F").Value = txtFone.Value
         ws.Cells(ultimaLinha, "G").Value = txtEmail.Value
-        ws.Cells(ultimaLinha, "H").Value = lstProdutosDaProposta.List(i, 0)  ' Item
-        ws.Cells(ultimaLinha, "I").Value = lstProdutosDaProposta.List(i, 3)  ' Código
-        ws.Cells(ultimaLinha, "J").Value = lstProdutosDaProposta.List(i, 4)  ' Preço
-        ws.Cells(ultimaLinha, "K").Value = lstProdutosDaProposta.List(i, 1)  ' Quantidade
-        
+        ws.Cells(ultimaLinha, "H").Value = lstProdutosDaProposta.List(i, 0) ' Item
+        ws.Cells(ultimaLinha, "I").Value = lstProdutosDaProposta.List(i, 3) ' Código
+        ws.Cells(ultimaLinha, "J").Value = lstProdutosDaProposta.List(i, 4) ' Preço
+        ws.Cells(ultimaLinha, "K").Value = lstProdutosDaProposta.List(i, 1) ' Quantidade
         ultimaLinha = ultimaLinha + 1
     Next i
     
@@ -229,8 +232,9 @@ End Sub
 
 
 
+
+
 Private Sub LimparFormulario()
-    ' ... (código anterior permanece o mesmo)
     
     ' Limpa e reinicializa o ListBox
     With lstProdutosDaProposta
@@ -244,5 +248,4 @@ Private Sub LimparFormulario()
         .List(0, 5) = "Sub Total"  ' Nova coluna
     End With
     
-    ' ... (código posterior permanece o mesmo)
 End Sub
