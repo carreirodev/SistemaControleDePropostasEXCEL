@@ -1,13 +1,23 @@
 ' Código para o formulário frmCliente
 
-Private Sub btnBuscar_Click()
+Private mSearchText As String ' Nova variável para armazenar o texto de busca
+
+
+Private Sub RealizarBusca(searchText As String)
     Dim ws As Worksheet
     Dim lastRow As Long
     Dim i As Long
-    Dim searchText As String
     
     ' Limpa a lista de resultados
     lstResultados.Clear
+    
+    ' Configura os cabeçalhos do ListBox
+    With lstResultados
+        .AddItem
+        .List(0, 0) = "Nome"
+        .List(0, 1) = "Cidade"
+        .List(0, 2) = "Estado"
+    End With
     
     ' Define a planilha "BancoDeCliente"
     Set ws = ThisWorkbook.Worksheets("BancoDeCliente")
@@ -15,12 +25,9 @@ Private Sub btnBuscar_Click()
     ' Encontra a última linha com dados
     lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     
-    ' Obtém o texto de busca
-    searchText = LCase(txtBuscaCliente.Value)
-    
     ' Percorre todos os clientes e adiciona os que correspondem à busca
     For i = 2 To lastRow ' Assumindo que a primeira linha é cabeçalho
-        If InStr(1, LCase(ws.Cells(i, 1).Value), searchText) > 0 Then
+        If InStr(1, LCase(ws.Cells(i, 1).Value), LCase(searchText)) > 0 Then
             lstResultados.AddItem
             lstResultados.List(lstResultados.ListCount - 1, 0) = ws.Cells(i, 1).Value ' Nome
             lstResultados.List(lstResultados.ListCount - 1, 1) = ws.Cells(i, 2).Value ' Cidade
@@ -29,9 +36,20 @@ Private Sub btnBuscar_Click()
     Next i
 End Sub
 
+Public Sub IniciarBusca(searchText As String)
+    ' Armazena o texto de busca
+    mSearchText = searchText
+    ' Mostra o formulário
+    Me.Show
+End Sub
+
+Private Sub btnBuscar_Click()
+    ' Realiza nova busca com o texto atual
+    RealizarBusca txtBuscaCliente.Value
+End Sub
+
 Private Sub btnSelecionar_Click()
     Dim selectedIndex As Long
-    
     ' Verifica se um cliente foi selecionado
     If lstResultados.ListIndex = -1 Then
         MsgBox "Por favor, selecione um cliente da lista.", vbExclamation
@@ -55,7 +73,6 @@ Private Sub btnLimpar_Click()
     txtBuscaCliente.Value = ""
     txtCidade.Value = ""
     txtEstado.Value = ""
-    
     ' Limpa a lista de resultados
     lstResultados.Clear
 End Sub
@@ -75,6 +92,16 @@ Private Sub lstResultados_Click()
     End If
 End Sub
 
+Private Sub UserForm_Activate()
+    ' Este evento é disparado após o formulário estar completamente carregado
+    If mSearchText <> "" Then
+        ' Preenche o campo de busca
+        txtBuscaCliente.Value = mSearchText
+        ' Realiza a busca automaticamente
+        RealizarBusca mSearchText
+    End If
+End Sub
+
 Private Sub UserForm_Initialize()
     ' Centraliza o formulário na tela
     Me.StartUpPosition = 0
@@ -89,3 +116,4 @@ Private Sub UserForm_Initialize()
         .List(0, 2) = "Estado"
     End With
 End Sub
+
