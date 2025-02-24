@@ -296,6 +296,7 @@ Private Sub btnSalvarNovaProposta_Click()
         ws.Cells(ultimaLinha, "I").Value = lstProdutosDaProposta.List(i, 3) ' Código
         ws.Cells(ultimaLinha, "J").Value = lstProdutosDaProposta.List(i, 4) ' Preço
         ws.Cells(ultimaLinha, "K").Value = lstProdutosDaProposta.List(i, 1) ' Quantidade
+        ws.Cells(ultimaLinha, "L").Value = txtRefProposta.Value ' Referência da Proposta
         ws.Cells(ultimaLinha, "M").Value = cmbVendedor.Value
         ws.Cells(ultimaLinha, "N").Value = cmbCondPagamento.Value
         ws.Cells(ultimaLinha, "O").Value = txtPrazoEntrega.Value
@@ -307,6 +308,7 @@ Private Sub btnSalvarNovaProposta_Click()
     MsgBox "Proposta salva com sucesso!", vbInformation
     LimparFormulario
 End Sub
+
 
 
 
@@ -331,6 +333,7 @@ Private Sub LimparFormulario()
     cmbCondPagamento.Value = ""
     txtPrazoEntrega.Value = ""
     cmbFrete.Value = ""
+    txtRefProposta.Value = ""
     txtValorTotal.Value = "0,00"
     
     ' Desabilitar botão Salvar
