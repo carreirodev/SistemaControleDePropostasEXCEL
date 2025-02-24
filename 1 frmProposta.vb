@@ -6,7 +6,7 @@ Private Sub UserForm_Initialize()
     With lstProdutosDaProposta
         .Clear
         .ColumnCount = 6  ' Aumentado para 6 colunas
-        .ColumnWidths = "40;60;340;90;90;120"  ' Adicionada largura para a nova coluna
+        .ColumnWidths = "40;60;320;90;90;120"  ' Adicionada largura para a nova coluna
     End With
     
     ' Adiciona o cabeçalho
@@ -135,8 +135,7 @@ Private Sub btnAdicionarProduto_Click()
     End If
     
     ' Converte os valores de texto para números
-    preco = CDbl(Replace(txtPreco.Value, ".", ""))
-    preco = CDbl(Replace(preco, ",", "."))
+    preco = ConverterParaNumero(txtPreco.Value)
     quantidade = CDbl(txtQTD.Value)
     
     ' Calcula o Sub Total
@@ -249,3 +248,13 @@ Private Sub LimparFormulario()
     End With
     
 End Sub
+
+Private Function ConverterParaNumero(valor As String) As Double
+    Dim temp As String
+    ' Primeiro, remover os separadores de milhar (pontos)
+    temp = Replace(valor, ".", "")
+    ' Depois, substituir a vírgula decimal por um ponto
+    temp = Replace(temp, ",", ".")
+    ' Converter para número
+    ConverterParaNumero = Val(temp)
+End Function
