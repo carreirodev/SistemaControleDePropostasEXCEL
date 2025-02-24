@@ -142,20 +142,6 @@ Public Sub PreencherDadosCliente(nome As String, cidade As String, estado As Str
 End Sub
 
 
-Private Sub AtualizarValorTotal()
-    Dim total As Double
-    Dim i As Long
-    
-    total = 0
-    ' Começa do 1 pois 0 é o cabeçalho
-    For i = 1 To lstProdutosDaProposta.ListCount - 1
-        ' Pega o valor do Sub Total (coluna 5) e soma ao total
-        total = total + CDbl(ConverterParaNumero(lstProdutosDaProposta.List(i, 5)))
-    Next i
-    
-    ' Atualiza o campo txtValorTotal com formatação de moeda
-    txtValorTotal.Value = Format(total, "#,##0.00")
-End Sub
 
 
 
@@ -340,6 +326,153 @@ Private Sub LimparFormulario()
     btnSalvarNovaProposta.Enabled = False
 End Sub
 
+
+
+
+Private Sub btnBuscaProposta_Click()
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim criterio As String
+    Dim propostasEncontradas As Collection
+    
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    criterio = LCase(txtNrProposta.Value)
+    
+    Set propostasEncontradas = New Collection
+    
+    ' Limpar o ListBox
+    lstBuscaProposta.Clear
+    
+    ' Adicionar cabeçalho
+    lstBuscaProposta.AddItem
+    lstBuscaProposta.List(0, 0) = "Nr da Proposta"
+    lstBuscaProposta.List(0, 1) = "Nome do Cliente"
+    
+    ' Buscar propostas únicas
+    For i = 2 To ultimaLinha
+        If InStr(1, LCase(ws.Cells(i, "A").Value), criterio) > 0 Then
+            On Error Resume Next
+            propostasEncontradas.Add ws.Cells(i, "A").Value, CStr(ws.Cells(i, "A").Value)
+            On Error GoTo 0
+        End If
+    Next i
+    
+    ' Adicionar propostas únicas ao ListBox
+    For i = 1 To propostasEncontradas.Count
+        lstBuscaProposta.AddItem
+        lstBuscaProposta.List(lstBuscaProposta.ListCount - 1, 0) = propostasEncontradas(i)
+        ' Encontrar o nome do cliente correspondente
+        Dim clienteLinha As Long
+        clienteLinha = Application.Match(propostasEncontradas(i), ws.Range("A:A"), 0)
+        lstBuscaProposta.List(lstBuscaProposta.ListCount - 1, 1) = ws.Cells(clienteLinha, "B").Value
+    Next i
+    
+    If lstBuscaProposta.ListCount = 1 Then ' Só tem o cabeçalho
+        MsgBox "Nenhuma proposta encontrada.", vbInformation
+    End If
+End Sub
+
+
+
+
+Private Sub lstBuscaProposta_Click()
+    Dim ws As Worksheet
+    Dim linha As Long
+    Dim nrProposta As String
+    
+    If lstBuscaProposta.ListIndex = 0 Then Exit Sub ' Evita clicar no cabeçalho
+    
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
+    nrProposta = lstBuscaProposta.List(lstBuscaProposta.ListIndex, 0)
+    
+    ' Encontrar a linha da proposta
+    linha = Application.Match(nrProposta, ws.Range("A:A"), 0)
+    
+    ' Preencher os campos
+    txtNrProposta.Value = nrProposta
+    txtNomeCliente.Value = ws.Cells(linha, "B").Value
+    txtCidade.Value = ws.Cells(linha, "C").Value
+    txtEstado.Value = ws.Cells(linha, "D").Value
+    txtPessoaContato.Value = ws.Cells(linha, "E").Value
+    txtEmail.Value = ws.Cells(linha, "F").Value
+    txtFone.Value = ws.Cells(linha, "G").Value
+    txtRefProposta.Value = ws.Cells(linha, "L").Value
+    cmbVendedor.Value = ws.Cells(linha, "M").Value
+    cmbCondPagamento.Value = ws.Cells(linha, "N").Value
+    txtPrazoEntrega.Value = ws.Cells(linha, "O").Value
+    cmbFrete.Value = ws.Cells(linha, "P").Value
+    
+    ' Preencher o ListBox com os itens da proposta
+    PreencherListBoxItens nrProposta
+    
+    ' Calcular e preencher o valor total
+    AtualizarValorTotal
+End Sub
+
+
+
+Private Sub PreencherListBoxItens(nrProposta As String)
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim wsPrecos As Worksheet
+    Dim descricao As String
+    
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
+    Set wsPrecos = ThisWorkbook.Worksheets("ListaDePrecos")
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Limpar o ListBox de itens
+    lstProdutosDaProposta.Clear
+    
+    ' Adicionar cabeçalho
+    With lstProdutosDaProposta
+        .AddItem
+        .List(0, 0) = "Item"
+        .List(0, 1) = "Qtd"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Código"
+        .List(0, 4) = "Preço"
+        .List(0, 5) = "Sub Total"
+    End With
+    
+    ' Preencher com os itens da proposta
+    For i = 2 To ultimaLinha
+        If ws.Cells(i, "A").Value = nrProposta Then
+            ' Buscar descrição na planilha ListaDePrecos
+            descricao = Application.WorksheetFunction.VLookup(ws.Cells(i, "I").Value, wsPrecos.Range("A:B"), 2, False)
+            
+            With lstProdutosDaProposta
+                .AddItem
+                .List(.ListCount - 1, 0) = ws.Cells(i, "H").Value ' Item
+                .List(.ListCount - 1, 1) = ws.Cells(i, "K").Value ' Quantidade
+                .List(.ListCount - 1, 2) = descricao ' Descrição
+                .List(.ListCount - 1, 3) = ws.Cells(i, "I").Value ' Código
+                .List(.ListCount - 1, 4) = Format(ws.Cells(i, "J").Value, "#,##0.00") ' Preço
+                .List(.ListCount - 1, 5) = Format(CDbl(ws.Cells(i, "J").Value) * CDbl(ws.Cells(i, "K").Value), "#,##0.00") ' Sub Total
+            End With
+        End If
+    Next i
+End Sub
+
+Private Sub AtualizarValorTotal()
+    Dim total As Double
+    Dim i As Long
+    
+    total = 0
+    ' Começa do 1 pois 0 é o cabeçalho
+    For i = 1 To lstProdutosDaProposta.ListCount - 1
+        ' Pega o valor do Sub Total (coluna 5) e soma o total
+        total = total + CDbl(ConverterParaNumero(lstProdutosDaProposta.List(i, 5)))
+    Next i
+    
+    ' Atualiza o campo txtValorTotal com formatação de moeda
+    txtValorTotal.Value = Format(total, "#,##0.00")
+End Sub
+
+
 Private Function ConverterParaNumero(valor As String) As Double
     Dim temp As String
     ' Primeiro, remover os separadores de milhar (pontos)
@@ -349,3 +482,8 @@ Private Function ConverterParaNumero(valor As String) As Double
     ' Converter para número
     ConverterParaNumero = Val(temp)
 End Function
+
+
+
+
+
