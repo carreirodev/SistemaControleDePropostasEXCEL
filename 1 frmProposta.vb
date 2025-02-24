@@ -142,6 +142,22 @@ Public Sub PreencherDadosCliente(nome As String, cidade As String, estado As Str
 End Sub
 
 
+Private Sub AtualizarValorTotal()
+    Dim total As Double
+    Dim i As Long
+    
+    total = 0
+    ' Começa do 1 pois 0 é o cabeçalho
+    For i = 1 To lstProdutosDaProposta.ListCount - 1
+        ' Pega o valor do Sub Total (coluna 5) e soma ao total
+        total = total + CDbl(ConverterParaNumero(lstProdutosDaProposta.List(i, 5)))
+    Next i
+    
+    ' Atualiza o campo txtValorTotal com formatação de moeda
+    txtValorTotal.Value = Format(total, "#,##0.00")
+End Sub
+
+
 
 
 Private Sub btnBuscarProduto_Click()
@@ -206,8 +222,11 @@ Private Sub btnAdicionarProduto_Click()
         .List(.ListCount - 1, 2) = txtDescricao.Value
         .List(.ListCount - 1, 3) = txtCodProduto.Value
         .List(.ListCount - 1, 4) = Format(preco, "#,##0.00")
-        .List(.ListCount - 1, 5) = Format(subTotal, "#,##0.00") ' Novo Sub Total
+        .List(.ListCount - 1, 5) = Format(subTotal, "#,##0.00") ' Sub Total
     End With
+    
+    ' Atualiza o valor total da proposta
+    AtualizarValorTotal
     
     ' Limpa os campos do produto
     txtItem.Value = ""
@@ -222,6 +241,7 @@ Private Sub btnAdicionarProduto_Click()
     ' Incrementa automaticamente o número do item
     txtItem.Value = lstProdutosDaProposta.ListCount
 End Sub
+
 
 
 
@@ -311,7 +331,8 @@ Private Sub LimparFormulario()
     cmbCondPagamento.Value = ""
     txtPrazoEntrega.Value = ""
     cmbFrete.Value = ""
-
+    txtValorTotal.Value = "0,00"
+    
     ' Desabilitar botão Salvar
     btnSalvarNovaProposta.Enabled = False
 End Sub
