@@ -17,6 +17,37 @@ Private Sub UserForm_Initialize()
     lstProdutosDaProposta.List(0, 3) = "Código"
     lstProdutosDaProposta.List(0, 4) = "Preço"
     lstProdutosDaProposta.List(0, 5) = "Sub Total"  ' Nova coluna
+
+    ' Preencher ComboBoxes
+    PreencherComboBoxes
+    
+    ' Desabilitar botão Salvar inicialmente
+    btnSalvarNovaProposta.Enabled = False
+End Sub
+
+
+
+Private Sub PreencherComboBoxes()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Worksheets("ListasDeEscolha")
+    
+    ' Preencher Vendedores usando a tabela nomeada "Vendedor"
+    With cmbVendedor
+        .Clear
+        .List = ws.ListObjects("Vendedor").DataBodyRange.Value
+    End With
+    
+    ' Preencher Condições de Pagamento usando a tabela nomeada "CondPagto"
+    With cmbCondPagamento
+        .Clear
+        .List = ws.ListObjects("CondPagto").DataBodyRange.Value
+    End With
+    
+    ' Preencher Tipos de Frete usando a tabela nomeada "Frete"
+    With cmbFrete
+        .Clear
+        .List = ws.ListObjects("Frete").DataBodyRange.Value
+    End With
 End Sub
 
 
@@ -38,6 +69,32 @@ Private Sub CheckEnableBuscarProduto()
                                 Trim(txtCidade.Value) <> "" And _
                                 Trim(txtEstado.Value) <> "")
 End Sub
+
+Private Sub CheckEnableSalvarProposta()
+    btnSalvarNovaProposta.Enabled = (cmbVendedor.Value <> "" And _
+                                    cmbCondPagamento.Value <> "" And _
+                                    Trim(txtPrazoEntrega.Value) <> "" And _
+                                    cmbFrete.Value <> "" And _
+                                    lstProdutosDaProposta.ListCount > 1) ' > 1 porque a primeira linha é o cabeçalho
+End Sub
+
+' Eventos Change para os novos controles
+Private Sub cmbVendedor_Change()
+    CheckEnableSalvarProposta
+End Sub
+
+Private Sub cmbCondPagamento_Change()
+    CheckEnableSalvarProposta
+End Sub
+
+Private Sub txtPrazoEntrega_Change()
+    CheckEnableSalvarProposta
+End Sub
+
+Private Sub cmbFrete_Change()
+    CheckEnableSalvarProposta
+End Sub
+
 
 Private Sub txtCodProduto_Change()
     CheckEnableAdicionarProduto
@@ -202,13 +259,12 @@ Private Sub btnSalvarNovaProposta_Click()
     Dim ws As Worksheet
     Dim ultimaLinha As Long
     Dim i As Long
-    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
     
-    ' Encontrar a última linha preenchida
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
     
     ' Salvar cada item da proposta
-    For i = 1 To lstProdutosDaProposta.ListCount - 1 ' -1 para ignorar o cabeçalho
+    For i = 1 To lstProdutosDaProposta.ListCount - 1
         ws.Cells(ultimaLinha, "A").Value = txtNovaProposta.Value
         ws.Cells(ultimaLinha, "B").Value = txtNomeCliente.Value
         ws.Cells(ultimaLinha, "C").Value = txtCidade.Value
@@ -220,14 +276,18 @@ Private Sub btnSalvarNovaProposta_Click()
         ws.Cells(ultimaLinha, "I").Value = lstProdutosDaProposta.List(i, 3) ' Código
         ws.Cells(ultimaLinha, "J").Value = lstProdutosDaProposta.List(i, 4) ' Preço
         ws.Cells(ultimaLinha, "K").Value = lstProdutosDaProposta.List(i, 1) ' Quantidade
+        ws.Cells(ultimaLinha, "M").Value = cmbVendedor.Value
+        ws.Cells(ultimaLinha, "N").Value = cmbCondPagamento.Value
+        ws.Cells(ultimaLinha, "O").Value = txtPrazoEntrega.Value
+        ws.Cells(ultimaLinha, "P").Value = cmbFrete.Value
+        
         ultimaLinha = ultimaLinha + 1
     Next i
     
     MsgBox "Proposta salva com sucesso!", vbInformation
-    
-    ' Limpar o formulário
     LimparFormulario
 End Sub
+
 
 
 
@@ -244,9 +304,16 @@ Private Sub LimparFormulario()
         .List(0, 2) = "Descrição"
         .List(0, 3) = "Código"
         .List(0, 4) = "Preço"
-        .List(0, 5) = "Sub Total"  ' Nova coluna
+        .List(0, 5) = "Sub Total"
     End With
     
+    cmbVendedor.Value = ""
+    cmbCondPagamento.Value = ""
+    txtPrazoEntrega.Value = ""
+    cmbFrete.Value = ""
+
+    ' Desabilitar botão Salvar
+    btnSalvarNovaProposta.Enabled = False
 End Sub
 
 Private Function ConverterParaNumero(valor As String) As Double
