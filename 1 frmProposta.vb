@@ -391,6 +391,62 @@ Private Sub btnBuscaProposta_Click()
     End If
 End Sub
 
+' NOVA SUB-ROTINA: Limpar o formulário preservando a lista de busca
+Private Sub LimparFormularioPreservandoLista()
+    ' Limpa e reinicializa o ListBox
+    With lstProdutosDaProposta
+        .Clear
+        .AddItem ""
+        .List(0, 0) = "Item"
+        .List(0, 1) = "Qtd"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Código"
+        .List(0, 4) = "Preço"
+        .List(0, 5) = "Sub Total"
+    End With
+    
+    ' Limpar campos de informações da proposta
+    cmbVendedor.Value = ""
+    cmbCondPagamento.Value = ""
+    txtPrazoEntrega.Value = ""
+    cmbFrete.Value = ""
+    txtRefProposta.Value = ""
+    txtValorTotal.Value = "0,00"
+    
+    ' Limpar campos de busca de proposta e identificação da proposta atual
+    txtNrProposta.Value = ""
+    txtNovaProposta.Value = ""
+    
+    ' Limpar campos do cliente
+    txtNomeCliente.Value = ""
+    txtCidade.Value = ""
+    txtEstado.Value = ""
+    txtPessoaContato.Value = ""
+    txtFone.Value = ""
+    txtEmail.Value = ""
+    
+    ' Limpar campos do produto atual
+    txtItem.Value = "1"
+    txtQTD.Value = ""
+    txtCodProduto.Value = ""
+    txtDescricao.Value = ""
+    txtPreco.Value = ""
+    
+    ' Resetar o estado do formulário
+    modoEdicao = False
+    propostaAlterada = False
+    nrPropostaOriginal = ""
+    
+    ' Gerenciar estado dos botões
+    btnSalvarNovaProposta.Enabled = False
+    btnAlterarProposta.Enabled = False
+    btnAdicionarProduto.Enabled = False
+    btnBuscarProduto.Enabled = False
+    
+    ' Verificar habilitação do botão de busca de produto
+    CheckEnableBuscarProduto
+End Sub
+
 Private Sub lstBuscaProposta_Click()
     Dim ws As Worksheet
     Dim linha As Long
@@ -415,8 +471,8 @@ Private Sub lstBuscaProposta_Click()
         Exit Sub
     End If
     
-    ' Limpar formulário antes de carregar nova proposta
-    LimparFormulario
+    ' Limpar formulário antes de carregar nova proposta, PRESERVANDO a lista de busca
+    LimparFormularioPreservandoLista
     
     Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
     
@@ -440,6 +496,7 @@ Private Sub lstBuscaProposta_Click()
     
     ' Preencher os campos
     txtNrProposta.Value = nrProposta
+    txtNovaProposta.Value = nrProposta  ' CORREÇÃO: Preencher também txtNovaProposta
     txtNomeCliente.Value = ws.Cells(linha, "B").Value
     txtCidade.Value = ws.Cells(linha, "C").Value
     txtEstado.Value = ws.Cells(linha, "D").Value
@@ -788,4 +845,3 @@ Private Sub cmbFrete_Change()
     MarcarComoAlterado
     CheckEnableSalvarProposta
 End Sub
-
