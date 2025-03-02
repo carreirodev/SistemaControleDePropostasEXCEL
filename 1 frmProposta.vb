@@ -9,6 +9,7 @@ Private Sub UserForm_Initialize()
     btnAdicionarProduto.Enabled = False
     btnSalvarNovaProposta.Enabled = False
     btnAlterarProposta.Enabled = False
+    btnApagarProposta.Enabled = False  ' Botão de apagar inicialmente desabilitado
     
     ' Inicializa o ListBox
     With lstProdutosDaProposta
@@ -85,10 +86,14 @@ Private Sub CheckEnableSalvarProposta()
         
         ' Botão Alterar só fica habilitado se houver itens, campos preenchidos e alterações
         btnAlterarProposta.Enabled = camposPreenchidos And temItens And propostaAlterada
+        
+        ' Botão Apagar fica habilitado em modo de edição
+        btnApagarProposta.Enabled = True
     Else
         ' Modo de nova proposta
         btnSalvarNovaProposta.Enabled = camposPreenchidos And temItens
         btnAlterarProposta.Enabled = False ' Sempre desabilitado em modo criação
+        btnApagarProposta.Enabled = False ' Sempre desabilitado em modo criação
     End If
 End Sub
 
@@ -442,6 +447,7 @@ Private Sub LimparFormularioPreservandoLista()
     btnAlterarProposta.Enabled = False
     btnAdicionarProduto.Enabled = False
     btnBuscarProduto.Enabled = False
+    btnApagarProposta.Enabled = False  ' Desabilitar o botão Apagar
     
     ' Verificar habilitação do botão de busca de produto
     CheckEnableBuscarProduto
@@ -496,7 +502,7 @@ Private Sub lstBuscaProposta_Click()
     
     ' Preencher os campos
     txtNrProposta.Value = nrProposta
-    txtNovaProposta.Value = nrProposta  ' CORREÇÃO: Preencher também txtNovaProposta
+    txtNovaProposta.Value = nrProposta  ' Preencher também txtNovaProposta
     txtNomeCliente.Value = ws.Cells(linha, "B").Value
     txtCidade.Value = ws.Cells(linha, "C").Value
     txtEstado.Value = ws.Cells(linha, "D").Value
@@ -701,6 +707,66 @@ Private Sub btnAlterarProposta_Click()
 End Sub
 
 ' ======================
+' NOVA ROTINA PARA APAGAR PROPOSTA
+' ======================
+
+Private Sub btnApagarProposta_Click()
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long
+    Dim i As Long
+    Dim nrProposta As String
+    Dim linhasParaExcluir As Collection
+    
+    ' Verificar se há uma proposta carregada
+    If Not modoEdicao Then
+        MsgBox "Não há proposta carregada para exclusão. Por favor, selecione uma proposta primeiro.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Confirmar a exclusão
+    If MsgBox("Deseja realmente APAGAR esta proposta? Esta ação não pode ser desfeita.", vbQuestion + vbYesNo + vbDefaultButton2 + vbCritical) = vbNo Then
+        Exit Sub
+    End If
+    
+    ' Segunda confirmação para evitar exclusões acidentais
+    If MsgBox("CONFIRMAÇÃO: Esta proposta será PERMANENTEMENTE EXCLUÍDA. Deseja continuar?", vbQuestion + vbYesNo + vbDefaultButton2 + vbCritical) = vbNo Then
+        Exit Sub
+    End If
+    
+    Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
+    nrProposta = nrPropostaOriginal ' Usar o número original da proposta
+    
+    ' Encontrar todas as linhas com a proposta atual
+    Set linhasParaExcluir = New Collection
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Primeiro, identifica todas as linhas que contêm o número da proposta
+    For i = ultimaLinha To 2 Step -1 ' Começa de baixo para cima para não afetar os índices
+        If ws.Cells(i, "A").Value = nrProposta Then
+            On Error Resume Next
+            linhasParaExcluir.Add i
+            On Error GoTo 0
+        End If
+    Next i
+    
+    ' Verificar se foram encontradas linhas para excluir
+    If linhasParaExcluir.Count = 0 Then
+        MsgBox "Não foram encontrados registros para a proposta " & nrProposta & ".", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Excluir as linhas identificadas (em ordem decrescente para não afetar índices)
+    For i = 1 To linhasParaExcluir.Count
+        ws.Rows(linhasParaExcluir(i)).Delete
+    Next i
+    
+    MsgBox "Proposta " & nrProposta & " excluída com sucesso!", vbInformation
+    
+    ' Limpar o formulário
+    LimparFormulario
+End Sub
+
+' ======================
 ' FUNÇÕES DE SUPORTE
 ' ======================
 
@@ -757,6 +823,7 @@ Private Sub LimparFormulario()
     btnAlterarProposta.Enabled = False
     btnAdicionarProduto.Enabled = False
     btnBuscarProduto.Enabled = False
+    btnApagarProposta.Enabled = False  ' Desabilitar o botão Apagar
     
     ' Verificar habilitação do botão de busca de produto
     CheckEnableBuscarProduto
