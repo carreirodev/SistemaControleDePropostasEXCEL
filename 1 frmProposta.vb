@@ -10,6 +10,7 @@ Private Sub UserForm_Initialize()
     btnSalvarNovaProposta.Enabled = False
     btnAlterarProposta.Enabled = False
     btnApagarProposta.Enabled = False  ' Botão de apagar inicialmente desabilitado
+    btnImprimir.Enabled = False  ' Botão de imprimir inicialmente desabilitado
     
     ' Inicializa o ListBox
     With lstProdutosDaProposta
@@ -89,11 +90,17 @@ Private Sub CheckEnableSalvarProposta()
         
         ' Botão Apagar fica habilitado em modo de edição
         btnApagarProposta.Enabled = True
+        
+        ' Botão Imprimir fica habilitado em modo de edição
+        btnImprimir.Enabled = True
     Else
         ' Modo de nova proposta
         btnSalvarNovaProposta.Enabled = camposPreenchidos And temItens
         btnAlterarProposta.Enabled = False ' Sempre desabilitado em modo criação
         btnApagarProposta.Enabled = False ' Sempre desabilitado em modo criação
+        
+        ' Botão Imprimir é habilitado se tem proposta salva (txtNovaProposta não estiver vazio)
+        btnImprimir.Enabled = (Trim(txtNovaProposta.Value) <> "")
     End If
 End Sub
 
@@ -195,7 +202,7 @@ Private Sub btnBuscarProduto_Click()
         MsgBox "Por favor, digite um código de produto.", vbExclamation
         Exit Sub
     End If
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
     encontrado = False
     For i = 2 To ultimaLinha
         If ws.Cells(i, "A").Value = codigo Then
@@ -355,7 +362,7 @@ Private Sub btnBuscaProposta_Click()
     Dim propostasEncontradas As Collection
     
     Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
     criterio = LCase(txtNrProposta.Value)
     
     Set propostasEncontradas = New Collection
@@ -448,6 +455,7 @@ Private Sub LimparFormularioPreservandoLista()
     btnAdicionarProduto.Enabled = False
     btnBuscarProduto.Enabled = False
     btnApagarProposta.Enabled = False  ' Desabilitar o botão Apagar
+    btnImprimir.Enabled = False  ' Desabilitar o botão Imprimir
     
     ' Verificar habilitação do botão de busca de produto
     CheckEnableBuscarProduto
@@ -527,6 +535,9 @@ Private Sub lstBuscaProposta_Click()
     
     ' Atualizar estado dos botões
     CheckEnableSalvarProposta
+    
+    ' Habilitar explicitamente o botão de impressão
+    btnImprimir.Enabled = True
 End Sub
 
 Private Sub PreencherListBoxItens(nrProposta As String)
@@ -538,7 +549,7 @@ Private Sub PreencherListBoxItens(nrProposta As String)
     
     Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
     Set wsPrecos = ThisWorkbook.Worksheets("ListaDePrecos")
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
     
     ' Limpar o ListBox de itens
     lstProdutosDaProposta.Clear
@@ -600,7 +611,7 @@ Private Sub btnSalvarNovaProposta_Click()
     End If
     
     Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row + 1
     
     ' Salvar cada item da proposta
     For i = 1 To lstProdutosDaProposta.ListCount - 1
@@ -623,6 +634,9 @@ Private Sub btnSalvarNovaProposta_Click()
         
         ultimaLinha = ultimaLinha + 1
     Next i
+    
+    ' Habilitar o botão de impressão antes de limpar o formulário
+    btnImprimir.Enabled = True
     
     MsgBox "Proposta salva com sucesso!", vbInformation
     LimparFormulario
@@ -661,7 +675,7 @@ Private Sub btnAlterarProposta_Click()
     
     ' Encontrar todas as linhas com a proposta atual
     Set linhasParaExcluir = New Collection
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
     
     ' Primeiro, identifica todas as linhas que contêm o número da proposta
     For i = ultimaLinha To 2 Step -1 ' Começa de baixo para cima para não afetar os índices
@@ -678,7 +692,7 @@ Private Sub btnAlterarProposta_Click()
     Next i
     
     ' Encontrar a nova última linha após as exclusões
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row + 1
     
     ' Salvar os itens atualizados da proposta
     For i = 1 To lstProdutosDaProposta.ListCount - 1
@@ -738,7 +752,7 @@ Private Sub btnApagarProposta_Click()
     
     ' Encontrar todas as linhas com a proposta atual
     Set linhasParaExcluir = New Collection
-    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
     
     ' Primeiro, identifica todas as linhas que contêm o número da proposta
     For i = ultimaLinha To 2 Step -1 ' Começa de baixo para cima para não afetar os índices
@@ -764,6 +778,82 @@ Private Sub btnApagarProposta_Click()
     
     ' Limpar o formulário
     LimparFormulario
+End Sub
+
+' ======================
+' NOVA ROTINA PARA IMPRIMIR PROPOSTA
+' ======================
+
+Private Sub btnImprimir_Click()
+    Dim wsOrigem As Worksheet
+    Dim wsDestino As Worksheet
+    Dim nomePlanilha As String
+    Dim dataFormatada As String
+    Dim mes As String
+    
+    ' Verificar se existe um número de proposta válido
+    If Trim(txtNovaProposta.Value) = "" Then
+        MsgBox "Não há proposta selecionada para impressão.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Obter o nome para a nova planilha (usando o número da proposta)
+    nomePlanilha = txtNovaProposta.Value
+    
+    ' Verificar se já existe uma planilha com esse nome
+    On Error Resume Next
+    Set wsDestino = ThisWorkbook.Worksheets(nomePlanilha)
+    On Error GoTo 0
+    
+    ' Se a planilha já existir, perguntar se deseja substituí-la
+    If Not wsDestino Is Nothing Then
+        If MsgBox("Já existe uma planilha com este nome. Deseja substituí-la?", vbQuestion + vbYesNo) = vbNo Then
+            Exit Sub
+        Else
+            Application.DisplayAlerts = False
+            ThisWorkbook.Worksheets(nomePlanilha).Delete
+            Application.DisplayAlerts = True
+        End If
+    End If
+    
+    ' Referenciar a planilha de modelo
+    Set wsOrigem = ThisWorkbook.Worksheets("IMPRESSAO")
+    
+    ' Criar uma cópia da planilha de modelo com o nome da proposta
+    wsOrigem.Copy After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count)
+    Set wsDestino = ThisWorkbook.Worksheets(ThisWorkbook.Sheets.Count)
+    wsDestino.Name = nomePlanilha
+    
+    ' Formatar a data atual no formato "São Paulo, DD de MMMM de YYYY"
+    ' Obter o mês por extenso em português
+    Select Case Month(Date)
+        Case 1: mes = "janeiro"
+        Case 2: mes = "fevereiro"
+        Case 3: mes = "março"
+        Case 4: mes = "abril"
+        Case 5: mes = "maio"
+        Case 6: mes = "junho"
+        Case 7: mes = "julho"
+        Case 8: mes = "agosto"
+        Case 9: mes = "setembro"
+        Case 10: mes = "outubro"
+        Case 11: mes = "novembro"
+        Case 12: mes = "dezembro"
+    End Select
+    
+    dataFormatada = "São Paulo, " & Day(Date) & " de " & mes & " de " & Year(Date)
+    
+    ' Inserir a data formatada na célula L5 e alinhar à direita
+    With wsDestino.Range("L5")
+        .Value = dataFormatada
+        .HorizontalAlignment = xlRight
+    End With
+    
+    ' Ativar a planilha recém-criada
+    wsDestino.Activate
+    
+    ' Confirmar para o usuário
+    MsgBox "Planilha de impressão criada com sucesso!", vbInformation
 End Sub
 
 ' ======================
@@ -824,6 +914,7 @@ Private Sub LimparFormulario()
     btnAdicionarProduto.Enabled = False
     btnBuscarProduto.Enabled = False
     btnApagarProposta.Enabled = False  ' Desabilitar o botão Apagar
+    btnImprimir.Enabled = False  ' Desabilitar o botão Imprimir
     
     ' Verificar habilitação do botão de busca de produto
     CheckEnableBuscarProduto
