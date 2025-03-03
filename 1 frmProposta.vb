@@ -789,6 +789,8 @@ Private Sub btnImprimir_Click()
     Dim nomePlanilha As String
     Dim dataFormatada As String
     Dim mes As String
+    Dim i As Long
+    Dim linhaAtual As Long
     
     ' Verificar se existe um número de proposta válido
     If Trim(txtNovaProposta.Value) = "" Then
@@ -855,6 +857,33 @@ Private Sub btnImprimir_Click()
     wsDestino.Range("B9").Value = txtPessoaContato.Value       ' NOME DE CONTATO DO CLIENTE
     wsDestino.Range("B10").Value = "'" & txtFone.Value         ' TELEFONE DO CLIENTE (com apóstrofo na frente para forçar formato texto)
     wsDestino.Range("D10").Value = txtEmail.Value              ' EMAIL DO CLIENTE
+    
+    ' Agora vamos adicionar os itens da proposta a partir da linha 14
+    linhaAtual = 14
+    
+    ' Começamos do índice 1 porque o índice 0 é o cabeçalho
+    For i = 1 To lstProdutosDaProposta.ListCount - 1
+        ' Se não for o primeiro item, precisamos inserir uma nova linha copiando a formatação da linha 14
+        If i > 1 Then
+            ' Copia a linha 14 (que tem a formatação correta) e insere abaixo da linha atual
+            wsDestino.Rows(14).Copy
+            wsDestino.Rows(linhaAtual + 1).Insert Shift:=xlDown
+            linhaAtual = linhaAtual + 1
+        End If
+        
+        ' Preencher os dados do item na linha atual
+        wsDestino.Cells(linhaAtual, "A").Value = lstProdutosDaProposta.List(i, 0)  ' ITEM
+        wsDestino.Cells(linhaAtual, "B").Value = lstProdutosDaProposta.List(i, 1)  ' QUANTIDADE
+        wsDestino.Cells(linhaAtual, "C").Value = lstProdutosDaProposta.List(i, 3)  ' CÓDIGO DO PRODUTO
+        wsDestino.Cells(linhaAtual, "D").Value = lstProdutosDaProposta.List(i, 2)  ' DESCRIÇÃO
+        
+        ' Formatamos o valor unitário como moeda
+        wsDestino.Cells(linhaAtual, "K").Value = ConverterParaNumero(lstProdutosDaProposta.List(i, 4))  ' VALOR UNITÁRIO
+        
+        ' Se necessário, atualize a fórmula do valor total na coluna L para refletir a linha atual
+        ' (Assumindo que a fórmula é baseada na multiplicação de B*K)
+        wsDestino.Cells(linhaAtual, "L").Formula = "=B" & linhaAtual & "*K" & linhaAtual
+    Next i
     
     ' Ativar a planilha recém-criada
     wsDestino.Activate
