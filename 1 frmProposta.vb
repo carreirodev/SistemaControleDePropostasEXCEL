@@ -360,10 +360,24 @@ Private Sub btnBuscaProposta_Click()
     Dim i As Long
     Dim criterio As String
     Dim propostasEncontradas As Collection
+    Dim buscarPorCliente As Boolean
+    Dim mensagemNaoEncontrado As String
     
     Set ws = ThisWorkbook.Worksheets("BancoDePropostas")
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
-    criterio = LCase(txtNrProposta.Value)
+    
+    ' Determinar o critério de busca
+    buscarPorCliente = (Trim(txtNrProposta.Value) = "" And Trim(txtNomeCliente.Value) <> "")
+    
+    If buscarPorCliente Then
+        ' Busca pelo nome do cliente
+        criterio = LCase(Trim(txtNomeCliente.Value))
+        mensagemNaoEncontrado = "Nenhuma proposta encontrada para o cliente " & txtNomeCliente.Value & "."
+    Else
+        ' Busca pelo número da proposta (comportamento original)
+        criterio = LCase(Trim(txtNrProposta.Value))
+        mensagemNaoEncontrado = "Nenhuma proposta encontrada."
+    End If
     
     Set propostasEncontradas = New Collection
     
@@ -375,9 +389,12 @@ Private Sub btnBuscaProposta_Click()
     lstBuscaProposta.List(0, 0) = "Nr da Proposta"
     lstBuscaProposta.List(0, 1) = "Nome do Cliente"
     
-    ' Buscar propostas únicas
+    ' Buscar propostas
     For i = 2 To ultimaLinha
-        If InStr(1, LCase(ws.Cells(i, "A").Value), criterio) > 0 Then
+        ' Verifica se a linha atual corresponde ao critério de busca
+        If (buscarPorCliente And InStr(1, LCase(ws.Cells(i, "B").Value), criterio) > 0) Or _
+           (Not buscarPorCliente And InStr(1, LCase(ws.Cells(i, "A").Value), criterio) > 0) Then
+            ' Tenta adicionar à coleção (ignorando duplicatas)
             On Error Resume Next
             propostasEncontradas.Add ws.Cells(i, "A").Value, CStr(ws.Cells(i, "A").Value)
             On Error GoTo 0
@@ -399,7 +416,7 @@ Private Sub btnBuscaProposta_Click()
     Next i
     
     If lstBuscaProposta.ListCount = 1 Then ' Só tem o cabeçalho
-        MsgBox "Nenhuma proposta encontrada.", vbInformation
+        MsgBox mensagemNaoEncontrado, vbInformation
     End If
 End Sub
 
