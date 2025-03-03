@@ -954,12 +954,80 @@ Private Sub btnImprimir_Click()
         .NumberFormat = "#,##0.00"  ' Formato moeda
     End With
     
+    ' Adicionar informações do vendedor 9 linhas abaixo do último item
+    Dim wsVendedores As Worksheet
+    Dim vendedorNome As String
+    Dim vendedorCargo As String
+    Dim vendedorFone As String
+    Dim vendedorEmail As String
+    Dim tblVendedor As ListObject
+    Dim vLinhaVendedor As Long
+    
+    ' Referenciar a planilha com as informações dos vendedores
+    Set wsVendedores = ThisWorkbook.Worksheets("ListasDeEscolha")
+    Set tblVendedor = wsVendedores.ListObjects("Vendedor")
+    
+    ' Obter o nome do vendedor (da proposta atual)
+    vendedorNome = cmbVendedor.Value
+    
+    ' Informações do vendedor - definidas manualmente para garantir a ordem correta
+    vendedorCargo = ""
+    vendedorFone = ""
+    vendedorEmail = ""
+    
+    ' Procurar o vendedor na tabela "Vendedor"
+    On Error Resume Next
+    For vLinhaVendedor = 1 To tblVendedor.ListRows.Count
+        If tblVendedor.ListRows(vLinhaVendedor).Range.Cells(1, 1).Value = vendedorNome Then
+            ' Verificar cada coluna da tabela para identificar corretamente os dados
+            ' Independente da ordem das colunas na tabela
+            
+            ' Iterar pelas colunas da tabela para identificar os campos
+            For i = 1 To tblVendedor.HeaderRowRange.Columns.Count
+                Dim colHeader As String
+                colHeader = tblVendedor.HeaderRowRange.Cells(1, i).Value
+                
+                ' Identificar colunas por nome de cabeçalho
+                Select Case LCase(colHeader)
+                    Case "cargo"
+                        vendedorCargo = tblVendedor.ListRows(vLinhaVendedor).Range.Cells(1, i).Value
+                    Case "fone", "telefone"
+                        vendedorFone = tblVendedor.ListRows(vLinhaVendedor).Range.Cells(1, i).Value
+                    Case "email", "e-mail"
+                        vendedorEmail = tblVendedor.ListRows(vLinhaVendedor).Range.Cells(1, i).Value
+                End Select
+            Next i
+            
+            Exit For
+        End If
+    Next vLinhaVendedor
+    On Error GoTo 0
+    
+    ' Adicionar as informações do vendedor 9 linhas abaixo do último item na COLUNA A
+    ' Na ordem especificada: Nome, Cargo, Fone, Email
+    With wsDestino
+        .Cells(linhaAtual + 9, "A").Value = vendedorNome
+        .Cells(linhaAtual + 9, "A").Font.Bold = True
+        
+        .Cells(linhaAtual + 10, "A").Value = vendedorCargo
+        
+        .Cells(linhaAtual + 11, "A").Value = vendedorFone
+        
+        .Cells(linhaAtual + 12, "A").Value = vendedorEmail
+    End With
+    
     ' Ativar a planilha recém-criada
     wsDestino.Activate
     
     ' Confirmar para o usuário
     MsgBox "Planilha de impressão criada com sucesso!", vbInformation
 End Sub
+
+
+
+
+
+
 
 
 
