@@ -783,6 +783,7 @@ End Sub
 ' ======================
 ' NOVA ROTINA PARA IMPRIMIR PROPOSTA
 ' ======================
+
 Private Sub btnImprimir_Click()
     Dim wsOrigem As Worksheet
     Dim wsDestino As Worksheet
@@ -865,7 +866,7 @@ Private Sub btnImprimir_Click()
     ' Preencher as informações adicionais na planilha
     wsDestino.Range("B6").Value = txtNovaProposta.Value        ' NÚMERO DA PROPOSTA
     wsDestino.Range("A8").Value = txtNomeCliente.Value         ' NOME DO CLIENTE
-    wsDestino.Range("I6").Value = txtRefProposta.Value         ' REFERÊNCIA DA PROPOSTA
+    wsDestino.Range("J9").Value = txtRefProposta.Value         ' REFERÊNCIA DA PROPOSTA
     wsDestino.Range("B9").Value = txtPessoaContato.Value       ' NOME DE CONTATO DO CLIENTE
     wsDestino.Range("B10").Value = "'" & txtFone.Value         ' TELEFONE DO CLIENTE (com apóstrofo na frente para forçar formato texto)
     wsDestino.Range("D10").Value = txtEmail.Value              ' EMAIL DO CLIENTE
@@ -934,6 +935,12 @@ Private Sub btnImprimir_Click()
         wsDestino.Cells(linhaAtual, "L").Formula = "=B" & linhaAtual & "*K" & linhaAtual
     Next i
     
+    ' Adicionar Condição de Pagamento, Prazo de Entrega e Frete
+    ' 3 linhas abaixo do último item (linhaAtual)
+    wsDestino.Cells(linhaAtual + 4, "E").Value = cmbCondPagamento.Value  ' Condição de Pagamento
+    wsDestino.Cells(linhaAtual + 5, "E").Value = txtPrazoEntrega.Value   ' Prazo de Entrega
+    wsDestino.Cells(linhaAtual + 6, "E").Value = cmbFrete.Value          ' Frete
+    
     ' Calcular a linha do Total (duas linhas abaixo do último item)
     linhaTotal = linhaAtual + 2
     
@@ -953,6 +960,7 @@ Private Sub btnImprimir_Click()
     ' Confirmar para o usuário
     MsgBox "Planilha de impressão criada com sucesso!", vbInformation
 End Sub
+
 
 
 
@@ -1106,4 +1114,8 @@ Private Sub cmbFrete_Change()
     MarcarComoAlterado
     CheckEnableSalvarProposta
 End Sub
+
+
+
+
 
