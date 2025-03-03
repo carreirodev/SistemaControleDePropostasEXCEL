@@ -783,7 +783,6 @@ End Sub
 ' ======================
 ' NOVA ROTINA PARA IMPRIMIR PROPOSTA
 ' ======================
-
 Private Sub btnImprimir_Click()
     Dim wsOrigem As Worksheet
     Dim wsDestino As Worksheet
@@ -801,6 +800,8 @@ Private Sub btnImprimir_Click()
     Dim simpro As String
     Dim linhaProduto As Long
     Dim ultimaLinha As Long
+    Dim linhaTotal As Long
+    Dim formulaSoma As String
     
     ' Verificar se existe um número de proposta válido
     If Trim(txtNovaProposta.Value) = "" Then
@@ -933,12 +934,26 @@ Private Sub btnImprimir_Click()
         wsDestino.Cells(linhaAtual, "L").Formula = "=B" & linhaAtual & "*K" & linhaAtual
     Next i
     
+    ' Calcular a linha do Total (duas linhas abaixo do último item)
+    linhaTotal = linhaAtual + 2
+    
+    ' Criar a fórmula de soma para somar todos os valores da coluna L dos itens
+    formulaSoma = "=SUM(L14:L" & linhaAtual & ")"
+    
+    ' Aplicar a fórmula de soma na coluna J da linha total
+    With wsDestino.Cells(linhaTotal, "J")
+        .Formula = formulaSoma
+        .Font.Bold = True
+        .NumberFormat = "#,##0.00"  ' Formato moeda
+    End With
+    
     ' Ativar a planilha recém-criada
     wsDestino.Activate
     
     ' Confirmar para o usuário
     MsgBox "Planilha de impressão criada com sucesso!", vbInformation
 End Sub
+
 
 
 
