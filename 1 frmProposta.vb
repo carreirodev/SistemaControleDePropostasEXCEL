@@ -783,14 +783,24 @@ End Sub
 ' ======================
 ' NOVA ROTINA PARA IMPRIMIR PROPOSTA
 ' ======================
+
 Private Sub btnImprimir_Click()
     Dim wsOrigem As Worksheet
     Dim wsDestino As Worksheet
+    Dim wsPrecos As Worksheet
     Dim nomePlanilha As String
     Dim dataFormatada As String
     Dim mes As String
     Dim i As Long
     Dim linhaAtual As Long
+    Dim codigoProduto As String
+    Dim descricaoCompleta As String
+    Dim descricaoBase As String
+    Dim marca As String
+    Dim anvisa As String
+    Dim simpro As String
+    Dim linhaProduto As Long
+    Dim ultimaLinha As Long
     
     ' Verificar se existe um número de proposta válido
     If Trim(txtNovaProposta.Value) = "" Then
@@ -817,8 +827,9 @@ Private Sub btnImprimir_Click()
         End If
     End If
     
-    ' Referenciar a planilha de modelo
+    ' Referenciar a planilha de modelo e a planilha de preços
     Set wsOrigem = ThisWorkbook.Worksheets("IMPRESSAO")
+    Set wsPrecos = ThisWorkbook.Worksheets("ListaDePrecos")
     
     ' Criar uma cópia da planilha de modelo com o nome da proposta
     wsOrigem.Copy After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count)
@@ -858,6 +869,9 @@ Private Sub btnImprimir_Click()
     wsDestino.Range("B10").Value = "'" & txtFone.Value         ' TELEFONE DO CLIENTE (com apóstrofo na frente para forçar formato texto)
     wsDestino.Range("D10").Value = txtEmail.Value              ' EMAIL DO CLIENTE
     
+    ' Encontrar a última linha na planilha ListaDePrecos
+    ultimaLinha = wsPrecos.Cells(wsPrecos.Rows.Count, "A").End(xlUp).row
+    
     ' Agora vamos adicionar os itens da proposta a partir da linha 14
     linhaAtual = 14
     
@@ -871,17 +885,51 @@ Private Sub btnImprimir_Click()
             linhaAtual = linhaAtual + 1
         End If
         
+        ' Definir altura da linha para 94 pixels (aproximadamente 70,5 pontos)
+        wsDestino.Rows(linhaAtual).RowHeight = 70.5
+        
+        ' Obter o código do produto para este item
+        codigoProduto = lstProdutosDaProposta.List(i, 3)
+        
+        ' Buscar na planilha ListaDePrecos as informações adicionais
+        descricaoBase = ""
+        marca = ""
+        anvisa = ""
+        simpro = ""
+        
+        ' Procurar o código na planilha ListaDePrecos
+        For linhaProduto = 2 To ultimaLinha
+            If wsPrecos.Cells(linhaProduto, "A").Value = codigoProduto Then
+                ' Encontrou o produto, obter as informações
+                descricaoBase = wsPrecos.Cells(linhaProduto, "B").Value
+                anvisa = wsPrecos.Cells(linhaProduto, "D").Value
+                simpro = wsPrecos.Cells(linhaProduto, "H").Value
+                marca = wsPrecos.Cells(linhaProduto, "J").Value
+                Exit For
+            End If
+        Next linhaProduto
+        
+        ' Montar a descrição completa no formato solicitado
+        descricaoCompleta = descricaoBase & vbCrLf & vbCrLf & _
+                           "Marca: " & marca & vbCrLf & _
+                           "ANVISA: " & anvisa & vbCrLf & _
+                           "SIMPRO: " & simpro
+        
         ' Preencher os dados do item na linha atual
         wsDestino.Cells(linhaAtual, "A").Value = lstProdutosDaProposta.List(i, 0)  ' ITEM
         wsDestino.Cells(linhaAtual, "B").Value = lstProdutosDaProposta.List(i, 1)  ' QUANTIDADE
-        wsDestino.Cells(linhaAtual, "C").Value = lstProdutosDaProposta.List(i, 3)  ' CÓDIGO DO PRODUTO
-        wsDestino.Cells(linhaAtual, "D").Value = lstProdutosDaProposta.List(i, 2)  ' DESCRIÇÃO
+        wsDestino.Cells(linhaAtual, "C").Value = codigoProduto                     ' CÓDIGO DO PRODUTO
+        
+        ' Ajustar a célula para quebra de texto e preencher com a descrição completa
+        With wsDestino.Cells(linhaAtual, "D")
+            .Value = descricaoCompleta
+            .WrapText = True
+        End With
         
         ' Formatamos o valor unitário como moeda
         wsDestino.Cells(linhaAtual, "K").Value = ConverterParaNumero(lstProdutosDaProposta.List(i, 4))  ' VALOR UNITÁRIO
         
         ' Se necessário, atualize a fórmula do valor total na coluna L para refletir a linha atual
-        ' (Assumindo que a fórmula é baseada na multiplicação de B*K)
         wsDestino.Cells(linhaAtual, "L").Formula = "=B" & linhaAtual & "*K" & linhaAtual
     Next i
     
@@ -891,6 +939,10 @@ Private Sub btnImprimir_Click()
     ' Confirmar para o usuário
     MsgBox "Planilha de impressão criada com sucesso!", vbInformation
 End Sub
+
+
+
+
 
 ' ======================
 ' FUNÇÕES DE SUPORTE
