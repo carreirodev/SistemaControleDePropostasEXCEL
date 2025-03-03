@@ -783,7 +783,6 @@ End Sub
 ' ======================
 ' NOVA ROTINA PARA IMPRIMIR PROPOSTA
 ' ======================
-
 Private Sub btnImprimir_Click()
     Dim wsOrigem As Worksheet
     Dim wsDestino As Worksheet
@@ -1016,15 +1015,35 @@ Private Sub btnImprimir_Click()
         .Cells(linhaAtual + 12, "A").Value = vendedorEmail
     End With
     
+    ' Configurar parâmetros de impressão da planilha
+    With wsDestino.PageSetup
+        ' Orientação e tamanho do papel
+        .Orientation = xlPortrait         ' Retrato
+        .PaperSize = xlPaperA4            ' Tamanho A4
+        
+        ' Margens em centímetros convertidos para polegadas (1 polegada = 2,54 cm)
+        .TopMargin = Application.CentimetersToPoints(0.5)      ' Margem superior 0,5 cm
+        .BottomMargin = Application.CentimetersToPoints(1#)    ' Margem inferior 1,0 cm
+        .LeftMargin = Application.CentimetersToPoints(1.3)     ' Margem esquerda 1,3 cm
+        .RightMargin = Application.CentimetersToPoints(1.3)    ' Margem direita 1,3 cm
+        
+        ' Centralizar na página
+        .CenterHorizontally = True        ' Centralizar horizontalmente
+        
+        ' Ajustar para 1 página de largura
+        .FitToPagesWide = 1
+        .FitToPagesTall = False           ' Altura automática baseada no conteúdo
+        
+        ' Repetir linhas no topo (1 a 13)
+        .PrintTitleRows = "$1:$13"        ' Repetir linhas 1 a 13 em cada página
+    End With
+    
     ' Ativar a planilha recém-criada
     wsDestino.Activate
     
     ' Confirmar para o usuário
     MsgBox "Planilha de impressão criada com sucesso!", vbInformation
 End Sub
-
-
-
 
 
 
