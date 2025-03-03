@@ -783,7 +783,6 @@ End Sub
 ' ======================
 ' NOVA ROTINA PARA IMPRIMIR PROPOSTA
 ' ======================
-
 Private Sub btnImprimir_Click()
     Dim wsOrigem As Worksheet
     Dim wsDestino As Worksheet
@@ -848,6 +847,14 @@ Private Sub btnImprimir_Click()
         .Value = dataFormatada
         .HorizontalAlignment = xlRight
     End With
+    
+    ' Preencher as informações adicionais na planilha
+    wsDestino.Range("B6").Value = txtNovaProposta.Value        ' NÚMERO DA PROPOSTA
+    wsDestino.Range("A8").Value = txtNomeCliente.Value         ' NOME DO CLIENTE
+    wsDestino.Range("I6").Value = txtRefProposta.Value         ' REFERÊNCIA DA PROPOSTA
+    wsDestino.Range("B9").Value = txtPessoaContato.Value       ' NOME DE CONTATO DO CLIENTE
+    wsDestino.Range("B10").Value = "'" & txtFone.Value         ' TELEFONE DO CLIENTE (com apóstrofo na frente para forçar formato texto)
+    wsDestino.Range("D10").Value = txtEmail.Value              ' EMAIL DO CLIENTE
     
     ' Ativar a planilha recém-criada
     wsDestino.Activate
@@ -1003,3 +1010,4 @@ Private Sub cmbFrete_Change()
     MarcarComoAlterado
     CheckEnableSalvarProposta
 End Sub
+
