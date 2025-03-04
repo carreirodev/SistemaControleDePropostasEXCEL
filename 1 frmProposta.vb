@@ -77,6 +77,7 @@ End Sub
 Private Sub CheckEnableSalvarProposta()
     Dim camposPreenchidos As Boolean
     Dim temItens As Boolean
+    Dim temCliente As Boolean
     
     ' Verifica se todos os campos obrigatórios estão preenchidos
     camposPreenchidos = (Trim(txtNomeCliente.Value) <> "" And _
@@ -90,6 +91,9 @@ Private Sub CheckEnableSalvarProposta()
     ' Verifica se há pelo menos um item na lista (além do cabeçalho)
     temItens = (lstProdutosDaProposta.ListCount > 1)
     
+    ' Verifica se há cliente selecionado (para controle do botão Imprimir)
+    temCliente = (Trim(txtNomeCliente.Value) <> "")
+    
     ' Lógica para habilitar/desabilitar os botões baseada no modo
     If modoEdicao Then
         ' Modo de edição de proposta existente
@@ -101,16 +105,16 @@ Private Sub CheckEnableSalvarProposta()
         ' Botão Apagar fica habilitado em modo de edição
         btnApagarProposta.Enabled = True
         
-        ' Botão Imprimir fica habilitado em modo de edição
-        btnImprimir.Enabled = True
+        ' Botão Imprimir fica habilitado em modo de edição SOMENTE se tiver cliente
+        btnImprimir.Enabled = temCliente
     Else
         ' Modo de nova proposta
         btnSalvarNovaProposta.Enabled = camposPreenchidos And temItens
         btnAlterarProposta.Enabled = False ' Sempre desabilitado em modo criação
         btnApagarProposta.Enabled = False ' Sempre desabilitado em modo criação
         
-        ' Botão Imprimir é habilitado se tem proposta salva (txtNovaProposta não estiver vazio)
-        btnImprimir.Enabled = (Trim(txtNovaProposta.Value) <> "")
+        ' Botão Imprimir é habilitado se tem proposta salva E tem cliente
+        btnImprimir.Enabled = (Trim(txtNovaProposta.Value) <> "") And temCliente
     End If
 End Sub
 
@@ -133,6 +137,16 @@ Private Sub txtNomeCliente_Change()
     MarcarComoAlterado
     CheckEnableBuscarProduto
     CheckEnableSalvarProposta
+    
+    ' Verificar especificamente o estado do botão Imprimir baseado no nome do cliente
+    If Trim(txtNomeCliente.Value) = "" Then
+        btnImprimir.Enabled = False
+    Else
+        ' Apenas reabilitar o botão Imprimir se tiver uma proposta carregada
+        If Trim(txtNovaProposta.Value) <> "" Then
+            btnImprimir.Enabled = True
+        End If
+    End If
 End Sub
 
 Private Sub txtCidade_Change()
@@ -836,6 +850,12 @@ Private Sub btnImprimir_Click()
         Exit Sub
     End If
     
+    ' NOVO: Verificar se tem um cliente selecionado
+    If Trim(txtNomeCliente.Value) = "" Then
+        MsgBox "Não é possível imprimir uma proposta sem cliente. Por favor, selecione um cliente.", vbExclamation
+        Exit Sub
+    End If
+    
     ' Obter o nome para a nova planilha (usando o número da proposta)
     nomePlanilha = txtNovaProposta.Value
     
@@ -1238,6 +1258,9 @@ Private Sub btnLimparCliente_Click()
     CheckEnableBuscarProduto
     CheckEnableAdicionarProduto
     CheckEnableSalvarProposta
+    
+    ' Desabilitar explicitamente o botão Imprimir quando o cliente for limpo
+    btnImprimir.Enabled = False
     
     ' Marcar como alterado se estiver em modo edição
     MarcarComoAlterado
