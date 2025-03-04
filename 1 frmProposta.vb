@@ -16,7 +16,7 @@ Private Sub UserForm_Initialize()
     With lstProdutosDaProposta
         .Clear
         .ColumnCount = 6
-        .ColumnWidths = "40;60;320;90;90;120"
+        .ColumnWidths = "30;35;290;70;70;100"
     End With
     
     ' Adiciona o cabeçalho
@@ -1220,6 +1220,83 @@ Private Sub cmbFrete_Change()
 End Sub
 
 
+Private Sub btnLimparCliente_Click()
+    ' Limpa apenas os campos relacionados ao cliente
+    txtNomeCliente.Value = ""
+    txtCidade.Value = ""
+    txtEstado.Value = ""
+    txtPessoaContato.Value = ""
+    txtFone.Value = ""
+    txtEmail.Value = ""
+    
+    ' Atualizar estado dos botões que dependem desses campos
+    CheckEnableBuscarProduto
+    CheckEnableAdicionarProduto
+    CheckEnableSalvarProposta
+    
+    ' Marcar como alterado se estiver em modo edição
+    MarcarComoAlterado
+End Sub
 
+Private Sub btnLimpaTudo_Click()
+    ' Limpar todos os campos de texto e seleção
+    ' Campos de cliente
+    txtNomeCliente.Value = ""
+    txtCidade.Value = ""
+    txtEstado.Value = ""
+    txtPessoaContato.Value = ""
+    txtFone.Value = ""
+    txtEmail.Value = ""
+    
+    ' Campos de proposta
+    txtRefProposta.Value = ""
+    txtPrazoEntrega.Value = ""
+    txtNrProposta.Value = ""
+    txtNovaProposta.Value = ""
+    txtValorTotal.Value = "0,00"
+    
+    ' Campos de produto
+    txtItem.Value = "1"  ' Reiniciar para 1, como no UserForm_Initialize
+    txtQTD.Value = ""
+    txtCodProduto.Value = ""
+    txtDescricao.Value = ""
+    txtPreco.Value = ""
+    
+    ' Limpar ComboBoxes
+    cmbVendedor.Value = ""
+    cmbCondPagamento.Value = ""
+    cmbFrete.Value = ""
+    
+    ' Limpar e reinicializar ListBox de produtos com cabeçalho
+    With lstProdutosDaProposta
+        .Clear
+        .AddItem ""
+        .List(0, 0) = "Item"
+        .List(0, 1) = "Qtd"
+        .List(0, 2) = "Descrição"
+        .List(0, 3) = "Código"
+        .List(0, 4) = "Preço"
+        .List(0, 5) = "Sub Total"
+    End With
+    
+    ' Limpar lista de resultados da busca
+    lstBuscaProposta.Clear
+    
+    ' Resetar variáveis de controle do formulário
+    modoEdicao = False
+    propostaAlterada = False
+    nrPropostaOriginal = ""
+    
+    ' Atualizar estado dos botões
+    btnBuscarProduto.Enabled = False
+    btnAdicionarProduto.Enabled = False
+    btnSalvarNovaProposta.Enabled = False
+    btnAlterarProposta.Enabled = False
+    btnApagarProposta.Enabled = False
+    btnImprimir.Enabled = False
+End Sub
 
-
+Private Sub btnFechar_Click()
+    ' Fecha o formulário sem realizar nenhuma ação adicional
+    Unload Me
+End Sub
