@@ -40,6 +40,9 @@ Private Sub UserForm_Initialize()
     txtItem.Value = "1"
 End Sub
 
+'==========================================
+' SUBROTINA 1: Preencher ComboBoxes
+'==========================================
 Private Sub PreencherComboBoxes()
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Worksheets("ListasDeEscolha")
@@ -61,7 +64,14 @@ Private Sub PreencherComboBoxes()
         .Clear
         .List = ws.ListObjects("Frete").DataBodyRange.Value
     End With
+    
+    ' Preencher Prazos de Entrega usando a tabela nomeada "PrazoEntrega"
+    With cmbPrazoEntrega
+        .Clear
+        .List = ws.ListObjects("PrazoEntrega").DataBodyRange.Value
+    End With
 End Sub
+
 
 ' Esta sub gerencia o estado dos botões Salvar Nova Proposta e Alterar Proposta
 Private Sub CheckEnableSalvarProposta()
@@ -74,7 +84,7 @@ Private Sub CheckEnableSalvarProposta()
                          Trim(txtEstado.Value) <> "" And _
                          cmbVendedor.Value <> "" And _
                          cmbCondPagamento.Value <> "" And _
-                         Trim(txtPrazoEntrega.Value) <> "" And _
+                         cmbPrazoEntrega.Value <> "" And _
                          cmbFrete.Value <> "")
     
     ' Verifica se há pelo menos um item na lista (além do cabeçalho)
@@ -437,7 +447,7 @@ Private Sub LimparFormularioPreservandoLista()
     ' Limpar campos de informações da proposta
     cmbVendedor.Value = ""
     cmbCondPagamento.Value = ""
-    txtPrazoEntrega.Value = ""
+    cmbPrazoEntrega.Value = ""
     cmbFrete.Value = ""
     txtRefProposta.Value = ""
     txtValorTotal.Value = "0,00"
@@ -537,7 +547,7 @@ Private Sub lstBuscaProposta_Click()
     txtRefProposta.Value = ws.Cells(linha, "L").Value
     cmbVendedor.Value = ws.Cells(linha, "M").Value
     cmbCondPagamento.Value = ws.Cells(linha, "N").Value
-    txtPrazoEntrega.Value = ws.Cells(linha, "O").Value
+    cmbPrazoEntrega.Value = ws.Cells(linha, "O").Value
     cmbFrete.Value = ws.Cells(linha, "P").Value
     
     ' Definir como modo de edição
@@ -646,7 +656,7 @@ Private Sub btnSalvarNovaProposta_Click()
         ws.Cells(ultimaLinha, "L").Value = txtRefProposta.Value ' Referência da Proposta
         ws.Cells(ultimaLinha, "M").Value = cmbVendedor.Value
         ws.Cells(ultimaLinha, "N").Value = cmbCondPagamento.Value
-        ws.Cells(ultimaLinha, "O").Value = txtPrazoEntrega.Value
+        ws.Cells(ultimaLinha, "O").Value = cmbPrazoEntrega.Value
         ws.Cells(ultimaLinha, "P").Value = cmbFrete.Value
         
         ultimaLinha = ultimaLinha + 1
@@ -727,7 +737,7 @@ Private Sub btnAlterarProposta_Click()
         ws.Cells(ultimaLinha, "L").Value = txtRefProposta.Value ' Referência da Proposta
         ws.Cells(ultimaLinha, "M").Value = cmbVendedor.Value
         ws.Cells(ultimaLinha, "N").Value = cmbCondPagamento.Value
-        ws.Cells(ultimaLinha, "O").Value = txtPrazoEntrega.Value
+        ws.Cells(ultimaLinha, "O").Value = cmbPrazoEntrega.Value
         ws.Cells(ultimaLinha, "P").Value = cmbFrete.Value
         
         ultimaLinha = ultimaLinha + 1
@@ -954,7 +964,7 @@ Private Sub btnImprimir_Click()
     ' Adicionar Condição de Pagamento, Prazo de Entrega e Frete
     ' 3 linhas abaixo do último item (linhaAtual)
     wsDestino.Cells(linhaAtual + 4, "E").Value = cmbCondPagamento.Value  ' Condição de Pagamento
-    wsDestino.Cells(linhaAtual + 5, "E").Value = txtPrazoEntrega.Value   ' Prazo de Entrega
+    wsDestino.Cells(linhaAtual + 5, "E").Value = cmbPrazoEntrega.Value   ' Prazo de Entrega
     wsDestino.Cells(linhaAtual + 6, "E").Value = cmbFrete.Value          ' Frete
     
     ' Calcular a linha do Total (duas linhas abaixo do último item)
@@ -1065,12 +1075,6 @@ End Sub
 
 
 
-
-
-
-
-
-
 ' ======================
 ' FUNÇÕES DE SUPORTE
 ' ======================
@@ -1091,7 +1095,7 @@ Private Sub LimparFormulario()
     ' Limpar campos de informações da proposta
     cmbVendedor.Value = ""
     cmbCondPagamento.Value = ""
-    txtPrazoEntrega.Value = ""
+    cmbPrazoEntrega.Value = ""
     cmbFrete.Value = ""
     txtRefProposta.Value = ""
     txtValorTotal.Value = "0,00"
@@ -1204,15 +1208,16 @@ Private Sub cmbVendedor_Change()
     CheckEnableSalvarProposta
 End Sub
 
+Private Sub cmbPrazoEntrega_Change()
+    MarcarComoAlterado
+    CheckEnableSalvarProposta
+End Sub
+
 Private Sub cmbCondPagamento_Change()
     MarcarComoAlterado
     CheckEnableSalvarProposta
 End Sub
 
-Private Sub txtPrazoEntrega_Change()
-    MarcarComoAlterado
-    CheckEnableSalvarProposta
-End Sub
 
 Private Sub cmbFrete_Change()
     MarcarComoAlterado
@@ -1250,7 +1255,7 @@ Private Sub btnLimpaTudo_Click()
     
     ' Campos de proposta
     txtRefProposta.Value = ""
-    txtPrazoEntrega.Value = ""
+    cmbPrazoEntrega.Value = ""
     txtNrProposta.Value = ""
     txtNovaProposta.Value = ""
     txtValorTotal.Value = "0,00"
@@ -1295,6 +1300,7 @@ Private Sub btnLimpaTudo_Click()
     btnApagarProposta.Enabled = False
     btnImprimir.Enabled = False
 End Sub
+
 
 Private Sub btnFechar_Click()
     ' Fecha o formulário sem realizar nenhuma ação adicional
