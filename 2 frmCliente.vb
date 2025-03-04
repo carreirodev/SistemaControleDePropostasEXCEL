@@ -1,5 +1,3 @@
- Código para o formulário frmCliente
-
 Private Sub btnBuscar_Click()
     Dim ws As Worksheet
     Dim lastRow As Long
