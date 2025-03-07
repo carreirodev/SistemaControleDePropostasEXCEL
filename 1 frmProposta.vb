@@ -983,9 +983,9 @@ Private Sub btnImprimir_Click()
     
     ' Adicionar Condição de Pagamento, Prazo de Entrega e Frete
     ' 3 linhas abaixo do último item (linhaAtual)
-    wsDestino.Cells(linhaAtual + 4, "E").Value = cmbCondPagamento.Value  ' Condição de Pagamento
-    wsDestino.Cells(linhaAtual + 5, "E").Value = cmbPrazoEntrega.Value   ' Prazo de Entrega
-    wsDestino.Cells(linhaAtual + 6, "E").Value = cmbFrete.Value          ' Frete
+    wsDestino.Cells(linhaAtual + 5, "j").Value = cmbCondPagamento.Value  ' Condição de Pagamento
+    wsDestino.Cells(linhaAtual + 6, "j").Value = cmbPrazoEntrega.Value   ' Prazo de Entrega
+    wsDestino.Cells(linhaAtual + 7, "j").Value = cmbFrete.Value          ' Frete
     
     ' Calcular a linha do Total (duas linhas abaixo do último item)
     linhaTotal = linhaAtual + 2
@@ -994,7 +994,7 @@ Private Sub btnImprimir_Click()
     formulaSoma = "=SUM(L14:L" & linhaAtual & ")"
     
     ' Aplicar a fórmula de soma na coluna J da linha total
-    With wsDestino.Cells(linhaTotal, "J")
+    With wsDestino.Cells(linhaTotal, "k")
         .Formula = formulaSoma
         .Font.Bold = True
         .NumberFormat = "#,##0.00"  ' Formato moeda
@@ -1052,37 +1052,35 @@ Private Sub btnImprimir_Click()
     ' Adicionar as informações do vendedor 9 linhas abaixo do último item na COLUNA A
     ' Na ordem especificada: Nome, Cargo, Fone, Email
     With wsDestino
-        .Cells(linhaAtual + 9, "A").Value = vendedorNome
-        .Cells(linhaAtual + 9, "A").Font.Bold = True
+        .Cells(linhaAtual + 11, "A").Value = vendedorNome
+        .Cells(linhaAtual + 11, "A").Font.Bold = True
         
-        .Cells(linhaAtual + 10, "A").Value = vendedorCargo
+        .Cells(linhaAtual + 12, "A").Value = vendedorCargo
         
-        .Cells(linhaAtual + 11, "A").Value = vendedorFone
+        .Cells(linhaAtual + 13, "A").Value = vendedorFone
         
-        .Cells(linhaAtual + 12, "A").Value = vendedorEmail
+        .Cells(linhaAtual + 14, "A").Value = vendedorEmail
     End With
     
     ' Configurar parâmetros de impressão da planilha
     With wsDestino.PageSetup
-        ' Orientação e tamanho do papel
-        .Orientation = xlPortrait         ' Retrato
-        .PaperSize = xlPaperA4            ' Tamanho A4
-        
-        ' Margens em centímetros convertidos para polegadas (1 polegada = 2,54 cm)
-        .TopMargin = Application.CentimetersToPoints(0.5)      ' Margem superior 0,5 cm
-        .BottomMargin = Application.CentimetersToPoints(1#)    ' Margem inferior 1,0 cm
-        .LeftMargin = Application.CentimetersToPoints(1.3)     ' Margem esquerda 1,3 cm
-        .RightMargin = Application.CentimetersToPoints(1.3)    ' Margem direita 1,3 cm
-        
-        ' Centralizar na página
-        .CenterHorizontally = True        ' Centralizar horizontalmente
-        
-        ' Ajustar para 1 página de largura
-        .FitToPagesWide = 1
-        .FitToPagesTall = False           ' Altura automática baseada no conteúdo
-        
-        ' Repetir linhas no topo (1 a 13)
-        .PrintTitleRows = "$1:$13"        ' Repetir linhas 1 a 13 em cada página
+
+
+        .PaperSize = xlPaperA4                                    ' Tamanho A4
+        .Orientation = xlPortrait                                 ' Orientação Retrato
+        .LeftMargin = Application.CentimetersToPoints(0.6)        ' Margem esquerda 0.6cm
+        .RightMargin = Application.CentimetersToPoints(0.6)       ' Margem direita 0.6cm
+        .TopMargin = Application.CentimetersToPoints(0.8)         ' Margem superior 0.5cm
+        .BottomMargin = Application.CentimetersToPoints(1#)       ' Margem inferior 0.5cm
+        .HeaderMargin = Application.CentimetersToPoints(0)        ' Margem do cabeçalho
+        .FooterMargin = Application.CentimetersToPoints(0.5)      ' Margem do rodapé
+        .CenterHorizontally = True                                ' Centralizar horizontalmente
+        .Zoom = False                                             ' Desabilitar zoom
+        .FitToPagesWide = 1                                       ' Ajustar para 1 página de largura
+        .FitToPagesTall = False                                   ' Altura pode variar conforme necessário
+
+        .RightFooter = "&8&P de &N                "
+
     End With
     
     ' Ativar a planilha recém-criada
@@ -1090,6 +1088,9 @@ Private Sub btnImprimir_Click()
     
     ' Confirmar para o usuário
     MsgBox "Planilha de impressão criada com sucesso!", vbInformation
+
+    ' Fecha o formulário sem realizar nenhuma ação adicional
+    Unload Me
 End Sub
 
 
