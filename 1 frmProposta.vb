@@ -825,6 +825,45 @@ End Sub
 ' NOVA ROTINA PARA IMPRIMIR PROPOSTA
 ' ======================
 Private Sub btnImprimir_Click()
+    ' NOVA VERIFICAÇÃO: Se a proposta precisa ser salva ou atualizada
+    ' Verificar se está em modo de nova proposta e precisa ser salva
+    If Not modoEdicao Then
+        ' Verificar se o botão Salvar Nova Proposta está habilitado
+        If btnSalvarNovaProposta.Enabled Then
+            ' Perguntar ao usuário se deseja salvar antes de imprimir
+            If MsgBox("Esta proposta ainda não foi salva. Deseja salvar antes de imprimir?", _
+                      vbQuestion + vbYesNo) = vbYes Then
+                ' Chama o procedimento para salvar a proposta
+                btnSalvarNovaProposta_Click
+                ' Se o formulário foi limpo depois de salvar, não prossegue com a impressão
+                If Trim(txtNovaProposta.Value) = "" Then
+                    Exit Sub
+                End If
+            Else
+                ' Usuário optou por não salvar - avisa e continua com a impressão
+                MsgBox "A proposta será impressa, mas não será salva no banco de dados.", vbInformation
+            End If
+        End If
+    ' Verificar se está em modo de edição e tem alterações pendentes
+    ElseIf propostaAlterada Then
+        ' Verificar se o botão Alterar Proposta está habilitado
+        If btnAlterarProposta.Enabled Then
+            ' Perguntar ao usuário se deseja atualizar antes de imprimir
+            If MsgBox("Esta proposta tem alterações não salvas. Deseja atualizar antes de imprimir?", _
+                      vbQuestion + vbYesNo) = vbYes Then
+                ' Chama o procedimento para alterar a proposta
+                btnAlterarProposta_Click
+                ' Se o formulário foi limpo depois de alterar, não prossegue com a impressão
+                If Trim(txtNovaProposta.Value) = "" Then
+                    Exit Sub
+                End If
+            Else
+                ' Usuário optou por não atualizar - avisa e continua com a impressão
+                MsgBox "A proposta será impressa com as alterações atuais, mas estas não serão salvas no banco de dados.", vbInformation
+            End If
+        End If
+    End If
+
     Dim wsOrigem As Worksheet
     Dim wsDestino As Worksheet
     Dim wsPrecos As Worksheet
@@ -1064,8 +1103,6 @@ Private Sub btnImprimir_Click()
     
     ' Configurar parâmetros de impressão da planilha
     With wsDestino.PageSetup
-
-
         .PaperSize = xlPaperA4                                    ' Tamanho A4
         .Orientation = xlPortrait                                 ' Orientação Retrato
         .LeftMargin = Application.CentimetersToPoints(0.6)        ' Margem esquerda 0.6cm
@@ -1080,7 +1117,6 @@ Private Sub btnImprimir_Click()
         .FitToPagesTall = False                                   ' Altura pode variar conforme necessário
 
         .RightFooter = "&8&P de &N                "
-
     End With
     
     ' Ativar a planilha recém-criada
@@ -1330,3 +1366,4 @@ Private Sub btnFechar_Click()
     ' Fecha o formulário sem realizar nenhuma ação adicional
     Unload Me
 End Sub
+
